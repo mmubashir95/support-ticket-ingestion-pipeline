@@ -98,7 +98,7 @@ Metadata fields such as `ticket_type`, `queue`, `priority`, and `tags` can still
 | `source_version` | `version` | `int` | Yes | No | METADATA | Source dataset marker; no blanks found. |
 | `tags` | `tag_1` through `tag_8` | `list[str]` | No | No | METADATA | Topic labels represented as a list; absent tags should be omitted rather than stored as `None`. |
 
-**Note:** tag aggregation is a Phase 1.2 (loader/mapping) responsibility. This document describes the intended source-to-canonical behavior, but no aggregation code or test currently reads `tag_1`..`tag_8` from a source row and builds the `tags` list — `tests/test_models.py` only constructs `Ticket` with a hand-written `tags` list. When Phase 1.2 implements the mapping, it should: preserve column order (`tag_1` first, `tag_8` last), omit blank/null values, and **not** deduplicate repeated tag values across positions — duplicates should be preserved as-is unless a future requirement says otherwise.
+**Note:** tag aggregation is implemented in `src/ticket_pipeline/loaders.py` (`_collect_tags`, used by `map_source_record`) and covered by `tests/test_loaders.py`. Column order is preserved (`tag_1` first, `tag_8` last), blank/null/`"nan"` values are omitted, and duplicate tag values across positions are preserved as-is rather than deduplicated — 13 records in `tickets_original.csv` contain a genuine duplicate tag, and the loader keeps both occurrences.
 
 ## Potential Leakage
 

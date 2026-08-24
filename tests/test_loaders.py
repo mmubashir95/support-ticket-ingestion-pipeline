@@ -36,6 +36,24 @@ def test_map_source_record_applies_canonical_field_names() -> None:
     }
 
 
+def test_map_source_record_preserves_duplicate_tags() -> None:
+    mapped = map_source_record(
+        {
+            "body": "The printer is jammed again.",
+            "type": "Incident",
+            "queue": "Technical Support",
+            "priority": "low",
+            "language": "en",
+            "version": "51",
+            "tag_1": "Printer",
+            "tag_2": "Hardware",
+            "tag_3": "Printer",
+        }
+    )
+
+    assert mapped["tags"] == ["Printer", "Hardware", "Printer"]
+
+
 def test_load_csv_returns_canonical_records() -> None:
     records = load_csv("tests/fixtures/tickets_sample.csv")
 
