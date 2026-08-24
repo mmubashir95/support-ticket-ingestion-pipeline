@@ -1,0 +1,27 @@
+[
+  {
+    "subject": "Payment issue",
+    "body": "My card was charged twice.",
+    "answer": "Refund guidance sent.",
+    "type": "Incident",
+    "queue": "Billing and Payments",
+    "priority": "high",
+    "language": "en",
+    "version": 52,
+    "tag_1": "billing",
+    "tag_2": "refund",
+    "tag_3": null
+  },
+  {
+    "subject": null,
+    "body": "Please explain the maintenance window.",
+    "answer": "Maintenance details sent.",
+    "type": "Request",
+    "queue": "Service Outages and Maintenance",
+    "priority": "medium",
+    "language": "en",
+    "version": "400",
+    "tag_1": "",
+    "tag_2": "nan"
+  }
+]

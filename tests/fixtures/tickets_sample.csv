@@ -1,0 +1,3 @@
+subject,body,answer,type,queue,priority,language,version,tag_1,tag_2,tag_3,tag_4,tag_5,tag_6,tag_7,tag_8
+Payment issue,My card was charged twice.,Refund guidance sent.,Incident,Billing and Payments,high,en,52,billing,refund,,,,,,
+,Please explain the maintenance window.,Maintenance details sent.,Request,Service Outages and Maintenance,medium,en,400,,,,,,,,
