@@ -1,0 +1,17 @@
+[project]
+name = "support-ticket-ingestion-pipeline"
+version = "0.1.0"
+description = "Support ticket ingestion pipeline"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
