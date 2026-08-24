@@ -1,0 +1,42 @@
+Library Instructions
+====================
+
+Use a small Python dependency set for Phase 1.
+
+Required libraries:
+
+- pydantic
+  - Use for canonical ticket schema validation.
+  - Validate required fields, field types, and normalized internal records.
+
+- pytest
+  - Use for unit tests and the end-to-end pipeline test.
+  - Cover loaders, validation, text normalization, PII masking, duplicate detection,
+    accepted/rejected outputs, and the data-quality report.
+
+Preferred standard library modules:
+
+- pathlib for file paths.
+- csv and json for CSV/JSON input and JSONL output.
+- re for URL, email, punctuation, and PII pattern handling.
+- html for basic HTML entity handling.
+- unicodedata for Unicode normalization.
+- hashlib for stable record fingerprints and exact duplicate detection.
+- logging for pipeline execution messages.
+
+Optional libraries:
+
+- beautifulsoup4
+  - Use only if standard-library HTML cleanup is not enough.
+
+- langdetect or another lightweight language detector
+  - Use only if simple built-in language heuristics are not enough.
+  - Keep language detection isolated in a small module.
+
+Suggested install command:
+
+python -m pip install pydantic pytest
+
+If optional helpers are used later:
+
+python -m pip install beautifulsoup4 langdetect
