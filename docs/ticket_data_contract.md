@@ -93,10 +93,12 @@ Metadata fields such as `ticket_type`, `queue`, `priority`, and `tags` can still
 | `message` | `body` | `str` | Yes | No | CORE_INPUT | Main support-ticket text; no blanks found in the dataset. |
 | `ticket_type` | `type` | `str` | Yes | No | METADATA | Existing ticket category. |
 | `queue` | `queue` | `str` | Yes | No | METADATA | Existing support routing metadata. |
-| `priority` | `priority` | `Literal["low", "medium", "high"]` | Yes | No | METADATA | Controlled values with no blanks in the dataset. |
+| `priority` | `priority` | `Literal["low", "medium", "high"]` | Yes | No | METADATA | Controlled values with no blanks in the dataset. `priority` drives downstream routing/SLA behavior, so a typo'd or unexpected value has outsized operational impact; `ticket_type` and `queue` are equally controlled in this dataset but are descriptive labels that may legitimately grow as the business changes, so they are intentionally left as plain `str` rather than `Literal`. |
 | `language` | `language` | `str` | Yes | No | METADATA | Language code; kept flexible because future datasets may include more languages. |
 | `source_version` | `version` | `int` | Yes | No | METADATA | Source dataset marker; no blanks found. |
 | `tags` | `tag_1` through `tag_8` | `list[str]` | No | No | METADATA | Topic labels represented as a list; absent tags should be omitted rather than stored as `None`. |
+
+**Note:** tag aggregation is a Phase 1.2 (loader/mapping) responsibility. This document describes the intended source-to-canonical behavior, but no aggregation code or test currently reads `tag_1`..`tag_8` from a source row and builds the `tags` list — `tests/test_models.py` only constructs `Ticket` with a hand-written `tags` list. When Phase 1.2 implements the mapping, it should: preserve column order (`tag_1` first, `tag_8` last), omit blank/null values, and **not** deduplicate repeated tag values across positions — duplicates should be preserved as-is unless a future requirement says otherwise.
 
 ## Potential Leakage
 
