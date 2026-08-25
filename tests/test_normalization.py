@@ -46,6 +46,18 @@ def test_non_html_semantic_placeholders_are_preserved() -> None:
     assert normalize_text(text) == text
 
 
+def test_script_and_style_content_is_dropped() -> None:
+    raw_text = "<p>Hello</p><script>alert(1)</script><style>p{color:red}</style><p>Bye</p>"
+
+    assert normalize_text(raw_text) == "Hello\n\nBye"
+
+
+def test_stray_angle_brackets_in_technical_text_are_preserved() -> None:
+    text = "5 < 10 and 10 > 5"
+
+    assert normalize_text(text) == text
+
+
 def test_leading_trailing_and_repeated_spaces_are_normalized() -> None:
     assert normalize_text("  Hello     team  ") == "Hello team"
 
