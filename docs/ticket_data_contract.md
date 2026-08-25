@@ -115,10 +115,13 @@ messages contain no visible content. This includes empty or whitespace-only
 strings, markup-only strings, and control-character-only strings. The check is
 inspection-only and does not modify the original message.
 
+`src/ticket_pipeline/normalization.py` then applies deterministic NFC Unicode
+normalization, HTML/entity handling, control-character cleanup, consistent
+line endings, and conservative whitespace cleanup. It preserves case,
+punctuation, emoji, URLs, email addresses, and useful paragraph boundaries.
+
 The following processing remains intentionally deferred to later implementation phases:
 
-- Unicode normalization
-- HTML removal
 - URL handling
 - email and PII masking
 - duplicate detection
