@@ -1,3 +1,5 @@
+import pytest
+
 from ticket_pipeline.models import Ticket
 from ticket_pipeline.validators import SCHEMA_VALIDATION_FAILED, validate_ticket
 
@@ -47,6 +49,28 @@ def test_invalid_priority_fails_schema_validation() -> None:
     record["priority"] = "urgent"
 
     assert_failed_at(record, "priority", "literal_error")
+
+
+@pytest.mark.parametrize("priority", ["low", "medium", "high"])
+def test_each_allowed_priority_passes_schema_validation(priority: str) -> None:
+    record = canonical_record()
+    record["priority"] = priority
+
+    ticket, failure = validate_ticket(record)
+
+    assert ticket is not None
+    assert ticket.priority == priority
+    assert failure is None
+
+
+@pytest.mark.parametrize(
+    "field", ["message", "ticket_type", "queue", "priority", "language", "source_version"]
+)
+def test_each_required_field_fails_when_missing(field: str) -> None:
+    record = canonical_record()
+    del record[field]
+
+    assert_failed_at(record, field, "missing")
 
 
 def test_nullable_subject_passes_schema_validation() -> None:
