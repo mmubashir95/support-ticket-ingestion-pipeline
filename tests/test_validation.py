@@ -1,7 +1,13 @@
 import pytest
 
 from ticket_pipeline.models import Ticket
-from ticket_pipeline.validators import SCHEMA_VALIDATION_FAILED, validate_ticket
+from ticket_pipeline.validators import (
+    EMPTY_MESSAGE,
+    SCHEMA_VALIDATION_FAILED,
+    is_message_empty,
+    validate_ticket,
+    validate_ticket_message,
+)
 
 
 def canonical_record() -> dict[str, object]:
@@ -147,3 +153,87 @@ def test_whitespace_only_message_remains_schema_valid() -> None:
     assert ticket is not None
     assert ticket.message == "   "
     assert failure is None
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "",
+        " ",
+        "     ",
+        "\n",
+        "\t",
+        "\n\t   ",
+        "<p></p>",
+        "<div></div>",
+        "<br>",
+        "<p>   </p>",
+        "<div><br></div>",
+        "\x00\x01",
+        "\x00   \n\t",
+    ],
+)
+def test_effectively_empty_messages_are_detected(message: str) -> None:
+    assert is_message_empty(message)
+
+
+def test_none_is_defensively_treated_as_empty() -> None:
+    assert is_message_empty(None)
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "My payment failed.",
+        "<p>Payment failed</p>",
+        "???",
+        "!!!",
+        "...",
+        "?",
+        "!",
+        "😡",
+        "👍",
+    ],
+)
+def test_visible_messages_are_preserved_as_business_valid(message: str) -> None:
+    record = canonical_record()
+    record["message"] = message
+    ticket, schema_failure = validate_ticket(record)
+
+    assert ticket is not None
+    assert schema_failure is None
+
+    validated_ticket, business_failure = validate_ticket_message(ticket)
+
+    assert validated_ticket is ticket
+    assert validated_ticket.message == message
+    assert business_failure is None
+
+
+def test_whitespace_message_is_schema_valid_but_business_invalid() -> None:
+    record = canonical_record()
+    record["message"] = "   "
+
+    ticket, schema_failure = validate_ticket(record)
+
+    assert ticket is not None
+    assert schema_failure is None
+
+    validated_ticket, business_failure = validate_ticket_message(ticket)
+
+    assert validated_ticket is None
+    assert business_failure == {"reason": EMPTY_MESSAGE}
+
+
+def test_empty_html_is_rejected_by_business_validation() -> None:
+    record = canonical_record()
+    record["message"] = "<p></p>"
+    ticket, schema_failure = validate_ticket(record)
+
+    assert ticket is not None
+    assert schema_failure is None
+
+    validated_ticket, business_failure = validate_ticket_message(ticket)
+
+    assert validated_ticket is None
+    assert business_failure == {"reason": EMPTY_MESSAGE}

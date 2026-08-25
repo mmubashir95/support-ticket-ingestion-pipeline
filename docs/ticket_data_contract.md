@@ -106,15 +106,17 @@ Metadata fields such as `ticket_type`, `queue`, `priority`, and `tags` can still
 
 The retained metadata fields `ticket_type`, `queue`, `priority`, and `tags` are not support responses, but they are labels or routing metadata. If a future model predicts any of these fields, that same field must be excluded from model input features.
 
-## Business Validation Deferred
+## Schema And Business Validation Boundary
 
 The `Ticket` Pydantic model only checks structural validity: expected field names and Python types.
 
-The following checks are intentionally deferred to later implementation phases:
+`src/ticket_pipeline/validators.py` separately rejects schema-valid tickets whose
+messages contain no visible content. This includes empty or whitespace-only
+strings, markup-only strings, and control-character-only strings. The check is
+inspection-only and does not modify the original message.
 
-- empty messages
-- whitespace-only messages
-- effectively empty HTML
+The following processing remains intentionally deferred to later implementation phases:
+
 - Unicode normalization
 - HTML removal
 - URL handling
@@ -122,4 +124,3 @@ The following checks are intentionally deferred to later implementation phases:
 - duplicate detection
 - language detection
 - accepted/rejected output generation
-
