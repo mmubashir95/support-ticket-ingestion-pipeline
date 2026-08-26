@@ -1,10 +1,16 @@
+import pytest
+
 from ticket_pipeline.normalization import (
+    apply_text_symbol_policy,
     normalize_newlines,
+    normalize_repeated_punctuation,
     normalize_text,
     normalize_unicode,
     normalize_whitespace,
     remove_control_characters,
     remove_html,
+    replace_emails,
+    replace_urls,
 )
 
 
@@ -91,22 +97,108 @@ def test_problematic_control_characters_are_removed() -> None:
     assert normalize_text("My\x00 payment failed") == "My payment failed"
 
 
-def test_punctuation_case_and_technical_text_are_preserved() -> None:
-    text = "PAYMENT FAILED!!! Why?! don't E-102 v2.4.1 /api/payment C++"
+def test_normal_punctuation_case_and_technical_text_are_preserved() -> None:
+    text = "PAYMENT FAILED! Why?! don't E-102 v2.4.1 /api/payment C++"
 
     assert normalize_text(text) == text
 
 
-def test_emoji_is_preserved() -> None:
-    text = "Payment failed 😡 👍"
-
+@pytest.mark.parametrize(
+    "text",
+    ["Payment failed 😡", "Thanks 👍", "Very disappointed 😢"],
+)
+def test_emoji_is_preserved(text: str) -> None:
     assert normalize_text(text) == text
 
 
-def test_email_and_url_are_preserved() -> None:
-    text = "Contact ali@example.com or see https://example.com/payment?a=1&b=2"
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://example.com",
+        "http://example.com",
+        "www.example.com",
+        "https://example.com/path?q=test",
+    ],
+)
+def test_common_url_forms_are_replaced(url: str) -> None:
+    assert replace_urls(url) == "<URL>"
+    assert normalize_text(url) == "<URL>"
+
+
+def test_url_inside_sentence_is_replaced_without_losing_sentence_punctuation() -> None:
+    text = "Visit https://example.com/reset to continue."
+
+    assert normalize_text(text) == "Visit <URL> to continue."
+
+
+def test_url_replacement_preserves_unmatched_closing_delimiter() -> None:
+    text = "See (https://example.com/reset)."
+
+    assert normalize_text(text) == "See (<URL>)."
+
+
+@pytest.mark.parametrize(
+    "email",
+    [
+        "john@example.com",
+        "john.smith@example.com",
+        "john+support@example.co.uk",
+    ],
+)
+def test_common_email_forms_are_replaced(email: str) -> None:
+    assert replace_emails(email) == "<EMAIL>"
+    assert normalize_text(email) == "<EMAIL>"
+
+
+def test_email_inside_sentence_is_replaced() -> None:
+    text = "Please contact john.smith@example.com for help."
+
+    assert normalize_text(text) == "Please contact <EMAIL> for help."
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("Hello!!!!!!", "Hello!"),
+        ("Why?????", "Why?"),
+        ("Error........", "Error."),
+    ],
+)
+def test_excessive_repeated_punctuation_is_normalized(
+    text: str, expected: str
+) -> None:
+    assert normalize_repeated_punctuation(text) == expected
+    assert normalize_text(text) == expected
+
+
+def test_mixed_punctuation_sequence_is_preserved() -> None:
+    assert normalize_text("Really?!") == "Really?!"
+
+
+def test_mixed_support_ticket_content_follows_symbol_policy() -> None:
+    text = (
+        "Hi!!! My payment failed 😡. Please check "
+        "https://billing.example.com/order/123 and contact me at "
+        "john@example.com!!!!!"
+    )
+
+    assert normalize_text(text) == (
+        "Hi! My payment failed 😡. Please check <URL> and contact me at "
+        "<EMAIL>!"
+    )
+
+
+def test_replacement_tokens_are_stable_and_normalization_is_idempotent() -> None:
+    text = "Use <URL> or contact <EMAIL>!"
 
     assert normalize_text(text) == text
+    assert normalize_text(normalize_text(text)) == text
+
+
+def test_symbol_policy_helper_applies_replacements_before_punctuation() -> None:
+    text = "Email john@example.com!!! See https://example.com/reset???"
+
+    assert apply_text_symbol_policy(text) == "Email <EMAIL>! See <URL>?"
 
 
 def test_normalization_is_deterministic_and_idempotent() -> None:
@@ -115,5 +207,5 @@ def test_normalization_is_deterministic_and_idempotent() -> None:
     normalized_once = normalize_text(raw_text)
     normalized_twice = normalize_text(normalized_once)
 
-    assert normalized_once == "Café FAILED!!! 😡\n\nPlease help."
+    assert normalized_once == "Café FAILED! 😡\n\nPlease help."
     assert normalized_twice == normalized_once

@@ -117,13 +117,16 @@ inspection-only and does not modify the original message.
 
 `src/ticket_pipeline/normalization.py` then applies deterministic NFC Unicode
 normalization, HTML/entity handling, control-character cleanup, consistent
-line endings, and conservative whitespace cleanup. It preserves case,
-punctuation, emoji, URLs, email addresses, and useful paragraph boundaries.
+line endings, URL and email replacement, repeated-punctuation normalization,
+and conservative whitespace cleanup. URLs beginning with `http://`, `https://`,
+or `www.` become `<URL>`, and conventional email addresses become `<EMAIL>`.
+Emoji, case, meaningful punctuation, and useful paragraph boundaries are
+preserved. Homogeneous runs of `!`, `?`, or `.` are reduced to one character;
+mixed sequences such as `?!` remain intact.
 
 The following processing remains intentionally deferred to later implementation phases:
 
-- URL handling
-- email and PII masking
+- broader PII masking beyond email addresses
 - duplicate detection
 - language detection
 - accepted/rejected output generation

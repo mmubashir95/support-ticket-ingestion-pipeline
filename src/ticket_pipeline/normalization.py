@@ -1,8 +1,9 @@
 """Deterministic, meaning-preserving normalization for usable ticket text.
 
 The fixed order is Unicode NFC, HTML/entity handling, control-character
-cleanup, newline normalization, and whitespace normalization. Case,
-punctuation, emoji, URLs, and email addresses are deliberately preserved.
+cleanup, newline normalization, URL and email replacement, repeated
+punctuation normalization, and whitespace normalization. Case, emoji, and
+meaningful punctuation are deliberately preserved.
 """
 
 import re
@@ -130,6 +131,22 @@ _INLINE_HTML_TAGS = frozenset(
     }
 )
 _HTML_TAGS = _BLOCK_TAGS | _NON_VISIBLE_TAGS | _INLINE_HTML_TAGS
+_URL_PATTERN = re.compile(
+    r"(?<![\w@])(?:https?://|www\.)[^\s<>\"']+",
+    flags=re.IGNORECASE,
+)
+_EMAIL_PATTERN = re.compile(
+    r"(?<![\w.+-])"
+    r"[a-z0-9.!#$%&'*+/=?^_`{|}~-]+"
+    r"@"
+    r"[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
+    r"(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+"
+    r"(?![\w@-])",
+    flags=re.IGNORECASE,
+)
+_REPEATED_PUNCTUATION_PATTERN = re.compile(r"([!?.])\1+")
+_TRAILING_URL_PUNCTUATION = frozenset(".,!?;:")
+_URL_DELIMITER_PAIRS = {")": "(", "]": "[", "}": "{"}
 
 
 class _HTMLTextExtractor(HTMLParser):
@@ -205,6 +222,54 @@ def normalize_newlines(text: str) -> str:
     return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
+def _replace_url_match(match: re.Match[str]) -> str:
+    """Replace a URL while leaving adjacent sentence punctuation in place."""
+
+    url = match.group(0)
+    trailing_text = ""
+
+    while url:
+        final_character = url[-1]
+        is_sentence_punctuation = final_character in _TRAILING_URL_PUNCTUATION
+        opening_delimiter = _URL_DELIMITER_PAIRS.get(final_character)
+        is_unmatched_delimiter = (
+            opening_delimiter is not None
+            and url.count(final_character) > url.count(opening_delimiter)
+        )
+        if not is_sentence_punctuation and not is_unmatched_delimiter:
+            break
+        trailing_text = final_character + trailing_text
+        url = url[:-1]
+
+    return f"<URL>{trailing_text}"
+
+
+def replace_urls(text: str) -> str:
+    """Replace common HTTP(S) and ``www.`` URLs with ``<URL>``."""
+
+    return _URL_PATTERN.sub(_replace_url_match, text)
+
+
+def replace_emails(text: str) -> str:
+    """Replace conventional real-world email addresses with ``<EMAIL>``."""
+
+    return _EMAIL_PATTERN.sub("<EMAIL>", text)
+
+
+def normalize_repeated_punctuation(text: str) -> str:
+    """Collapse homogeneous runs of ``!``, ``?``, or ``.`` to one character."""
+
+    return _REPEATED_PUNCTUATION_PATTERN.sub(r"\1", text)
+
+
+def apply_text_symbol_policy(text: str) -> str:
+    """Apply URL, email, and conservative repeated-punctuation policies."""
+
+    text = replace_urls(text)
+    text = replace_emails(text)
+    return normalize_repeated_punctuation(text)
+
+
 def normalize_whitespace(text: str) -> str:
     """Normalize horizontal whitespace and keep at most one blank line."""
 
@@ -221,5 +286,6 @@ def normalize_text(text: str) -> str:
     text = remove_html(text)
     text = remove_control_characters(text)
     text = normalize_newlines(text)
+    text = apply_text_symbol_policy(text)
     text = normalize_whitespace(text)
     return text
