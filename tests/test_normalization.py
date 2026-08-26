@@ -156,6 +156,20 @@ def test_email_inside_sentence_is_replaced() -> None:
     assert normalize_text(text) == "Please contact <EMAIL> for help."
 
 
+def test_urls_joined_without_whitespace_are_replaced_separately() -> None:
+    text = "See https://a.com,https://b.com for details"
+
+    assert normalize_text(text) == "See <URL>,<URL> for details"
+
+
+def test_email_does_not_absorb_adjacent_query_string_text() -> None:
+    text = "See /api/v1/orders?id=123&ref=john@example.com for details"
+
+    assert normalize_text(text) == (
+        "See /api/v1/orders?id=123&ref=<EMAIL> for details"
+    )
+
+
 @pytest.mark.parametrize(
     ("text", "expected"),
     [

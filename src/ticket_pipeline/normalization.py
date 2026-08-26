@@ -132,12 +132,13 @@ _INLINE_HTML_TAGS = frozenset(
 )
 _HTML_TAGS = _BLOCK_TAGS | _NON_VISIBLE_TAGS | _INLINE_HTML_TAGS
 _URL_PATTERN = re.compile(
-    r"(?<![\w@])(?:https?://|www\.)[^\s<>\"']+",
+    r"(?<![\w@])(?:https?://|www\.)"
+    r"(?:(?!https?://|www\.)[^\s<>\"'])+",
     flags=re.IGNORECASE,
 )
 _EMAIL_PATTERN = re.compile(
     r"(?<![\w.+-])"
-    r"[a-z0-9.!#$%&'*+/=?^_`{|}~-]+"
+    r"[a-z0-9._%+-]+"
     r"@"
     r"[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
     r"(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+"
