@@ -186,9 +186,45 @@ become exact duplicates when their only differences were masked values. Raw
 PII is not recovered or compared. Empty-content acceptance remains the
 responsibility of the earlier validation stage.
 
+## Semantic Deduplication Candidates
+
+`src/ticket_pipeline/semantic_deduplication.py` consumes exact-unique,
+normalized, and PII-masked tickets. It embeds `subject + "\n" + body` with the
+CPU-friendly `sentence-transformers/all-MiniLM-L6-v2` model, using batched
+inference and normalized embeddings. The model is loaded once per semantic
+deduplication operation. Its files are downloaded on first use unless already
+present in the local Hugging Face cache.
+
+Install the real-model dependency with:
+
+```bash
+.venv/bin/pip install -e '.[semantic]'
+```
+
+Cosine nearest-neighbor search uses scikit-learn's `NearestNeighbors` and
+retrieves a configurable number of neighbors (default `top_k=5`). Self-matches
+and later records are excluded. A later record is linked to the
+highest-similarity qualifying earlier neighbor among those retrieved; each
+pair therefore has one deterministic direction rather than both `A -> B` and
+`B -> A`. Exact duplicates can be supplied through their Step 8 canonical
+links and are excluded from embedding and semantic results.
+
+The configurable default cosine threshold is `0.85`. This is a provisional
+development value and has **not** been calibrated on labeled support-ticket
+duplicate/non-duplicate pairs. Results expose the nearest earlier record,
+similarity score, threshold, and candidate decision so the threshold can be
+evaluated later. Similarity indicates a review candidate; it does not prove
+that two tickets are duplicates, and this step never deletes records.
+
+The default test suite uses injected synthetic embeddings and requires no
+network access. Set `RUN_REAL_SEMANTIC_MODEL_TEST=1` to opt into the small real
+model smoke test; that run may download the model. PyTorch currently has no
+compatible wheel for this project's Python 3.13 macOS x86_64 environment, so
+real model inference here requires a supported Python/PyTorch platform (for
+example Python 3.12) while the model-independent search remains testable.
+
 The following processing remains intentionally deferred to later implementation phases:
 
 - broader PII detection such as names and postal addresses
-- semantic duplicate detection
 - language detection
 - accepted/rejected output generation

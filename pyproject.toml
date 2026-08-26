@@ -4,12 +4,17 @@ version = "0.1.0"
 description = "Support ticket ingestion pipeline"
 requires-python = ">=3.10"
 dependencies = [
+    "numpy>=1.26",
     "pydantic>=2",
+    "scikit-learn>=1.4",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=9",
+]
+semantic = [
+    "sentence-transformers>=3",
 ]
 
 [tool.pytest.ini_options]
