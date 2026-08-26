@@ -151,9 +151,37 @@ indistinguishable from a real IPv4 address and will be masked as
 regex-only design rather than a bug; resolving it would require semantic
 context beyond Phase 1 scope.
 
+## Exact Deduplication
+
+`src/ticket_pipeline/deduplication.py` operates only on text that has already
+completed normalization and PII masking. The exact duplicate identity is:
+
+```text
+normalized and PII-masked subject
+\n
+normalized and PII-masked body
+```
+
+The canonical key uses one fixed newline between subject and body and is
+encoded as UTF-8 before SHA-256 hashing. A missing subject is represented as an
+empty string. Case, punctuation, emoji, and all other supplied content remain
+significant; the deduplication step performs no additional text processing.
+Priority, queue, language, tags, source version, and other metadata do not
+participate in the exact duplicate identity.
+
+Detection is a single ordered pass. The first fingerprint occurrence is the
+canonical record, and later matches point directly to its zero-based input
+index through `duplicate_of`. Results remain aligned with input order. The
+expected complexity is O(n) time and O(u) memory for `u` unique fingerprints.
+
+Because exact deduplication occurs after PII masking, distinct raw tickets may
+become exact duplicates when their only differences were masked values. Raw
+PII is not recovered or compared. Empty-content acceptance remains the
+responsibility of the earlier validation stage.
+
 The following processing remains intentionally deferred to later implementation phases:
 
 - broader PII detection such as names and postal addresses
-- duplicate detection
+- semantic duplicate detection
 - language detection
 - accepted/rejected output generation
