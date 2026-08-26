@@ -19,14 +19,17 @@ class ExactDuplicateResult(TypedDict):
 
 
 def build_deduplication_key(subject: str | None, body: str) -> str:
-    """Join a preprocessed subject and body with a fixed newline separator.
+    """Join a preprocessed subject and body into an unambiguous key.
 
-    A missing subject is represented by an empty string. Empty content is
-    accepted here because usability validation belongs to an earlier stage.
+    Each field is prefixed with its character length, so a value containing
+    a newline (or any other character) cannot shift the subject/body boundary
+    and collide with a different subject/body pair. A missing subject is
+    represented by an empty string. Empty content is accepted here because
+    usability validation belongs to an earlier stage.
     """
 
     canonical_subject = subject if subject is not None else ""
-    return f"{canonical_subject}\n{body}"
+    return f"{len(canonical_subject)}:{canonical_subject}{len(body)}:{body}"
 
 
 def compute_ticket_fingerprint(subject: str | None, body: str) -> str:

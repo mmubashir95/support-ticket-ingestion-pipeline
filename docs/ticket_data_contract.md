@@ -158,16 +158,23 @@ completed normalization and PII masking. The exact duplicate identity is:
 
 ```text
 normalized and PII-masked subject
-\n
++
 normalized and PII-masked body
 ```
 
-The canonical key uses one fixed newline between subject and body and is
-encoded as UTF-8 before SHA-256 hashing. A missing subject is represented as an
-empty string. Case, punctuation, emoji, and all other supplied content remain
-significant; the deduplication step performs no additional text processing.
-Priority, queue, language, tags, source version, and other metadata do not
-participate in the exact duplicate identity.
+The canonical key length-prefixes each field before concatenating them
+(`f"{len(subject)}:{subject}{len(body)}:{body}"`) and is encoded as UTF-8
+before SHA-256 hashing. Length-prefixing is used instead of a plain
+separator character because normalization preserves paragraph newlines
+inside subject/body text, so a fixed separator such as `\n` could let a
+value ending or starting with a newline shift the subject/body boundary and
+collide with a different pair; the length prefix removes that ambiguity
+regardless of what characters the fields contain. A missing subject is
+represented as an empty string. Case, punctuation, emoji, and all other
+supplied content remain significant; the deduplication step performs no
+additional text processing. Priority, queue, language, tags, source
+version, and other metadata do not participate in the exact duplicate
+identity.
 
 Detection is a single ordered pass. The first fingerprint occurrence is the
 canonical record, and later matches point directly to its zero-based input

@@ -16,7 +16,9 @@ def test_fingerprint_is_deterministic_and_uses_sha256() -> None:
 
     fingerprint_once = compute_ticket_fingerprint(subject, body)
     fingerprint_twice = compute_ticket_fingerprint(subject, body)
-    expected = hashlib.sha256(f"{subject}\n{body}".encode("utf-8")).hexdigest()
+    expected = hashlib.sha256(
+        build_deduplication_key(subject, body).encode("utf-8")
+    ).hexdigest()
 
     assert fingerprint_once == fingerprint_twice == expected
     assert len(fingerprint_once) == 64
@@ -41,13 +43,21 @@ def test_subject_body_separator_prevents_simple_boundary_ambiguity() -> None:
     first = build_deduplication_key("ab", "c")
     second = build_deduplication_key("a", "bc")
 
-    assert first == "ab\nc"
-    assert second == "a\nbc"
     assert first != second
 
 
+def test_length_prefixed_key_prevents_embedded_newline_collisions() -> None:
+    first = build_deduplication_key("a\nb", "c")
+    second = build_deduplication_key("a", "b\nc")
+
+    assert first != second
+    assert compute_ticket_fingerprint(
+        "a\nb", "c"
+    ) != compute_ticket_fingerprint("a", "b\nc")
+
+
 def test_empty_and_missing_content_hashes_safely() -> None:
-    assert build_deduplication_key(None, "") == "\n"
+    assert build_deduplication_key(None, "") == build_deduplication_key("", "")
     assert compute_ticket_fingerprint(None, "") == compute_ticket_fingerprint(
         "", ""
     )
