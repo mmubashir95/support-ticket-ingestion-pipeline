@@ -51,6 +51,22 @@ def test_technical_numbers_are_not_masked_as_phones(
 
 
 @pytest.mark.parametrize(
+    "zero_leading_id",
+    [
+        "order 01234567890",
+        "reference 09876543210",
+        "tracking id 00000000001",
+        "invoice 01111111111",
+    ],
+)
+def test_zero_leading_numeric_ids_are_not_masked_as_phones(
+    zero_leading_id: str,
+) -> None:
+    assert mask_phone_numbers(zero_leading_id) == zero_leading_id
+    assert mask_pii(zero_leading_id) == zero_leading_id
+
+
+@pytest.mark.parametrize(
     "ip_address",
     ["192.168.1.20", "10.0.0.1", "127.0.0.1", "8.8.8.8"],
 )

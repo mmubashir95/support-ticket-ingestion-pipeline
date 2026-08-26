@@ -144,6 +144,13 @@ numerically, and account masking requires one of the listed prefixes. Ordinary
 technical numbers, paths, versions, error codes, and unrecognized identifiers
 are preserved. No raw detected values are logged.
 
+**Known limitation:** a four-part version, build, or schema number whose
+segments are all `0-255` (for example `10.0.19.1`) is structurally
+indistinguishable from a real IPv4 address and will be masked as
+`<IP_ADDRESS>`. This is an accepted tradeoff of the conservative,
+regex-only design rather than a bug; resolving it would require semantic
+context beyond Phase 1 scope.
+
 The following processing remains intentionally deferred to later implementation phases:
 
 - broader PII detection such as names and postal addresses
