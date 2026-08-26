@@ -124,9 +124,29 @@ Emoji, case, meaningful punctuation, and useful paragraph boundaries are
 preserved. Homogeneous runs of `!`, `?`, or `.` are reduced to one character;
 mixed sequences such as `?!` remain intact.
 
+`src/ticket_pipeline/pii.py` runs after normalization and applies this
+intentionally conservative masking policy:
+
+| Data type | Action |
+|---|---|
+| Email | Already replaced with `<EMAIL>` during normalization |
+| URL | Already replaced with `<URL>` during normalization |
+| Supported phone number | Replace with `<PHONE>` |
+| Valid IPv4 address | Replace with `<IP_ADDRESS>` |
+| Luhn-valid payment-card-like number | Replace with `<PAYMENT_CARD>` |
+| Explicit `ACC-`, `ACCOUNT-`, `CUSTOMER-`, or `CUST-` ID | Replace with `<ACCOUNT_ID>` |
+| Person name | Not handled |
+| Postal address | Not handled |
+
+Existing masking tokens remain unchanged. Payment cards are checked before
+phone numbers to prevent pattern collisions, IPv4 octets are validated
+numerically, and account masking requires one of the listed prefixes. Ordinary
+technical numbers, paths, versions, error codes, and unrecognized identifiers
+are preserved. No raw detected values are logged.
+
 The following processing remains intentionally deferred to later implementation phases:
 
-- broader PII masking beyond email addresses
+- broader PII detection such as names and postal addresses
 - duplicate detection
 - language detection
 - accepted/rejected output generation
