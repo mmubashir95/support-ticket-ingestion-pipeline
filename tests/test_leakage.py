@@ -134,19 +134,25 @@ def test_false_and_zero_are_populated_future_values(value: object) -> None:
     assert result.issues[0].type is LeakageIssueType.FUTURE_FIELD
 
 
-def test_configured_direct_target_is_flagged() -> None:
+def test_configured_target_is_informational_not_a_warning() -> None:
+    """A populated target field is a normal labeled row, not leakage.
+
+    Presence of the label a record is meant to train on does not mean that
+    label leaked into a model's input features, so it must not raise the
+    same status as a genuinely forbidden post-outcome field.
+    """
     checker = LeakageChecker(
         LeakageConfig(forbidden_fields=set(), target_fields={"priority"})
     )
 
     result = checker.check({"priority": "high"})
 
-    assert result.issues == [
-        LeakageIssue(type=LeakageIssueType.TARGET_FIELD, field="priority")
-    ]
+    assert result.status is LeakageCheckStatus.CLEAN
+    assert result.issues == []
+    assert result.targets.target_fields == ["priority"]
 
 
-def test_configured_target_proxy_is_flagged() -> None:
+def test_configured_target_and_proxy_are_informational() -> None:
     checker = LeakageChecker(
         LeakageConfig(
             forbidden_fields=set(),
@@ -159,10 +165,10 @@ def test_configured_target_proxy_is_flagged() -> None:
         {"needs_escalation": False, "assigned_team": "L3 Escalation"}
     )
 
-    assert [issue.type for issue in result.issues] == [
-        LeakageIssueType.TARGET_FIELD,
-        LeakageIssueType.TARGET_PROXY,
-    ]
+    assert result.status is LeakageCheckStatus.CLEAN
+    assert result.issues == []
+    assert result.targets.target_fields == ["needs_escalation"]
+    assert result.targets.target_proxy_fields == ["assigned_team"]
 
 
 def test_no_target_configured_skips_proxy_check() -> None:
@@ -177,6 +183,8 @@ def test_no_target_configured_skips_proxy_check() -> None:
 
     assert result.status is LeakageCheckStatus.CLEAN
     assert result.issues == []
+    assert result.targets.target_fields == []
+    assert result.targets.target_proxy_fields == []
 
 
 def test_missing_configured_fields_do_not_crash() -> None:
@@ -192,6 +200,36 @@ def test_missing_configured_fields_do_not_crash() -> None:
     result = checker.check({"subject": "Refund not received"})
 
     assert result.status is LeakageCheckStatus.CLEAN
+    assert result.unchecked_fields == [
+        "assigned_team",
+        "closed_at",
+        "conversation_id",
+        "needs_escalation",
+        "resolved_at",
+    ]
+
+
+def test_omitting_source_fields_leaves_answer_unchecked_not_silently_clean() -> (
+    None
+):
+    """Forgetting source_fields must not look identical to a checked, clean record.
+
+    The default answer field only ever appears in the merged record when a
+    caller passes source_fields, since answer is intentionally excluded from
+    the canonical Ticket. A future orchestrator that forgets to pass
+    source_fields would otherwise get status=clean indistinguishable from a
+    record that was actually checked and found free of the default forbidden
+    field. unchecked_fields makes that gap visible instead of silent.
+    """
+    ticket = make_ticket()
+    checker = LeakageChecker()
+
+    annotated = annotate_ticket_leakage(ticket, checker)
+
+    assert annotated.leakage_check is not None
+    assert annotated.leakage_check.status is LeakageCheckStatus.CLEAN
+    assert annotated.leakage_check.issues == []
+    assert annotated.leakage_check.unchecked_fields == ["answer"]
 
 
 def test_exact_duplicate_link_becomes_informational_group() -> None:
@@ -282,6 +320,7 @@ def test_annotation_preserves_ticket_text_and_previous_metadata() -> None:
     assert annotated.leakage_check.grouping.identifiers == {
         "conversation_id": "CONV-123"
     }
+    assert annotated.leakage_check.unchecked_fields == []
 
 
 def test_canonical_ticket_fields_can_be_checked_as_targets() -> None:
@@ -293,7 +332,9 @@ def test_canonical_ticket_fields_can_be_checked_as_targets() -> None:
     annotated = annotate_ticket_leakage(ticket, checker)
 
     assert annotated.leakage_check is not None
-    assert annotated.leakage_check.issues[0].field == "priority"
+    assert annotated.leakage_check.status is LeakageCheckStatus.CLEAN
+    assert annotated.leakage_check.issues == []
+    assert annotated.leakage_check.targets.target_fields == ["priority"]
 
 
 def test_invalid_duplicate_metadata_fails_safely_and_logs_without_text(

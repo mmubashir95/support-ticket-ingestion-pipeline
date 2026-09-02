@@ -12,6 +12,7 @@ from ticket_pipeline.models import (
     LeakageGroupingMetadata,
     LeakageIssue,
     LeakageIssueType,
+    LeakageTargetMetadata,
     Ticket,
 )
 from ticket_pipeline.semantic_deduplication import SemanticDuplicateResult
@@ -102,30 +103,32 @@ class LeakageChecker:
         exact_duplicate: ExactDuplicateResult | None,
         semantic_duplicate: SemanticDuplicateResult | None,
     ) -> LeakageCheckMetadata:
-        issues: list[LeakageIssue] = []
-
-        issues.extend(
-            self._field_issues(
-                record_fields,
-                self.config.forbidden_fields,
-                LeakageIssueType.FUTURE_FIELD,
-            )
+        issues = self._field_issues(
+            record_fields,
+            self.config.forbidden_fields,
+            LeakageIssueType.FUTURE_FIELD,
         )
+
+        # A populated target/proxy field is the normal, expected shape of a
+        # labeled training record, not evidence that this record is invalid,
+        # so it is recorded as informational metadata rather than a warning.
+        checked_field_sets = [
+            self.config.forbidden_fields,
+            self.config.target_fields,
+            self.config.group_fields,
+        ]
+        target_proxy_fields_present: list[str] = []
         if self.config.target_fields:
-            issues.extend(
-                self._field_issues(
-                    record_fields,
-                    self.config.target_fields,
-                    LeakageIssueType.TARGET_FIELD,
-                )
+            target_proxy_fields_present = self._populated_fields(
+                record_fields, self.config.target_proxy_fields
             )
-            issues.extend(
-                self._field_issues(
-                    record_fields,
-                    self.config.target_proxy_fields,
-                    LeakageIssueType.TARGET_PROXY,
-                )
-            )
+            checked_field_sets.append(self.config.target_proxy_fields)
+        targets = LeakageTargetMetadata(
+            target_fields=self._populated_fields(
+                record_fields, self.config.target_fields
+            ),
+            target_proxy_fields=target_proxy_fields_present,
+        )
 
         grouping = LeakageGroupingMetadata(
             exact_duplicate_group_id=self._exact_group(exact_duplicate),
@@ -136,6 +139,10 @@ class LeakageChecker:
         )
         self._validate_duplicate_alignment(exact_duplicate, semantic_duplicate)
 
+        unchecked_fields = self._unchecked_fields(
+            record_fields, *checked_field_sets
+        )
+
         status = (
             LeakageCheckStatus.WARNING
             if issues
@@ -144,8 +151,22 @@ class LeakageChecker:
         return LeakageCheckMetadata(
             status=status,
             issues=issues,
+            targets=targets,
             grouping=grouping,
+            unchecked_fields=unchecked_fields,
         )
+
+    @staticmethod
+    def _populated_fields(
+        record_fields: Mapping[str, object],
+        configured_fields: Collection[str],
+    ) -> list[str]:
+        return [
+            field_name
+            for field_name in sorted(configured_fields)
+            if field_name in record_fields
+            and is_populated(record_fields[field_name])
+        ]
 
     @staticmethod
     def _field_issues(
@@ -155,10 +176,31 @@ class LeakageChecker:
     ) -> list[LeakageIssue]:
         return [
             LeakageIssue(type=issue_type, field=field_name)
-            for field_name in sorted(configured_fields)
-            if field_name in record_fields
-            and is_populated(record_fields[field_name])
+            for field_name in LeakageChecker._populated_fields(
+                record_fields, configured_fields
+            )
         ]
+
+    @staticmethod
+    def _unchecked_fields(
+        record_fields: Mapping[str, object],
+        *configured_field_sets: Collection[str],
+    ) -> list[str]:
+        """Report configured field names the checker never saw any value for.
+
+        A missing configured field is always treated as safe (never a
+        warning), but silently missing a field is different from having
+        confirmed it is genuinely empty: a caller that forgets to pass
+        ``source_fields`` to ``annotate_ticket_leakage`` cannot have any
+        source-only forbidden field (for example this project's default
+        ``answer``) show up here, which would otherwise be indistinguishable
+        from a record that was checked and found clean.
+        """
+
+        all_configured: set[str] = set()
+        for configured_fields in configured_field_sets:
+            all_configured.update(configured_fields)
+        return sorted(name for name in all_configured if name not in record_fields)
 
     def _group_identifiers(
         self,

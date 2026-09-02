@@ -295,13 +295,22 @@ dataset because `answer` is intentionally removed during canonical mapping,
 but must still be detectable as a source leakage risk. It never inspects
 ticket text semantically and never logs source values.
 
+**This mapping is optional, and that is a real limitation, not just a
+convenience.** `answer` only ever reaches the checker through it, so a caller
+that omits `source_fields` cannot have `answer` leakage detected at all — the
+checker has no way to warn about a field it was never given. Any future
+orchestration step (Step 14) must pass this mapping for the default forbidden
+policy to be meaningful. `unchecked_fields` (below) exists specifically so
+this omission is visible in the output rather than looking identical to a
+record that was checked and found clean.
+
 `LeakageConfig` contains configurable `forbidden_fields`, `target_fields`,
 `target_proxy_fields`, and `group_fields`. The only default forbidden field is
 `answer`, based directly on this dataset's post-ticket agent response column.
 No target, proxy, or grouping field is configured by default. Target and proxy
 checks are skipped when no target is configured; target names and proxies are
-never inferred automatically. Missing configured fields are safe and produce
-no finding.
+never inferred automatically. Missing configured fields are always safe and
+never produce a warning.
 
 The generated shape is:
 
@@ -309,24 +318,34 @@ The generated shape is:
 {
   "status": "warning",
   "issues": [
-    {"type": "future_field", "field": "answer"},
-    {"type": "target_field", "field": "priority"},
-    {"type": "target_proxy", "field": "assigned_team"}
+    {"type": "future_field", "field": "answer"}
   ],
+  "targets": {
+    "target_fields": ["priority"],
+    "target_proxy_fields": ["assigned_team"]
+  },
   "grouping": {
     "exact_duplicate_group_id": 0,
     "semantic_duplicate_group_id": null,
     "identifiers": {"conversation_id": "CONV-123"}
-  }
+  },
+  "unchecked_fields": []
 }
 ```
 
-Statuses are `clean`, `warning`, and `failed`. Forbidden, target, and proxy
-findings are warnings. Duplicate relationships and configured identifiers are
-informational because they are instructions for future split grouping rather
-than evidence that a record itself is invalid. Exact and semantic links come
-directly from Steps 8 and 9; Step 11 performs no hashing, embedding, similarity
-search, or duplicate recomputation.
+Statuses are `clean`, `warning`, and `failed`. Only forbidden-field findings
+are warnings: a populated post-outcome field is actionable evidence something
+is wrong with this record at the intended prediction time. A populated target
+or target-proxy field is **not** a warning and never affects status — a
+labeled training row is expected to contain its own label, and its presence
+is not evidence that the label leaked into a model's input features. Target
+and proxy findings are reported as informational `targets` metadata instead,
+naming which fields a future feature set built for that task must exclude.
+This mirrors, and is deliberately consistent with, how duplicate relationships
+and configured group identifiers are already treated: informational
+instructions for future split grouping, not evidence that a record itself is
+invalid. Exact and semantic links come directly from Steps 8 and 9; Step 11
+performs no hashing, embedding, similarity search, or duplicate recomputation.
 
 For field presence, `None`, empty/whitespace-only strings, and empty built-in
 containers are empty. `False` and numeric zero are populated because they may
@@ -334,6 +353,14 @@ encode real post-outcome decisions. Group identifiers must be populated
 scalar strings, integers, floats, or booleans. Customer/user identifiers can
 serve as group keys but should not become model features without explicit
 justification because they enable memorization.
+
+`unchecked_fields` lists every configured forbidden/target/proxy/group field
+name that was not present at all in the merged record (canonical ticket
+fields plus any supplied `source_fields`) — as opposed to present but empty.
+This distinguishes "this field was checked and is genuinely absent" from
+"this field was never available to check," which matters most for `answer`:
+if `source_fields` is omitted, `answer` always appears in `unchecked_fields`
+rather than silently contributing to a `clean` status.
 
 Leakage detection is policy-based and cannot prove a dataset is universally
 leakage-free. It cannot know an unspecified prediction point, discover target

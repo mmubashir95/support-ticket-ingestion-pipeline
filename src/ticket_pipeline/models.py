@@ -67,11 +67,15 @@ class LeakageCheckStatus(str, Enum):
 
 
 class LeakageIssueType(str, Enum):
-    """Configured feature risks reported by the leakage checker."""
+    """Configured feature risks reported by the leakage checker.
+
+    Only genuinely risky, actionable findings belong here. A target field
+    being present is not one of them: a labeled training row is expected to
+    contain its own label, so target/proxy presence is recorded separately as
+    informational ``LeakageTargetMetadata``, not as a warning-worthy issue.
+    """
 
     FUTURE_FIELD = "future_field"
-    TARGET_FIELD = "target_field"
-    TARGET_PROXY = "target_proxy"
 
 
 class LeakageIssue(BaseModel):
@@ -96,6 +100,22 @@ class LeakageGroupingMetadata(BaseModel):
     identifiers: dict[StrictStr, GroupIdentifierValue] = Field(default_factory=dict)
 
 
+class LeakageTargetMetadata(BaseModel):
+    """Configured target/proxy fields populated on this record.
+
+    This is informational, like ``LeakageGroupingMetadata``: a populated
+    target field is the normal, expected shape of a labeled training record,
+    not evidence that the record itself is invalid. It exists so whoever
+    builds the input-feature set for the named target task knows which
+    fields to exclude from it.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    target_fields: list[StrictStr] = Field(default_factory=list)
+    target_proxy_fields: list[StrictStr] = Field(default_factory=list)
+
+
 class LeakageCheckMetadata(BaseModel):
     """Structured leakage warnings and informational grouping metadata."""
 
@@ -103,9 +123,11 @@ class LeakageCheckMetadata(BaseModel):
 
     status: LeakageCheckStatus
     issues: list[LeakageIssue] = Field(default_factory=list)
+    targets: LeakageTargetMetadata = Field(default_factory=LeakageTargetMetadata)
     grouping: LeakageGroupingMetadata = Field(
         default_factory=LeakageGroupingMetadata
     )
+    unchecked_fields: list[StrictStr] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_status(self) -> "LeakageCheckMetadata":

@@ -98,20 +98,34 @@ so it is the only default forbidden field. Targets, proxies, and group fields
 default to empty because the project has not selected an ML task and its
 source schema has no conversation/customer identifier. The processed ticket
 does not retain `answer`; callers pass the original source/candidate feature
-mapping to the checker so excluded source fields can still be audited.
+mapping to the checker so excluded source fields can still be audited. Because
+`answer` is only ever visible through that optional mapping, a caller that
+omits it cannot have `answer` leakage detected — the checker cannot warn
+about a field it never received. Any future orchestration step **must** pass
+this mapping for the default policy to be meaningful; see `unchecked_fields`
+below for how this gap stays visible instead of looking identical to a
+genuinely clean record.
 
-Populated forbidden, target, and proxy fields produce warning issues. Group
-identifiers and the already-computed exact/semantic duplicate links are
-informational grouping metadata, not warnings. They prepare records for
-future safe train/validation/test splitting; Step 11 does not perform any
-splitting or recompute duplicates. Customer IDs should be used as grouping
-keys and excluded from model features unless their use is deliberately
-justified.
+Only populated forbidden fields produce warning issues. A populated target or
+target-proxy field is informational, not a warning: a labeled training row is
+expected to contain its own label, so target/proxy presence does not by
+itself mean that field leaked into a model's input features — it means a
+future feature set built for that target must exclude it. Target and proxy
+findings are reported separately under `targets`. Group identifiers and the
+already-computed exact/semantic duplicate links are likewise informational
+grouping metadata, not warnings. They prepare records for future safe
+train/validation/test splitting; Step 11 does not perform any splitting or
+recompute duplicates. Customer IDs should be used as grouping keys and
+excluded from model features unless their use is deliberately justified.
 
 `None`, blank strings, whitespace-only strings, and empty lists/dictionaries
 are considered empty. `False` and numeric zero are meaningful populated
-values. Missing configured fields are ignored safely. Checks never reject a
-ticket and do not modify its text or earlier processing metadata.
+values. Missing configured fields are always safe (never a warning), but a
+missing field is also listed in `unchecked_fields` so a record that was never
+given a chance to check a configured field (for example because
+`source_fields` was omitted) is distinguishable from one that was checked and
+found genuinely empty. Checks never reject a ticket and do not modify its
+text or earlier processing metadata.
 
 Leakage detection is policy-based and cannot prove a dataset is universally
 leakage-free. The intended prediction point, targets, and known proxies must

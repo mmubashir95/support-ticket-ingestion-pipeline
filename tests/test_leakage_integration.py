@@ -174,6 +174,15 @@ def test_current_pipeline_stages_feed_leakage_metadata_without_recomputation() -
     assert {
         issue.field for issue in first_leakage.issues
     } == {"answer", "closed_at", "resolution_text"}
+    # needs_escalation/escalation_result are configured as a target and its
+    # proxy but never appear in these source records: informational, not a
+    # warning, and surfaced as unchecked rather than silently absent.
+    assert first_leakage.targets.target_fields == []
+    assert first_leakage.targets.target_proxy_fields == []
+    assert first_leakage.unchecked_fields == [
+        "escalation_result",
+        "needs_escalation",
+    ]
     assert exact_leakage.grouping.exact_duplicate_group_id == 0
     assert semantic_leakage.grouping.semantic_duplicate_group_id == 0
     assert first_leakage.grouping.identifiers == {
