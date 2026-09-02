@@ -14,9 +14,38 @@ from ticket_pipeline.models import (
 
 
 DEFAULT_CONFIDENCE_THRESHOLD = 0.80
-DEFAULT_MIN_ALPHABETIC_CHARACTERS = 10
+DEFAULT_MIN_ALPHABETIC_CHARACTERS = 4
 _ISO_639_1_PATTERN = re.compile(r"^[a-z]{2}$")
 logger = logging.getLogger(__name__)
+
+# A curated set of languages plausible in a global support-ticket dataset.
+# Building the Lingua backend from all 75 supported languages spreads its
+# per-language probability mass thin and pushes native confidence down even
+# for unambiguous text; restricting to a realistic candidate set keeps
+# Lingua's own confidence values meaningful without narrowing detection to
+# only the languages already observed in the current dataset (en, de).
+_SUPPORTED_LANGUAGE_NAMES = (
+    "ENGLISH",
+    "GERMAN",
+    "SPANISH",
+    "FRENCH",
+    "ITALIAN",
+    "PORTUGUESE",
+    "DUTCH",
+    "POLISH",
+    "RUSSIAN",
+    "TURKISH",
+    "SWEDISH",
+    "ARABIC",
+    "HEBREW",
+    "HINDI",
+    "CHINESE",
+    "JAPANESE",
+    "KOREAN",
+    "VIETNAMESE",
+    "THAI",
+    "INDONESIAN",
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,37 +84,27 @@ class LanguageIdentifier(Protocol):
 
 
 class LinguaLanguageIdentifier:
-    """Adapter around ``lingua-language-detector`` using all known languages."""
+    """Adapter around ``lingua-language-detector`` using a curated language set."""
 
     def __init__(self) -> None:
-        from lingua import LanguageDetectorBuilder
+        from lingua import Language, LanguageDetectorBuilder
 
-        self._detector = LanguageDetectorBuilder.from_all_languages().build()
+        languages = [getattr(Language, name) for name in _SUPPORTED_LANGUAGE_NAMES]
+        self._detector = LanguageDetectorBuilder.from_languages(*languages).build()
 
     def predict(self, text: str) -> LanguagePrediction:
         confidence_values = self._detector.compute_language_confidence_values(text)
         if not confidence_values:
             raise ValueError("Lingua returned no confidence values")
 
+        # Lingua's own per-language probability, unmodified: the value it
+        # assigns to the leading candidate out of the curated language set,
+        # not a derived margin over the runner-up.
         best_match = confidence_values[0]
-        runner_up_value = (
-            float(confidence_values[1].value)
-            if len(confidence_values) > 1
-            else 0.0
-        )
-        best_value = float(best_match.value)
-        comparison_total = best_value + runner_up_value
-        if comparison_total <= 0.0:
-            raise ValueError("Lingua returned unusable confidence values")
-
-        # Lingua distributes confidence over every supported language. Comparing
-        # the two leading candidates produces a useful 0..1 operational score
-        # without narrowing the detector to a hand-picked language list.
-        confidence = best_value / comparison_total
         language_code = best_match.language.iso_code_639_1.name.lower()
         return LanguagePrediction(
             language=language_code,
-            confidence=confidence,
+            confidence=float(best_match.value),
         )
 
 

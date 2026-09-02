@@ -24,8 +24,10 @@ class IntegrationEmbeddingModel:
         convert_to_numpy: bool,
     ) -> np.ndarray:
         assert sentences == [
-            "Login problem\nI cannot log into my account. Email <EMAIL>",
-            "Problema de acceso\nNo puedo iniciar sesión en mi cuenta.",
+            "Login problem\nI am writing to report that I cannot log into my "
+            "account after the recent update. Email <EMAIL>",
+            "Problema de acceso\nEstoy escribiendo para informar que no puedo "
+            "iniciar sesión en mi cuenta después de la actualización reciente.",
         ]
         return np.asarray([[1.0, 0.0], [0.0, 1.0]], dtype=np.float32)
 
@@ -34,7 +36,10 @@ def test_ticket_flow_through_language_detection_preserves_cleaned_records() -> N
     source_records = [
         {
             "subject": "Login problem",
-            "body": "I cannot log into my account. Email user@example.com",
+            "body": (
+                "I am writing to report that I cannot log into my account "
+                "after the recent update. Email user@example.com"
+            ),
             "type": "Incident",
             "queue": "Technical Support",
             "priority": "high",
@@ -44,7 +49,10 @@ def test_ticket_flow_through_language_detection_preserves_cleaned_records() -> N
         },
         {
             "subject": "Problema de acceso",
-            "body": "No puedo iniciar sesión en mi cuenta.",
+            "body": (
+                "Estoy escribiendo para informar que no puedo iniciar sesión "
+                "en mi cuenta después de la actualización reciente."
+            ),
             "type": "Incident",
             "queue": "Technical Support",
             "priority": "high",

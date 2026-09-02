@@ -57,14 +57,17 @@ field:
 ```
 
 Language codes are lowercase ISO 639-1 values. The default confidence
-threshold is `0.80`. Lingua distributes its confidence over every supported
-language, so the adapter reports the leading candidate's share of the top two
-candidate scores. A score below the threshold produces `status="uncertain"`
-and `language=null`; the observed score is retained. Text with fewer than 10
-alphabetic characters bypasses the backend and is uncertain with no
-confidence. Both settings are configurable through `LanguageDetectionConfig`.
-Backend initialization or execution errors produce `status="failed"` and are
-logged without ticket text.
+threshold is `0.80`. The detector is built from a curated set of 20 languages
+plausible in a global support-ticket dataset, rather than Lingua's full
+75-language catalog; `confidence` is Lingua's own native per-language
+probability for the leading candidate against that set, used unmodified. This
+default threshold is a conservative, project-chosen starting point, not a
+value calibrated against labeled support-ticket data. A score below the
+threshold produces `status="uncertain"` and `language=null`; the observed
+score is retained. Text with fewer than 4 alphabetic characters bypasses the
+backend and is uncertain with no confidence. Both settings are configurable
+through `LanguageDetectionConfig`. Backend initialization or execution errors
+produce `status="failed"` and are logged without ticket text.
 
 A detected non-English language does not automatically cause ticket
 rejection. The current implementation deliberately does not translate,

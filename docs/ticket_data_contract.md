@@ -233,7 +233,9 @@ newline. Detection never uses the source language label, queue, type,
 priority, tags, source version, answer, or other unrelated metadata.
 
 The local `lingua-language-detector` backend is built once per reusable
-`LanguageDetector` service. It considers all Lingua languages and performs no
+`LanguageDetector` service, from a curated set of 20 languages plausible in a
+global support-ticket dataset (major European, Middle Eastern, and Asian
+languages), rather than Lingua's full 75-language catalog. It performs no
 network calls. The generated result is nested separately from the existing
 source-declared `Ticket.language` field:
 
@@ -246,18 +248,29 @@ source-declared `Ticket.language` field:
 ```
 
 The language is a lowercase ISO 639-1 code. Confidence is constrained to
-`0.0-1.0`, and status is one of `detected`, `uncertain`, or `failed`. Because
-Lingua's confidence is distributed across all supported languages, the
-reported operational confidence is the leading candidate's share of the top
-two candidate values. The default detection threshold is `0.80`; equality is
-accepted. Below-threshold results retain confidence but set language to null
-and status to `uncertain`.
+`0.0-1.0`, and status is one of `detected`, `uncertain`, or `failed`.
+`confidence` is Lingua's own native per-language probability for the leading
+candidate against the curated language set, used unmodified rather than a
+derived score. Restricting the candidate set (instead of using all 75
+languages) keeps this native probability meaningful: spread across the full
+catalog, Lingua's own confidence drops even for unambiguous text because
+probability mass is diluted across many implausible candidates. The default
+detection threshold is `0.80`; equality is accepted. This default is a
+conservative, project-chosen starting point and, like the semantic-duplicate
+cosine threshold above, has **not** been empirically calibrated against
+labeled support-ticket language data. Below-threshold results retain
+confidence but set language to null and status to `uncertain`.
 
-Text containing fewer than 10 alphabetic Unicode characters is also
-`uncertain`, without invoking Lingua. This protects inputs such as `OK`, and
-both the threshold and minimum are configurable. Empty, whitespace-only, and
-`None` inputs are handled defensively the same way. Backend failures return
-`failed` metadata and are logged without raw ticket content.
+Text containing fewer than 4 alphabetic Unicode characters is also
+`uncertain`, without invoking Lingua. This protects inputs such as `OK` while
+avoiding a bias against information-dense scripts: unlike Latin-script
+sentences, a handful of CJK or Arabic characters can already carry enough
+signal for Lingua to identify the language unambiguously, so the minimum is
+kept low and the confidence threshold — which is script-agnostic — is relied
+on to filter genuinely ambiguous short text. Both the threshold and minimum
+are configurable. Empty, whitespace-only, and `None` inputs are handled
+defensively the same way. Backend failures return `failed` metadata and are
+logged without raw ticket content.
 
 A detected non-English language does not automatically cause ticket
 rejection. Language support and ticket acceptance remain separate concerns.
