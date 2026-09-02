@@ -97,6 +97,7 @@ Metadata fields such as `ticket_type`, `queue`, `priority`, and `tags` can still
 | `language` | `language` | `str` | Yes | No | METADATA | Language code; kept flexible because future datasets may include more languages. |
 | `source_version` | `version` | `int` | Yes | No | METADATA | Source dataset marker; no blanks found. `int` (not a strict int type) intentionally accepts simple numeric strings like `"51"`, since CSV/JSON source values arrive as text; non-numeric strings like `"abc"` still fail. Covered by `tests/test_validation.py`. |
 | `tags` | `tag_1` through `tag_8` | `list[str]` | No | No | METADATA | Topic labels represented as a list; absent tags should be omitted rather than stored as `None`. |
+| `language_detection` | Generated | `LanguageDetectionMetadata \| None` | No | Yes | GENERATED_METADATA | Result added after cleaning and deduplication; absent before that stage. |
 
 **Note:** tag aggregation is implemented in `src/ticket_pipeline/loaders.py` (`_collect_tags`, used by `map_source_record`) and covered by `tests/test_loaders.py`. Column order is preserved (`tag_1` first, `tag_8` last), blank/null/`"nan"` values are omitted, and duplicate tag values across positions are preserved as-is rather than deduplicated — 13 records in `tickets_original.csv` contain a genuine duplicate tag, and the loader keeps both occurrences.
 
@@ -223,8 +224,49 @@ compatible wheel for this project's Python 3.13 macOS x86_64 environment, so
 real model inference here requires a supported Python/PyTorch platform (for
 example Python 3.12) while the model-independent search remains testable.
 
+## Language Detection
+
+`src/ticket_pipeline/language.py` runs after semantic duplicate candidate
+detection and analyzes only the normalized, PII-masked customer subject and
+message. When a subject exists, the stage joins it to the message with one
+newline. Detection never uses the source language label, queue, type,
+priority, tags, source version, answer, or other unrelated metadata.
+
+The local `lingua-language-detector` backend is built once per reusable
+`LanguageDetector` service. It considers all Lingua languages and performs no
+network calls. The generated result is nested separately from the existing
+source-declared `Ticket.language` field:
+
+```json
+{
+  "language": "en",
+  "confidence": 0.87,
+  "status": "detected"
+}
+```
+
+The language is a lowercase ISO 639-1 code. Confidence is constrained to
+`0.0-1.0`, and status is one of `detected`, `uncertain`, or `failed`. Because
+Lingua's confidence is distributed across all supported languages, the
+reported operational confidence is the leading candidate's share of the top
+two candidate values. The default detection threshold is `0.80`; equality is
+accepted. Below-threshold results retain confidence but set language to null
+and status to `uncertain`.
+
+Text containing fewer than 10 alphabetic Unicode characters is also
+`uncertain`, without invoking Lingua. This protects inputs such as `OK`, and
+both the threshold and minimum are configurable. Empty, whitespace-only, and
+`None` inputs are handled defensively the same way. Backend failures return
+`failed` metadata and are logged without raw ticket content.
+
+A detected non-English language does not automatically cause ticket
+rejection. Language support and ticket acceptance remain separate concerns.
+The detector is ticket-level only; dedicated mixed-language handling,
+translation, and language-based routing are intentionally deferred. Very
+short text, Roman Urdu, mixed/code-switched text, and closely related
+languages remain known limitations.
+
 The following processing remains intentionally deferred to later implementation phases:
 
 - broader PII detection such as names and postal addresses
-- language detection
 - accepted/rejected output generation
