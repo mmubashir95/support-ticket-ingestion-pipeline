@@ -8,7 +8,16 @@ handled by later pipeline phases.
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StrictStr, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    StrictBool,
+    StrictFloat,
+    StrictInt,
+    StrictStr,
+    model_validator,
+)
 
 
 Priority = Literal["low", "medium", "high"]
@@ -49,6 +58,66 @@ class LanguageDetectionMetadata(BaseModel):
         return self
 
 
+class LeakageCheckStatus(str, Enum):
+    """Outcome of policy-based leakage inspection."""
+
+    CLEAN = "clean"
+    WARNING = "warning"
+    FAILED = "failed"
+
+
+class LeakageIssueType(str, Enum):
+    """Configured feature risks reported by the leakage checker."""
+
+    FUTURE_FIELD = "future_field"
+    TARGET_FIELD = "target_field"
+    TARGET_PROXY = "target_proxy"
+
+
+class LeakageIssue(BaseModel):
+    """One populated field that violates the configured feature policy."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    type: LeakageIssueType
+    field: StrictStr
+
+
+GroupIdentifierValue = StrictStr | StrictInt | StrictFloat | StrictBool
+
+
+class LeakageGroupingMetadata(BaseModel):
+    """Information that future dataset splitting must keep together."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    exact_duplicate_group_id: int | None = Field(default=None, ge=0)
+    semantic_duplicate_group_id: int | None = Field(default=None, ge=0)
+    identifiers: dict[StrictStr, GroupIdentifierValue] = Field(default_factory=dict)
+
+
+class LeakageCheckMetadata(BaseModel):
+    """Structured leakage warnings and informational grouping metadata."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    status: LeakageCheckStatus
+    issues: list[LeakageIssue] = Field(default_factory=list)
+    grouping: LeakageGroupingMetadata = Field(
+        default_factory=LeakageGroupingMetadata
+    )
+
+    @model_validator(mode="after")
+    def validate_status(self) -> "LeakageCheckMetadata":
+        """Require warning status exactly when policy issues are present."""
+
+        if self.status is LeakageCheckStatus.WARNING and not self.issues:
+            raise ValueError("warning status requires at least one issue")
+        if self.status is not LeakageCheckStatus.WARNING and self.issues:
+            raise ValueError("leakage issues require warning status")
+        return self
+
+
 class Ticket(BaseModel):
     """Canonical representation of one support ticket."""
 
@@ -63,3 +132,4 @@ class Ticket(BaseModel):
     source_version: int
     tags: list[StrictStr] = Field(default_factory=list)
     language_detection: LanguageDetectionMetadata | None = None
+    leakage_check: LeakageCheckMetadata | None = None

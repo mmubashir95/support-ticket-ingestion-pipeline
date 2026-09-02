@@ -98,6 +98,7 @@ Metadata fields such as `ticket_type`, `queue`, `priority`, and `tags` can still
 | `source_version` | `version` | `int` | Yes | No | METADATA | Source dataset marker; no blanks found. `int` (not a strict int type) intentionally accepts simple numeric strings like `"51"`, since CSV/JSON source values arrive as text; non-numeric strings like `"abc"` still fail. Covered by `tests/test_validation.py`. |
 | `tags` | `tag_1` through `tag_8` | `list[str]` | No | No | METADATA | Topic labels represented as a list; absent tags should be omitted rather than stored as `None`. |
 | `language_detection` | Generated | `LanguageDetectionMetadata \| None` | No | Yes | GENERATED_METADATA | Result added after cleaning and deduplication; absent before that stage. |
+| `leakage_check` | Generated | `LeakageCheckMetadata \| None` | No | Yes | GENERATED_METADATA | Policy warnings and future split-group information; absent before Step 11. |
 
 **Note:** tag aggregation is implemented in `src/ticket_pipeline/loaders.py` (`_collect_tags`, used by `map_source_record`) and covered by `tests/test_loaders.py`. Column order is preserved (`tag_1` first, `tag_8` last), blank/null/`"nan"` values are omitted, and duplicate tag values across positions are preserved as-is rather than deduplicated — 13 records in `tickets_original.csv` contain a genuine duplicate tag, and the loader keeps both occurrences.
 
@@ -278,6 +279,67 @@ The detector is ticket-level only; dedicated mixed-language handling,
 translation, and language-based routing are intentionally deferred. Very
 short text, Roman Urdu, mixed/code-switched text, and closely related
 languages remain known limitations.
+
+## Leakage Checks
+
+`src/ticket_pipeline/leakage.py` runs after language detection and adds
+diagnostic metadata without rejecting or modifying a ticket. The governing
+prediction-time policy is:
+
+> A field is safe for a future model only if it would realistically be
+> available at the intended prediction time.
+
+The checker receives both the processed ticket fields and, when available, an
+explicit source/candidate-feature mapping. This is necessary for the current
+dataset because `answer` is intentionally removed during canonical mapping,
+but must still be detectable as a source leakage risk. It never inspects
+ticket text semantically and never logs source values.
+
+`LeakageConfig` contains configurable `forbidden_fields`, `target_fields`,
+`target_proxy_fields`, and `group_fields`. The only default forbidden field is
+`answer`, based directly on this dataset's post-ticket agent response column.
+No target, proxy, or grouping field is configured by default. Target and proxy
+checks are skipped when no target is configured; target names and proxies are
+never inferred automatically. Missing configured fields are safe and produce
+no finding.
+
+The generated shape is:
+
+```json
+{
+  "status": "warning",
+  "issues": [
+    {"type": "future_field", "field": "answer"},
+    {"type": "target_field", "field": "priority"},
+    {"type": "target_proxy", "field": "assigned_team"}
+  ],
+  "grouping": {
+    "exact_duplicate_group_id": 0,
+    "semantic_duplicate_group_id": null,
+    "identifiers": {"conversation_id": "CONV-123"}
+  }
+}
+```
+
+Statuses are `clean`, `warning`, and `failed`. Forbidden, target, and proxy
+findings are warnings. Duplicate relationships and configured identifiers are
+informational because they are instructions for future split grouping rather
+than evidence that a record itself is invalid. Exact and semantic links come
+directly from Steps 8 and 9; Step 11 performs no hashing, embedding, similarity
+search, or duplicate recomputation.
+
+For field presence, `None`, empty/whitespace-only strings, and empty built-in
+containers are empty. `False` and numeric zero are populated because they may
+encode real post-outcome decisions. Group identifiers must be populated
+scalar strings, integers, floats, or booleans. Customer/user identifiers can
+serve as group keys but should not become model features without explicit
+justification because they enable memorization.
+
+Leakage detection is policy-based and cannot prove a dataset is universally
+leakage-free. It cannot know an unspecified prediction point, discover target
+proxies automatically, infer causal timing, or detect arbitrary semantic
+leakage. Duplicate and group metadata are prepared for future safe
+train/validation/test splitting; splitting itself is not performed in Step 11.
 
 The following processing remains intentionally deferred to later implementation phases:
 

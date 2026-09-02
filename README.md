@@ -25,7 +25,7 @@ python -m pip install -e '.[semantic]'
 ```text
 CSV/JSON mapping -> schema validation -> message usability validation
 -> normalization -> PII masking -> exact deduplication
--> semantic duplicate candidates -> language detection
+-> semantic duplicate candidates -> language detection -> leakage checks
 ```
 
 Each stage is currently exposed as an isolated, testable module. Accepted and
@@ -77,6 +77,46 @@ Known language-identification limitations include very short messages, Roman
 Urdu, code-switched or mixed-language tickets, and closely related languages.
 Detection is ticket-level only; dedicated mixed-language detection is outside
 the current scope.
+
+## Leakage checks
+
+`src/ticket_pipeline/leakage.py` performs inexpensive, policy-based checks
+after language detection. Its core rule is that a future model may use a field
+only when that field would realistically exist at the intended prediction
+time.
+
+`LeakageConfig` provides four explicit field sets:
+
+- `forbidden_fields` for post-outcome or future information;
+- `target_fields` for fields a future task intends to predict;
+- `target_proxy_fields` for known direct proxies of configured targets;
+- `group_fields` for conversation, thread, case, or customer identifiers that
+  should stay together during future dataset splitting.
+
+The current dataset's `answer` column contains a post-ticket agent response,
+so it is the only default forbidden field. Targets, proxies, and group fields
+default to empty because the project has not selected an ML task and its
+source schema has no conversation/customer identifier. The processed ticket
+does not retain `answer`; callers pass the original source/candidate feature
+mapping to the checker so excluded source fields can still be audited.
+
+Populated forbidden, target, and proxy fields produce warning issues. Group
+identifiers and the already-computed exact/semantic duplicate links are
+informational grouping metadata, not warnings. They prepare records for
+future safe train/validation/test splitting; Step 11 does not perform any
+splitting or recompute duplicates. Customer IDs should be used as grouping
+keys and excluded from model features unless their use is deliberately
+justified.
+
+`None`, blank strings, whitespace-only strings, and empty lists/dictionaries
+are considered empty. `False` and numeric zero are meaningful populated
+values. Missing configured fields are ignored safely. Checks never reject a
+ticket and do not modify its text or earlier processing metadata.
+
+Leakage detection is policy-based and cannot prove a dataset is universally
+leakage-free. The intended prediction point, targets, and known proxies must
+be supplied by the future modeling task; automatic target/proxy discovery and
+temporal or grouped splitting are outside this stage.
 
 ## Data source
 
