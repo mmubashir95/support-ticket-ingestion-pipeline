@@ -26,6 +26,7 @@ python -m pip install -e '.[semantic]'
 CSV/JSON mapping -> schema validation -> message usability validation
 -> normalization -> PII masking -> exact deduplication
 -> semantic duplicate candidates -> language detection -> leakage checks
+-> dataset manifest/version
 ```
 
 Each stage is currently exposed as an isolated, testable module. Accepted and
@@ -131,6 +132,45 @@ Leakage detection is policy-based and cannot prove a dataset is universally
 leakage-free. The intended prediction point, targets, and known proxies must
 be supplied by the future modeling task; automatic target/proxy discovery and
 temporal or grouped splitting are outside this stage.
+
+## Dataset versioning
+
+`src/ticket_pipeline/versioning.py` creates a typed, local dataset manifest.
+The primary identifier is content-addressed rather than timestamp-based:
+
+```text
+ds_<first 12 hex characters of identity SHA-256>
+```
+
+The identity incorporates the combined source fingerprint, processing-config
+fingerprint, ordered-output fingerprint, and package pipeline version from
+`pyproject.toml`. `created_at` is retained for auditability but deliberately
+excluded from identity, so rebuilding identical content with identical
+settings produces the same dataset version.
+
+Source files are hashed from their exact bytes. Manifests retain only stable
+file names, hashes, and byte sizes—not absolute paths, modification times, or
+user/machine information. Multiple source files are sorted by file name, so
+argument order does not change the combined input fingerprint. Duplicate file
+names are rejected because they would be ambiguous.
+
+Processed records are canonically serialized and hashed in ingestion order.
+The current ticket contract has no stable unique record identifier, so output
+fingerprints are intentionally order-sensitive. Dictionary keys and sets are
+canonicalized deterministically; strings use Unicode NFC; aware datetimes are
+normalized to UTC; arbitrary objects, non-finite floats, and naive datetimes
+are rejected instead of being serialized with unstable `repr()` output.
+
+The configuration snapshot contains the existing semantic-deduplication,
+language-detection, and leakage settings. Fixed normalization, PII, and exact
+deduplication behavior has no independent configuration today and is tracked
+through the pipeline package version. When semantic deduplication is disabled,
+irrelevant semantic thresholds/model settings do not affect identity.
+
+The manifest currently records only input and processed counts. Accepted and
+rejected counts are not fabricated before those outputs exist. Helpers are
+provided to write/load a JSON manifest and compare whether input,
+configuration, output, pipeline version, or counts changed.
 
 ## Data source
 

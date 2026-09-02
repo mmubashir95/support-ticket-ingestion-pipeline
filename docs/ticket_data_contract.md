@@ -368,6 +368,101 @@ proxies automatically, infer causal timing, or detect arbitrary semantic
 leakage. Duplicate and group metadata are prepared for future safe
 train/validation/test splitting; splitting itself is not performed in Step 11.
 
+## Dataset Versioning
+
+Step 12 produces a dataset-level `DatasetManifest`; it is not copied onto
+every `Ticket`. This keeps source/build provenance separate from record-level
+generated metadata such as language and leakage results.
+
+The manifest contract is:
+
+```json
+{
+  "dataset_version": "ds_a91c74f22d3b",
+  "created_at": "2026-09-02T11:30:00Z",
+  "pipeline_version": "0.1.0",
+  "source": {
+    "files": [
+      {
+        "name": "tickets_raw.csv",
+        "sha256": "<64 lowercase hex characters>",
+        "size_bytes": 12345
+      }
+    ]
+  },
+  "counts": {
+    "input": 10000,
+    "processed": 9500
+  },
+  "processing_config": {
+    "semantic_deduplication": {
+      "model_name": "sentence-transformers/all-MiniLM-L6-v2",
+      "threshold": 0.85,
+      "top_k": 5,
+      "batch_size": 32
+    },
+    "language_detection": {
+      "backend": "lingua-language-detector",
+      "confidence_threshold": 0.8,
+      "min_alphabetic_characters": 4,
+      "supported_languages": ["ENGLISH", "GERMAN", "SPANISH"]
+    },
+    "leakage": {
+      "forbidden_fields": ["answer"],
+      "target_fields": [],
+      "target_proxy_fields": [],
+      "group_fields": []
+    }
+  },
+  "fingerprints": {
+    "input": "<SHA-256>",
+    "config": "<SHA-256>",
+    "output": "<SHA-256>"
+  }
+}
+```
+
+The actual supported-language list contains all configured languages; the
+example is shortened for readability. Accepted/rejected counts are omitted
+until Step 15 can produce them reliably.
+
+### Identity and hashing policy
+
+All fingerprints use SHA-256. Canonical structured serialization sorts
+dictionary keys, uses compact JSON separators, preserves list order, sorts
+set/frozenset content by canonical value, normalizes strings to Unicode NFC,
+serializes enums by value, and converts timezone-aware datetimes to UTC.
+Naive datetimes, non-finite floats, non-string dictionary keys, and arbitrary
+objects fail clearly.
+
+The input fingerprint hashes the canonical, name-sorted list of source file
+manifests. Each individual source hash covers exact file bytes, so source row
+order and byte-level formatting are significant. Absolute paths, mtimes,
+inodes, and usernames never enter identity. Stable source names are part of
+identity, and duplicate names are rejected.
+
+The output fingerprint hashes canonical processed records in ingestion order
+with length-prefixed framing. Output is intentionally order-sensitive because
+the current source has no stable unique ticket ID; records are not silently
+sorted by non-unique content fields.
+
+The configuration fingerprint covers settings that currently exist:
+semantic-deduplication enablement/model/threshold/retrieval/batch settings,
+language threshold/minimum/candidate set, and leakage field sets. Fixed
+normalization, PII, and exact-deduplication policies currently have no runtime
+configuration and are represented by the package `pipeline_version`.
+
+The dataset identity hashes the three fingerprints plus `pipeline_version`
+and uses the first 12 hexadecimal characters with a `ds_` prefix. `created_at`
+does not affect identity. Consequently, identical content/configuration/code
+versions rebuilt at different times receive the same dataset version, while a
+material input, configuration, output, or pipeline-version change receives a
+different identity. Manifest comparison reports each dimension separately.
+
+The package version is the project's code-version marker and must be bumped
+when releasing materially changed processing behavior. Step 12 does not add a
+registry, remote artifact store, dataset retention policy, or orchestration.
+
 The following processing remains intentionally deferred to later implementation phases:
 
 - broader PII detection such as names and postal addresses

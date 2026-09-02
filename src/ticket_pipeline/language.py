@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 # for unambiguous text; restricting to a realistic candidate set keeps
 # Lingua's own confidence values meaningful without narrowing detection to
 # only the languages already observed in the current dataset (en, de).
-_SUPPORTED_LANGUAGE_NAMES = (
+SUPPORTED_LANGUAGE_NAMES = (
     "ENGLISH",
     "GERMAN",
     "SPANISH",
@@ -89,7 +89,7 @@ class LinguaLanguageIdentifier:
     def __init__(self) -> None:
         from lingua import Language, LanguageDetectorBuilder
 
-        languages = [getattr(Language, name) for name in _SUPPORTED_LANGUAGE_NAMES]
+        languages = [getattr(Language, name) for name in SUPPORTED_LANGUAGE_NAMES]
         self._detector = LanguageDetectorBuilder.from_languages(*languages).build()
 
     def predict(self, text: str) -> LanguagePrediction:

@@ -5,6 +5,8 @@ empty-message detection, HTML cleanup, PII masking, and duplicate detection are
 handled by later pipeline phases.
 """
 
+import unicodedata
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Literal
 
@@ -16,6 +18,7 @@ from pydantic import (
     StrictFloat,
     StrictInt,
     StrictStr,
+    field_validator,
     model_validator,
 )
 
@@ -155,3 +158,143 @@ class Ticket(BaseModel):
     tags: list[StrictStr] = Field(default_factory=list)
     language_detection: LanguageDetectionMetadata | None = None
     leakage_check: LeakageCheckMetadata | None = None
+
+
+class SourceFileManifest(BaseModel):
+    """Stable identity for one file used to build a dataset."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: StrictStr = Field(min_length=1)
+    sha256: StrictStr = Field(pattern=r"^[a-f0-9]{64}$")
+    size_bytes: int = Field(ge=0)
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, value: str) -> str:
+        normalized = unicodedata.normalize("NFC", value)
+        if not normalized.strip() or "/" in normalized or "\\" in normalized:
+            raise ValueError("source name must be a non-blank file name")
+        return normalized
+
+
+class DatasetSourceManifest(BaseModel):
+    """Deterministically ordered source-file identities."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    files: list[SourceFileManifest] = Field(min_length=1)
+
+    @field_validator("files")
+    @classmethod
+    def sort_and_validate_files(
+        cls,
+        files: list[SourceFileManifest],
+    ) -> list[SourceFileManifest]:
+        ordered = sorted(files, key=lambda item: item.name)
+        names = [item.name for item in ordered]
+        if len(names) != len(set(names)):
+            raise ValueError("source file names must be unique")
+        return ordered
+
+
+class DatasetRecordCounts(BaseModel):
+    """Counts available before accepted/rejected outputs are implemented."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    input: int = Field(ge=0)
+    processed: int = Field(ge=0)
+
+    @model_validator(mode="after")
+    def validate_counts(self) -> "DatasetRecordCounts":
+        if self.processed > self.input:
+            raise ValueError("processed count cannot exceed input count")
+        return self
+
+
+class DatasetFingerprints(BaseModel):
+    """SHA-256 identities for dataset inputs, configuration, and output."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    input: StrictStr = Field(pattern=r"^[a-f0-9]{64}$")
+    config: StrictStr = Field(pattern=r"^[a-f0-9]{64}$")
+    output: StrictStr = Field(pattern=r"^[a-f0-9]{64}$")
+
+
+class SemanticDeduplicationConfigSnapshot(BaseModel):
+    """Material semantic-deduplication settings for one dataset build."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    model_name: StrictStr = Field(min_length=1)
+    threshold: float = Field(ge=-1.0, le=1.0)
+    top_k: int = Field(ge=1)
+    batch_size: int = Field(ge=1)
+
+
+class LanguageDetectionConfigSnapshot(BaseModel):
+    """Material language-detection settings for one dataset build."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    backend: Literal["lingua-language-detector"]
+    confidence_threshold: float = Field(ge=0.0, le=1.0)
+    min_alphabetic_characters: int = Field(ge=1)
+    supported_languages: list[StrictStr] = Field(min_length=1)
+
+
+class LeakageConfigSnapshot(BaseModel):
+    """Deterministically ordered leakage policy for one dataset build."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    forbidden_fields: list[StrictStr] = Field(default_factory=list)
+    target_fields: list[StrictStr] = Field(default_factory=list)
+    target_proxy_fields: list[StrictStr] = Field(default_factory=list)
+    group_fields: list[StrictStr] = Field(default_factory=list)
+
+
+class ProcessingConfigSnapshot(BaseModel):
+    """Existing configurable settings that materially affect processing."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    semantic_deduplication: SemanticDeduplicationConfigSnapshot | None
+    language_detection: LanguageDetectionConfigSnapshot
+    leakage: LeakageConfigSnapshot
+
+
+class DatasetManifest(BaseModel):
+    """Content-addressed provenance for one processed dataset build."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    dataset_version: StrictStr = Field(pattern=r"^ds_[a-f0-9]{12}$")
+    created_at: datetime
+    pipeline_version: StrictStr = Field(min_length=1)
+    source: DatasetSourceManifest
+    counts: DatasetRecordCounts
+    processing_config: ProcessingConfigSnapshot
+    fingerprints: DatasetFingerprints
+
+    @field_validator("created_at")
+    @classmethod
+    def normalize_created_at(cls, value: datetime) -> datetime:
+        if value.tzinfo is None or value.utcoffset() is None:
+            raise ValueError("created_at must include a timezone")
+        return value.astimezone(timezone.utc)
+
+
+class DatasetManifestComparison(BaseModel):
+    """Material differences between two dataset manifests."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    same_dataset_version: bool
+    input_changed: bool
+    config_changed: bool
+    output_changed: bool
+    pipeline_version_changed: bool
+    counts_changed: bool
