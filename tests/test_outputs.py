@@ -327,17 +327,32 @@ def test_deterministic_writes_produce_identical_contents(tmp_path) -> None:
     assert first_contents == second_contents
 
 
-def test_privacy_safe_rejected_serialization_omits_raw_text_and_error_input() -> None:
+def test_privacy_safe_rejected_serialization_omits_raw_values_and_error_input() -> None:
     rejected = rejected_record(reason=SCHEMA_VALIDATION_FAILED)
 
     serialized = serialize_rejected_record(rejected)
     serialized_text = json.dumps(serialized, sort_keys=True)
 
-    assert "subject" not in serialized["canonical_record"]
-    assert "message" not in serialized["canonical_record"]
-    assert "jane@example.com" not in serialized_text
-    assert "+1 555 123 4567" not in serialized_text
-    assert "raw-secret@example.com" not in serialized_text
+    assert "canonical_record" not in serialized
+    assert serialized["present_canonical_fields"] == [
+        "language",
+        "message",
+        "priority",
+        "queue",
+        "source_version",
+        "subject",
+        "tags",
+        "ticket_type",
+    ]
+    # No raw value from any canonical field or Pydantic error reaches disk.
+    for secret in (
+        "jane@example.com",
+        "+1 555 123 4567",
+        "raw-secret@example.com",
+        "Technical Support",
+        "login",
+    ):
+        assert secret not in serialized_text
     assert serialized["failure"] == {
         "reason": SCHEMA_VALIDATION_FAILED,
         "errors": [
@@ -348,6 +363,87 @@ def test_privacy_safe_rejected_serialization_omits_raw_text_and_error_input() ->
             }
         ],
     }
+
+
+def test_rejected_output_persists_no_raw_canonical_values(tmp_path) -> None:
+    rejected = [
+        RejectedRecord(
+            record_index=0,
+            canonical_record={
+                "subject": "Reset for john.doe@corp.com",
+                "message": "card 4111 1111 1111 1111 was charged",
+                "ticket_type": "Incident",
+                "queue": "escalate to alice@corp.com",
+                "priority": "critical-not-valid",
+                "language": "en",
+                "source_version": "v-4111111111111111",
+                "tags": ["ssn 123-45-6789"],
+            },
+            failure={  # type: ignore[arg-type]
+                "reason": SCHEMA_VALIDATION_FAILED,
+                "errors": [
+                    {
+                        "loc": ("priority",),
+                        "msg": "Input should be 'low', 'medium' or 'high'",
+                        "type": "literal_error",
+                        "input": "critical-not-valid",
+                        "ctx": {"expected": "'low', 'medium' or 'high'"},
+                    }
+                ],
+            },
+        )
+    ]
+    result = result_with(rejected=rejected)
+
+    artifacts = write_pipeline_outputs(result, tmp_path)
+    raw = artifacts.rejected_path.read_text(encoding="utf-8")
+
+    for secret in (
+        "john.doe@corp.com",
+        "alice@corp.com",
+        "4111",
+        "123-45-6789",
+        "critical-not-valid",
+        "v-4111111111111111",
+        "Incident",
+        "escalate",
+    ):
+        assert secret not in raw
+
+    row = read_jsonl(artifacts.rejected_path)[0]
+    assert "canonical_record" not in row
+    assert row["present_canonical_fields"] == [
+        "language",
+        "message",
+        "priority",
+        "queue",
+        "source_version",
+        "subject",
+        "tags",
+        "ticket_type",
+    ]
+    assert row["failure"]["errors"][0] == {
+        "loc": ["priority"],
+        "msg": "Input should be 'low', 'medium' or 'high'",
+        "type": "literal_error",
+    }
+
+
+def test_atomic_write_failure_cleans_up_temp_file_and_raises(
+    tmp_path, monkeypatch
+) -> None:
+    import ticket_pipeline.outputs as outputs_module
+
+    def failing_fsync(fd: int) -> None:
+        raise OSError("simulated fsync failure")
+
+    monkeypatch.setattr(outputs_module.os, "fsync", failing_fsync)
+
+    with pytest.raises(OutputPersistenceError) as error:
+        write_pipeline_outputs(result_with(accepted=[ticket()]), tmp_path)
+
+    assert isinstance(error.value.__cause__, OSError)
+    assert sorted(p.name for p in tmp_path.iterdir()) == []
 
 
 def test_original_pipeline_result_is_not_mutated_by_persistence(tmp_path) -> None:

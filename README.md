@@ -372,12 +372,14 @@ language-annotated, leakage-annotated records returned by
 `PipelineResult.accepted_records`.
 
 `rejected.jsonl` contains one privacy-filtered rejected record per line. Each
-object preserves the source `record_index`, non-text canonical context, and
-sanitized validation failure metadata. Because rejected records may fail before
-PII masking, raw source records are never written, and canonical `subject` and
-`message` are deliberately omitted from the rejected artifact. Pydantic error
-metadata is filtered to diagnostic fields such as `loc`, `msg`, `type`, and
-`url`; raw `input` values are not persisted.
+object holds the source `record_index`, a sorted `present_canonical_fields`
+list naming the canonical fields that carried a value, and sanitized validation
+failure metadata. Because rejected records may fail before PII masking, no raw
+field value from the source or the canonical mapping is written -- only field
+names. Pydantic error metadata is filtered to diagnostic fields (`loc`, `msg`,
+`type`, `url`); raw `input` and `ctx` values are not persisted. To inspect the
+original values of a rejected row, use its `record_index` against the source
+file.
 
 `dataset_manifest.json` is the exact Step 12 manifest object from
 `PipelineResult.dataset_manifest`. `data_quality_report.json` is the exact

@@ -11,13 +11,13 @@ from typing import Any
 from ticket_pipeline.data_quality import data_quality_report_to_json
 from ticket_pipeline.models import Ticket
 from ticket_pipeline.pipeline import PipelineResult, RejectedRecord
+from ticket_pipeline.versioning import dataset_manifest_to_json
 
 
 ACCEPTED_RECORDS_FILENAME = "accepted.jsonl"
 REJECTED_RECORDS_FILENAME = "rejected.jsonl"
 DATASET_MANIFEST_FILENAME = "dataset_manifest.json"
 DATA_QUALITY_REPORT_FILENAME = "data_quality_report.json"
-_REJECTED_TEXT_FIELDS = frozenset({"subject", "message"})
 _FAILURE_ERROR_FIELDS = frozenset({"loc", "msg", "type", "url"})
 
 
@@ -62,8 +62,8 @@ def write_pipeline_outputs(
             artifacts.rejected_path: serialize_rejected_records(
                 result.rejected_records
             ),
-            artifacts.manifest_path: _serialize_json_document(
-                result.dataset_manifest.model_dump(mode="json")
+            artifacts.manifest_path: (
+                f"{dataset_manifest_to_json(result.dataset_manifest)}\n"
             ),
             artifacts.report_path: (
                 f"{data_quality_report_to_json(result.data_quality_report)}\n"
@@ -100,27 +100,41 @@ def serialize_rejected_records(records: Sequence[RejectedRecord]) -> str:
 
 
 def serialize_rejected_record(record: RejectedRecord) -> dict[str, object]:
-    """Return a safe rejected-record representation for disk output.
+    """Return a privacy-safe rejected-record representation for disk output.
 
-    Rejected records may not have reached PII masking, so raw text fields and
-    raw source payloads are intentionally omitted. The persisted record keeps
-    source index, non-text canonical context, and sanitized validation failure
-    metadata.
+    Rejected records may fail before ever reaching PII masking, so no raw
+    field value from the source or the canonical mapping is persisted -- only
+    the names of the canonical fields that carried a value. ``record_index``
+    plus sanitized ``failure`` metadata (diagnostic keys only, never Pydantic
+    ``input``/``ctx``) locate and explain the rejection; the original values
+    remain in the source file.
     """
 
     return {
         "record_index": record.record_index,
-        "canonical_record": _safe_canonical_record(record.canonical_record),
+        "present_canonical_fields": _present_canonical_fields(
+            record.canonical_record
+        ),
         "failure": _safe_failure(record.failure),
     }
 
 
-def _safe_canonical_record(record: Mapping[str, object]) -> dict[str, object]:
-    return {
-        str(key): value
-        for key, value in sorted(record.items())
-        if isinstance(key, str) and key not in _REJECTED_TEXT_FIELDS
-    }
+def _present_canonical_fields(record: Mapping[str, object]) -> list[str]:
+    return sorted(
+        str(key)
+        for key, value in record.items()
+        if isinstance(key, str) and _has_value(value)
+    )
+
+
+def _has_value(value: object) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (list, tuple, set, frozenset, dict)):
+        return bool(value)
+    return True
 
 
 def _safe_failure(failure: Mapping[str, object]) -> dict[str, object]:
@@ -160,16 +174,6 @@ def _json_safe_value(value: object) -> object:
     return value
 
 
-def _serialize_json_document(value: object) -> str:
-    serialized = json.dumps(
-        value,
-        sort_keys=True,
-        ensure_ascii=False,
-        indent=2,
-    )
-    return f"{serialized}\n"
-
-
 def _json_line(value: Any) -> str:
     return json.dumps(
         value,
@@ -188,10 +192,10 @@ def _atomic_write_text(path: Path, content: str) -> None:
             dir=path.parent,
             delete=False,
         ) as temp_file:
+            temp_path = Path(temp_file.name)
             temp_file.write(content)
             temp_file.flush()
             os.fsync(temp_file.fileno())
-            temp_path = Path(temp_file.name)
         os.replace(temp_path, path)
     except Exception as error:
         if temp_path is not None:

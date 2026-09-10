@@ -301,6 +301,17 @@ def compare_dataset_manifests(
     )
 
 
+def dataset_manifest_to_json(manifest: DatasetManifest) -> str:
+    """Serialize a manifest as stable, readable JSON without a trailing newline."""
+
+    return json.dumps(
+        manifest.model_dump(mode="json"),
+        sort_keys=True,
+        ensure_ascii=False,
+        indent=2,
+    )
+
+
 def write_dataset_manifest(
     manifest: DatasetManifest,
     path: str | Path,
@@ -309,13 +320,9 @@ def write_dataset_manifest(
 
     output_path = Path(path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    serialized = json.dumps(
-        manifest.model_dump(mode="json"),
-        sort_keys=True,
-        ensure_ascii=False,
-        indent=2,
+    output_path.write_text(
+        f"{dataset_manifest_to_json(manifest)}\n", encoding="utf-8"
     )
-    output_path.write_text(f"{serialized}\n", encoding="utf-8")
 
 
 def load_dataset_manifest(path: str | Path) -> DatasetManifest:
