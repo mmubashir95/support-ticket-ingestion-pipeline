@@ -61,7 +61,12 @@ Language codes are lowercase ISO 639-1 values. The default confidence
 threshold is `0.80`. The detector is built from a curated set of 20 languages
 plausible in a global support-ticket dataset, rather than Lingua's full
 75-language catalog; `confidence` is Lingua's own native per-language
-probability for the leading candidate against that set, used unmodified. This
+probability for the leading candidate against that set, rounded to 9 decimal
+places. The backend computes that probability with multithreaded
+floating-point summation, so the raw value jitters in its least-significant
+bits between otherwise identical runs; quantizing before the value is stored
+keeps repeated runs byte-identical and the content-addressed dataset version
+stable, while staying far more precise than any reported statistic. This
 default threshold is a conservative, project-chosen starting point, not a
 value calibrated against labeled support-ticket data. A score below the
 threshold produces `status="uncertain"` and `language=null`; the observed
@@ -274,6 +279,13 @@ result = run_pipeline(
     PipelineConfig(),
 )
 ```
+
+`PipelineConfig()` enables semantic duplicate candidates by default, which
+needs the optional `[semantic]` dependency (see setup above). When it is
+enabled without that dependency and without an injected `semantic_model`,
+`run_pipeline` raises `PipelineExecutionError` immediately, before doing any
+work, with instructions to install `[semantic]`, inject a model, or set
+`PipelineConfig(semantic_deduplication_enabled=False)`.
 
 `run_pipeline(source, config)` accepts one CSV or JSON source path supported by
 the existing loaders. It returns a typed `PipelineResult`:

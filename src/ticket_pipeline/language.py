@@ -15,6 +15,13 @@ from ticket_pipeline.models import (
 
 DEFAULT_CONFIDENCE_THRESHOLD = 0.80
 DEFAULT_MIN_ALPHABETIC_CHARACTERS = 4
+# Backends such as Lingua compute confidence with multithreaded floating-point
+# summation, so the raw value jitters in its least-significant bits between
+# otherwise identical runs. Quantizing before the value is stored keeps
+# repeated runs over the same input byte-identical (and therefore keeps the
+# content-addressed dataset version stable) while staying far more precise
+# than any reported statistic.
+_CONFIDENCE_DECIMAL_PLACES = 9
 _ISO_639_1_PATTERN = re.compile(r"^[a-z]{2}$")
 logger = logging.getLogger(__name__)
 
@@ -147,12 +154,16 @@ class LanguageDetector:
             logger.exception("Language detection execution failed")
             return self._failed()
 
-        if prediction.confidence < self.config.confidence_threshold:
-            return self._uncertain(confidence=prediction.confidence)
+        confidence = round(
+            float(prediction.confidence), _CONFIDENCE_DECIMAL_PLACES
+        )
+
+        if confidence < self.config.confidence_threshold:
+            return self._uncertain(confidence=confidence)
 
         return LanguageDetectionMetadata(
             language=prediction.language,
-            confidence=prediction.confidence,
+            confidence=confidence,
             status=LanguageDetectionStatus.DETECTED,
         )
 

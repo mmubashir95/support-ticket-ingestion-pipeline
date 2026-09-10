@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 
 import numpy as np
@@ -56,6 +57,23 @@ class FixedLanguageBackend:
     def predict(self, text: str) -> LanguagePrediction:
         self.texts.append(text)
         return LanguagePrediction("en", self.confidence)
+
+
+class NoisyLanguageBackend:
+    """Backend whose confidence jitters in its least-significant bits.
+
+    Real multithreaded detectors return a slightly different float each run
+    for the same text. The pipeline must quantize that value before storing
+    it so the content-addressed dataset version stays reproducible.
+    """
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def predict(self, text: str) -> LanguagePrediction:
+        self.calls += 1
+        jitter = (self.calls % 7) * 1e-11
+        return LanguagePrediction("en", 0.9312345678 + jitter)
 
 
 def write_csv(path, rows: list[dict[str, str]]) -> None:
@@ -474,3 +492,67 @@ def test_rejected_record_contract_contains_index_record_and_failure(
     assert result.rejected_records[0].failure["reason"] == (
         SCHEMA_VALIDATION_FAILED
     )
+
+
+def test_dataset_version_is_stable_despite_backend_confidence_noise(
+    tmp_path,
+) -> None:
+    source = tmp_path / "tickets.csv"
+    write_csv(
+        source,
+        [
+            valid_row(subject="Login one", body="Cannot log in."),
+            valid_row(subject="Login two", body="Password reset failed."),
+        ],
+    )
+    noisy_backend = NoisyLanguageBackend()
+
+    first = run_pipeline(source, config(language_backend=noisy_backend))
+    second = run_pipeline(source, config(language_backend=noisy_backend))
+
+    assert noisy_backend.calls == 4
+    assert first.accepted_records == second.accepted_records
+    assert first.dataset_manifest.dataset_version == (
+        second.dataset_manifest.dataset_version
+    )
+    assert first.dataset_manifest.fingerprints.output == (
+        second.dataset_manifest.fingerprints.output
+    )
+
+
+def test_json_source_runs_through_every_stage(tmp_path) -> None:
+    source = tmp_path / "tickets.json"
+    source.write_text(
+        json.dumps(
+            [
+                valid_row(subject="Login issue", body="Cannot log in."),
+                valid_row(body="   "),
+                valid_row(subject="Payment problem", body="Card failed."),
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_pipeline(source, config())
+
+    assert [record.record_index for record in result.rejected_records] == [1]
+    assert result.rejected_records[0].failure["reason"] == EMPTY_MESSAGE
+    assert len(result.accepted_records) == 2
+    assert result.data_quality_report.dataset_summary.total_input_records == 3
+    assert result.dataset_manifest.counts.processed == 2
+    assert result.accepted_records[0].language_detection is not None
+    assert result.accepted_records[0].leakage_check is not None
+
+
+def test_default_config_without_semantic_dependency_fails_fast(
+    tmp_path, monkeypatch
+) -> None:
+    source = tmp_path / "tickets.csv"
+    write_csv(source, [valid_row()])
+
+    monkeypatch.setattr("importlib.util.find_spec", lambda name: None)
+
+    with pytest.raises(PipelineExecutionError) as error:
+        run_pipeline(source, PipelineConfig())
+
+    assert "semantic_deduplication_enabled=False" in str(error.value)

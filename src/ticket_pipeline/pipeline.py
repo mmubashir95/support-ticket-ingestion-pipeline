@@ -1,5 +1,6 @@
 """Phase 1 orchestration for the support-ticket ingestion pipeline."""
 
+import importlib.util
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -106,6 +107,7 @@ def run_pipeline(
     """Run the complete Phase 1 pipeline over one CSV or JSON source file."""
 
     settings = config or PipelineConfig()
+    _validate_runtime_settings(settings)
     source_path = Path(source)
 
     source_records = _run_stage(
@@ -173,6 +175,23 @@ def run_pipeline(
         dataset_manifest=manifest,
         data_quality_report=report,
     )
+
+
+def _validate_runtime_settings(settings: PipelineConfig) -> None:
+    """Reject configuration that cannot run to completion before doing work."""
+
+    if (
+        settings.semantic_deduplication_enabled
+        and settings.semantic_model is None
+        and importlib.util.find_spec("sentence_transformers") is None
+    ):
+        raise PipelineExecutionError(
+            "Semantic deduplication is enabled but no embedding model is "
+            "available. Install the optional dependency with "
+            "`pip install -e '.[semantic]'`, pass "
+            "PipelineConfig(semantic_model=...), or set "
+            "PipelineConfig(semantic_deduplication_enabled=False)."
+        )
 
 
 def _run_stage(stage_name: str, operation: Callable[[], T]) -> T:
