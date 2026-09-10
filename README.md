@@ -172,6 +172,95 @@ rejected counts are not fabricated before those outputs exist. Helpers are
 provided to write/load a JSON manifest and compare whether input,
 configuration, output, pipeline version, or counts changed.
 
+## Phase 1 Step 13 — Data-quality Report
+
+`src/ticket_pipeline/data_quality.py` adds a deterministic reporting layer over
+the existing Step 1-12 outputs. It does not validate records, normalize text,
+run PII detection, recompute duplicates, rerun language detection, perform
+leakage checks, or create a new dataset identity. Callers pass the records and
+metadata already produced by the earlier stages to
+`generate_data_quality_report(...)`, which returns a typed
+`DataQualityReport`.
+
+The report contains these top-level sections:
+
+```text
+dataset_summary
+validation_summary
+preprocessing_summary
+pii_summary
+deduplication_summary
+language_summary
+leakage_summary
+dataset_version
+```
+
+`dataset_summary` reports total input, accepted, rejected, acceptance rate, and
+rejection rate. Rates use total input records as the denominator and are
+rounded to six decimal places; empty datasets return `0.0` rates. The model
+enforces that accepted plus rejected equals total input.
+
+`validation_summary` aggregates the existing validation failure reasons, such
+as `SCHEMA_VALIDATION_FAILED` and `EMPTY_MESSAGE`. Reason counts are record
+counts. `validation_issue_events` is an event count, so a single schema-invalid
+record with multiple Pydantic errors can contribute multiple issue events.
+
+`pii_summary` aggregates count-only metadata from PII masking. The
+backward-compatible `mask_pii_with_metadata(...)` helper returns masked text,
+entity counts by the project's supported PII types, and a total count without
+raw detected values. When subject and message are masked separately, pass both
+field results as one nested record item so `records_with_pii` remains a ticket
+count while `total_entities_masked` remains an entity count. Existing
+normalization-produced `<EMAIL>` and `<URL>` tokens are not counted by the PII
+helper because the normalization stage currently exposes no event counters for
+those replacements.
+
+`deduplication_summary` consumes Step 8 exact-duplicate results and Step 9
+semantic-candidate results. Duplicate record counts are the later records that
+link to an earlier record. Group counts are the number of distinct earlier
+canonical records referenced by those links. Semantic similarity is not
+recomputed.
+
+`language_summary` reads `Ticket.language_detection` metadata from Step 10 and
+groups detected languages plus unknown/failed outcomes. Language percentages
+use the number of records with language metadata as the denominator and are
+rounded to six decimal places.
+
+`leakage_summary` reads `Ticket.leakage_check` metadata from Step 11. It
+reports clean, warning, and failed record counts plus issue counts grouped by
+leakage type and field name. It does not include raw leaked content.
+
+`dataset_version` copies the authoritative Step 12 manifest identity into the
+report: dataset version, pipeline version, input fingerprint, configuration
+fingerprint, and output fingerprint. It deliberately does not add a new hash
+or include the manifest's `created_at` timestamp in the deterministic report
+identity section.
+
+Reports can be serialized and persisted with:
+
+```python
+from ticket_pipeline.data_quality import (
+    generate_data_quality_report,
+    write_data_quality_report,
+)
+
+report = generate_data_quality_report(
+    total_input_records=len(source_records),
+    accepted_records=processed_tickets,
+    dataset_manifest=manifest,
+    validation_failures=validation_failures,
+    exact_duplicate_results=exact_results,
+    semantic_duplicate_results=semantic_results,
+    pii_results=pii_results_by_record,
+)
+write_data_quality_report(report, "reports/data_quality_report.json")
+```
+
+Serialization uses stable sorted JSON keys, matching the manifest persistence
+style. If no preprocessing or PII event metadata is supplied, the report
+returns a valid section with a limitation note rather than inventing fragile
+statistics from processed strings.
+
 ## Data source
 
 Customer support ticket data source:

@@ -298,3 +298,142 @@ class DatasetManifestComparison(BaseModel):
     output_changed: bool
     pipeline_version_changed: bool
     counts_changed: bool
+
+
+class DatasetSummary(BaseModel):
+    """Accepted and rejected record counts for one report input."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    total_input_records: int = Field(ge=0)
+    accepted_records: int = Field(ge=0)
+    rejected_records: int = Field(ge=0)
+    acceptance_rate: float = Field(ge=0.0, le=1.0)
+    rejection_rate: float = Field(ge=0.0, le=1.0)
+
+    @model_validator(mode="after")
+    def validate_totals(self) -> "DatasetSummary":
+        if self.accepted_records + self.rejected_records != self.total_input_records:
+            raise ValueError(
+                "accepted and rejected records must equal total input records"
+            )
+        return self
+
+
+class ValidationSummary(BaseModel):
+    """Aggregated validation failures from existing rejection metadata."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    records_with_validation_issues: int = Field(ge=0)
+    validation_issue_events: int = Field(ge=0)
+    issue_counts_by_reason: dict[StrictStr, int] = Field(default_factory=dict)
+    schema_error_counts_by_type: dict[StrictStr, int] = Field(default_factory=dict)
+    schema_error_counts_by_field: dict[StrictStr, int] = Field(default_factory=dict)
+
+
+class PreprocessingSummary(BaseModel):
+    """Transformation metrics supplied by previous preprocessing stages."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    metrics: dict[StrictStr, int] = Field(default_factory=dict)
+    limitations: list[StrictStr] = Field(default_factory=list)
+
+
+class PiiSummary(BaseModel):
+    """PII masking counts only; raw PII values are never retained."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    records_with_pii: int = Field(ge=0)
+    total_entities_masked: int = Field(ge=0)
+    entities_by_type: dict[StrictStr, int] = Field(default_factory=dict)
+    limitations: list[StrictStr] = Field(default_factory=list)
+
+
+class ExactDeduplicationSummary(BaseModel):
+    """Counts derived from Step 8 exact duplicate results."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    records_evaluated: int = Field(ge=0)
+    duplicate_records_detected: int = Field(ge=0)
+    duplicate_groups: int = Field(ge=0)
+
+
+class SemanticDeduplicationSummary(BaseModel):
+    """Counts derived from Step 9 semantic duplicate candidate results."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    records_evaluated: int = Field(ge=0)
+    duplicate_candidate_records_detected: int = Field(ge=0)
+    duplicate_candidate_groups: int = Field(ge=0)
+    skipped_exact_duplicate_records: int = Field(ge=0)
+    threshold: float | None = Field(default=None, ge=-1.0, le=1.0)
+
+
+class DeduplicationSummary(BaseModel):
+    """Exact and semantic deduplication aggregates."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    exact: ExactDeduplicationSummary
+    semantic: SemanticDeduplicationSummary
+
+
+class LanguageSummary(BaseModel):
+    """Aggregated Step 10 language-detection metadata."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    checks_performed: int = Field(ge=0)
+    detected_records: int = Field(ge=0)
+    unknown_records: int = Field(ge=0)
+    low_confidence_records: int = Field(ge=0)
+    failed_records: int = Field(ge=0)
+    by_language: dict[StrictStr, int] = Field(default_factory=dict)
+    percentages_by_language: dict[StrictStr, float] = Field(default_factory=dict)
+
+
+class LeakageSummary(BaseModel):
+    """Aggregated Step 11 leakage-check metadata without raw leaked content."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    checks_performed: int = Field(ge=0)
+    clean_records: int = Field(ge=0)
+    warning_records: int = Field(ge=0)
+    failed_records: int = Field(ge=0)
+    violations_detected: int = Field(ge=0)
+    warnings_detected: int = Field(ge=0)
+    issues_by_type: dict[StrictStr, int] = Field(default_factory=dict)
+    issues_by_field: dict[StrictStr, int] = Field(default_factory=dict)
+
+
+class DatasetVersionSummary(BaseModel):
+    """Authoritative Step 12 identity copied from the dataset manifest."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    dataset_version: StrictStr = Field(pattern=r"^ds_[a-f0-9]{12}$")
+    pipeline_version: StrictStr = Field(min_length=1)
+    input_fingerprint: StrictStr = Field(pattern=r"^[a-f0-9]{64}$")
+    config_fingerprint: StrictStr = Field(pattern=r"^[a-f0-9]{64}$")
+    output_fingerprint: StrictStr = Field(pattern=r"^[a-f0-9]{64}$")
+
+
+class DataQualityReport(BaseModel):
+    """Deterministic data-quality report for one processed dataset version."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    dataset_summary: DatasetSummary
+    validation_summary: ValidationSummary
+    preprocessing_summary: PreprocessingSummary
+    pii_summary: PiiSummary
+    deduplication_summary: DeduplicationSummary
+    language_summary: LanguageSummary
+    leakage_summary: LeakageSummary
+    dataset_version: DatasetVersionSummary
