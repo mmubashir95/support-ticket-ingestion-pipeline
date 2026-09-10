@@ -343,6 +343,63 @@ exception preserved as `__cause__`.
 Step 14 intentionally does not write final accepted/rejected artifacts.
 `Step 15 — Accepted/rejected output persistence` remains separate.
 
+## Phase 1 Step 15 — Accepted/Rejected Outputs
+
+`src/ticket_pipeline/outputs.py` persists an already-created Step 14
+`PipelineResult`. It does not call `run_pipeline`, rebuild the dataset
+manifest, or recalculate the data-quality report.
+
+```python
+from ticket_pipeline.outputs import write_pipeline_outputs
+from ticket_pipeline.pipeline import PipelineConfig, run_pipeline
+
+result = run_pipeline("data/raw/tickets_raw.csv", PipelineConfig())
+artifacts = write_pipeline_outputs(result, "data/processed/run")
+```
+
+The fixed artifact names are:
+
+```text
+accepted.jsonl
+rejected.jsonl
+dataset_manifest.json
+data_quality_report.json
+```
+
+`accepted.jsonl` contains one final processed `Ticket` JSON object per line,
+using the Pydantic JSON representation. These are the normalized, PII-masked,
+language-annotated, leakage-annotated records returned by
+`PipelineResult.accepted_records`.
+
+`rejected.jsonl` contains one privacy-filtered rejected record per line. Each
+object preserves the source `record_index`, non-text canonical context, and
+sanitized validation failure metadata. Because rejected records may fail before
+PII masking, raw source records are never written, and canonical `subject` and
+`message` are deliberately omitted from the rejected artifact. Pydantic error
+metadata is filtered to diagnostic fields such as `loc`, `msg`, `type`, and
+`url`; raw `input` values are not persisted.
+
+`dataset_manifest.json` is the exact Step 12 manifest object from
+`PipelineResult.dataset_manifest`. `data_quality_report.json` is the exact
+Step 13 report object from `PipelineResult.data_quality_report`.
+
+The output directory is created when needed. Existing Step 15 artifact files
+with the fixed names are overwritten deterministically; unrelated files in the
+directory are left alone. Record ordering follows the in-memory
+`PipelineResult` order. Empty accepted or rejected collections produce valid
+zero-byte JSONL files, while manifest and report files are still written.
+
+Each artifact is serialized before final replacement and then written through a
+temporary file in the target directory followed by atomic `os.replace`.
+If writing fails, `OutputPersistenceError` is raised with the underlying
+exception preserved as `__cause__`; persistence failures are not converted into
+rejected ticket records. A failure after some artifacts have already been
+replaced can leave those completed replacements on disk, but each individual
+artifact is either the previous complete file or the new complete file.
+
+`Step 16 — Complete unit tests` and `Step 17 — End-to-end integration test`
+remain separate.
+
 ## Data source
 
 Customer support ticket data source:
