@@ -28,14 +28,26 @@ def map_source_record(record: dict[str, object]) -> dict[str, object]:
 def load_csv(path: str | Path) -> list[dict[str, object]]:
     """Load a CSV file and return canonical ticket dictionaries."""
 
+    return [map_source_record(record) for record in load_source_csv(path)]
+
+
+def load_source_csv(path: str | Path) -> list[dict[str, object]]:
+    """Load a CSV file and return source-shaped record dictionaries."""
+
     file_path = Path(path)
     with file_path.open(newline="", encoding="utf-8-sig") as csv_file:
         reader = csv.DictReader(csv_file)
-        return [map_source_record(dict(row)) for row in reader]
+        return [dict(row) for row in reader]
 
 
 def load_json(path: str | Path) -> list[dict[str, object]]:
     """Load a JSON list of source records and return canonical dictionaries."""
+
+    return [map_source_record(record) for record in load_source_json(path)]
+
+
+def load_source_json(path: str | Path) -> list[dict[str, object]]:
+    """Load a JSON list of source-shaped record dictionaries."""
 
     file_path = Path(path)
     with file_path.open(encoding="utf-8") as json_file:
@@ -48,7 +60,7 @@ def load_json(path: str | Path) -> list[dict[str, object]]:
     for index, item in enumerate(data):
         if not isinstance(item, dict):
             raise ValueError(f"JSON record at index {index} must be an object.")
-        records.append(map_source_record(item))
+        records.append(dict(item))
 
     return records
 
@@ -56,13 +68,19 @@ def load_json(path: str | Path) -> list[dict[str, object]]:
 def load_records(path: str | Path) -> list[dict[str, object]]:
     """Load records from a supported source file based on file extension."""
 
+    return [map_source_record(record) for record in load_source_records(path)]
+
+
+def load_source_records(path: str | Path) -> list[dict[str, object]]:
+    """Load source-shaped records from a supported file extension."""
+
     file_path = Path(path)
     suffix = file_path.suffix.lower()
 
     if suffix == ".csv":
-        return load_csv(file_path)
+        return load_source_csv(file_path)
     if suffix == ".json":
-        return load_json(file_path)
+        return load_source_json(file_path)
 
     raise ValueError(f"Unsupported input file extension: {file_path.suffix}")
 

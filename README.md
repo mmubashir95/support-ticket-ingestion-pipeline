@@ -261,6 +261,76 @@ style. If no preprocessing or PII event metadata is supplied, the report
 returns a valid section with a limitation note rather than inventing fragile
 statistics from processed strings.
 
+## Phase 1 Step 14 — Pipeline Orchestration
+
+`src/ticket_pipeline/pipeline.py` provides the canonical in-memory Phase 1
+entry point:
+
+```python
+from ticket_pipeline.pipeline import PipelineConfig, run_pipeline
+
+result = run_pipeline(
+    "data/raw/tickets_raw.csv",
+    PipelineConfig(),
+)
+```
+
+`run_pipeline(source, config)` accepts one CSV or JSON source path supported by
+the existing loaders. It returns a typed `PipelineResult`:
+
+```text
+accepted_records: list[Ticket]
+rejected_records: list[RejectedRecord]
+dataset_manifest: DatasetManifest
+data_quality_report: DataQualityReport
+```
+
+The orchestration order is explicit:
+
+```text
+source loading
+-> schema validation
+-> message usability validation
+-> normalization
+-> PII masking
+-> exact deduplication
+-> semantic duplicate candidates
+-> language detection
+-> leakage checks
+-> dataset manifest/version
+-> data-quality report
+```
+
+The orchestrator composes existing stage APIs rather than reimplementing their
+logic. Schema-invalid and empty-message records become `RejectedRecord`
+instances with their original zero-based source index, canonical mapped record,
+and existing validation failure metadata. Rejected records are not passed into
+normalization, PII masking, deduplication, language detection, leakage checks,
+versioning output records, or report language/leakage summaries.
+
+`PipelineConfig` composes the existing configurable pieces: semantic
+deduplication settings, optional injected semantic model, language detection
+config/backend, leakage config, optional pipeline version, and optional
+manifest `created_at`. Non-configurable stages such as normalization, URL/email
+policy, PII masking policy, and exact deduplication continue to use their
+module-owned deterministic behavior.
+
+Dataset versioning is created once through Step 12's `create_dataset_manifest`.
+The manifest uses Step 12 source fingerprinting, processing-config snapshots,
+ordered accepted records, and package/passed pipeline version. The
+data-quality report is then produced through Step 13's
+`generate_data_quality_report`, using the stage outputs accumulated during the
+same run.
+
+Record-level quality problems are preserved as rejected records. Fatal
+pipeline problems, such as an unreadable source file, invalid global
+configuration, unexpected stage contract mismatch, manifest creation failure,
+or report generation failure, raise `PipelineExecutionError` with the original
+exception preserved as `__cause__`.
+
+Step 14 intentionally does not write final accepted/rejected artifacts.
+`Step 15 — Accepted/rejected output persistence` remains separate.
+
 ## Data source
 
 Customer support ticket data source:
