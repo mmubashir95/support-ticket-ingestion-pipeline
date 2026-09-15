@@ -425,6 +425,83 @@ the default suite with deterministic injected embeddings; the production
 above. Real-model threshold calibration and duplicate-quality evaluation belong
 to later model/evaluation work, not Phase 1 ingestion closure.
 
+## Phase 2.1 — Classification Dataset Audit
+
+`src/ticket_classification/` adds a classification-data audit layer on top of
+the completed Phase 1 ingestion outputs. It does not read raw source data and
+does not rerun validation, normalization, PII masking, deduplication, language
+detection, or leakage checks. Its source is the trusted Phase 1
+`accepted.jsonl` artifact, with optional traceability to `dataset_manifest.json`.
+
+The default classification data contract is:
+
+```text
+record_id: accepted:<zero-based accepted-record index>
+input text: subject + blank line + message
+target label: ticket_type
+source fields used for input: subject, message
+```
+
+`subject` and `message` are the only default model-input fields because they
+are customer ticket text available when a ticket arrives. `ticket_type` is the
+default supervised target. Other retained ticket fields are audited but not
+used as model input: `source_version` is traceability metadata;
+`language`, `queue`, `priority`, and `tags` are metadata or operational labels;
+and generated Phase 1 fields such as `language_detection` and `leakage_check`
+are not original customer input. Classification-specific leakage risks are
+reported separately so future model training can avoid using fields that encode
+the target or arrive after the prediction point.
+
+Run the audit from Python:
+
+```python
+from ticket_classification.dataset import ClassificationAuditConfig
+from ticket_classification.workflow import run_classification_dataset_audit
+
+audit, artifacts = run_classification_dataset_audit(
+    "data/processed/run/accepted.jsonl",
+    manifest_path="data/processed/run/dataset_manifest.json",
+    output_dir="artifacts/classification/run",
+    config=ClassificationAuditConfig(
+        target_field="ticket_type",
+        input_fields=("subject", "message"),
+        rare_class_min_samples=10,
+        short_text_min_words=3,
+    ),
+)
+```
+
+The generated artifacts are:
+
+```text
+classification_dataset_audit.json
+classification_dataset_audit.md
+```
+
+The JSON artifact is deterministic, UTF-8, sorted-key JSON. The Markdown
+artifact is a human-readable summary. The audit reports the detected task type
+(`binary`, `single_label_multiclass`, `multilabel`, or `not_supervised`),
+target-label completeness, class distribution and imbalance, rare classes,
+suspicious label formatting, missing/blank/invalid targets, text-length
+statistics, empty or placeholder-only inputs, exact duplicate inputs with
+conflicting labels, excluded leakage-risk fields, dataset-version traceability,
+warnings, and one of these readiness statuses:
+
+```text
+READY
+READY_WITH_WARNINGS
+NOT_READY
+```
+
+`NOT_READY` is reserved for blockers such as no usable supervised target, no
+usable labeled records, or fewer than two usable classes. Class imbalance, rare
+classes, short inputs, and duplicate-label conflicts are surfaced as warnings
+unless they make the supervised task itself invalid. Excluded leakage-risk
+fields are reported separately from readiness warnings so a clean dataset is
+not downgraded merely because unsafe fields were correctly excluded. This audit
+does not train models, create dataset splits, tune thresholds, calibrate
+probabilities, or resolve label issues automatically.
+
 ## Data source
 
 Customer support ticket data source:
