@@ -20,17 +20,32 @@ Semantic-deduplication model inference has a separate optional dependency:
 python -m pip install -e '.[semantic]'
 ```
 
+The default test suite covers unit tests, integration tests, and an
+end-to-end persistence test without downloading external model assets. The
+real sentence-transformer semantic smoke test is opt-in because it may load or
+download the embedding model:
+
+```bash
+RUN_REAL_SEMANTIC_MODEL_TEST=1 pytest tests/test_semantic_deduplication.py::test_real_sentence_transformer_smoke
+```
+
 ## Implemented processing order
 
 ```text
 CSV/JSON mapping -> schema validation -> message usability validation
 -> normalization -> PII masking -> exact deduplication
 -> semantic duplicate candidates -> language detection -> leakage checks
--> dataset manifest/version
+-> dataset manifest/version -> data-quality report -> PipelineResult
+-> write_pipeline_outputs()
+-> accepted.jsonl, rejected.jsonl, dataset_manifest.json, data_quality_report.json
 ```
 
-Each stage is currently exposed as an isolated, testable module. Accepted and
-rejected output orchestration belongs to a later implementation step.
+Each stage is exposed as an isolated, testable module and is also wired into
+the active Phase 1 Python API workflow. The repository currently does not
+define a CLI entry point; run the pipeline from Python with `run_pipeline(...)`
+and persist artifacts with `write_pipeline_outputs(...)`. Configuration is
+code-based through `PipelineConfig`, `LanguageDetectionConfig`, and
+`LeakageConfig`; there is no separate `configs/` directory.
 
 ## Language detection
 
@@ -172,10 +187,11 @@ deduplication behavior has no independent configuration today and is tracked
 through the pipeline package version. When semantic deduplication is disabled,
 irrelevant semantic thresholds/model settings do not affect identity.
 
-The manifest currently records only input and processed counts. Accepted and
-rejected counts are not fabricated before those outputs exist. Helpers are
-provided to write/load a JSON manifest and compare whether input,
-configuration, output, pipeline version, or counts changed.
+The manifest records input and processed counts. Accepted and rejected counts
+are reported in the data-quality report and represented directly by the
+accepted/rejected output artifacts. Helpers are provided to write/load a JSON
+manifest and compare whether input, configuration, output, pipeline version,
+or counts changed.
 
 ## Phase 1 Step 13 — Data-quality Report
 
@@ -340,8 +356,9 @@ configuration, unexpected stage contract mismatch, manifest creation failure,
 or report generation failure, raise `PipelineExecutionError` with the original
 exception preserved as `__cause__`.
 
-Step 14 intentionally does not write final accepted/rejected artifacts.
-`Step 15 — Accepted/rejected output persistence` remains separate.
+Step 14 intentionally returns an in-memory result. Step 15 persists that result
+with `write_pipeline_outputs(...)`, which completes the documented Phase 1
+artifact workflow.
 
 ## Phase 1 Step 15 — Accepted/Rejected Outputs
 
@@ -399,8 +416,14 @@ rejected ticket records. A failure after some artifacts have already been
 replaced can leave those completed replacements on disk, but each individual
 artifact is either the previous complete file or the new complete file.
 
-`Step 16 — Complete unit tests` and `Step 17 — End-to-end integration test`
-remain separate.
+The repository includes unit tests, integration tests, and an end-to-end
+persistence test covering source input through `run_pipeline(...)`,
+`write_pipeline_outputs(...)`, accepted/rejected JSONL files, the dataset
+manifest, and the data-quality report. Semantic duplicate logic is covered in
+the default suite with deterministic injected embeddings; the production
+`sentence-transformers` backend remains covered by the opt-in smoke test shown
+above. Real-model threshold calibration and duplicate-quality evaluation belong
+to later model/evaluation work, not Phase 1 ingestion closure.
 
 ## Data source
 
