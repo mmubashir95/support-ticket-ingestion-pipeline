@@ -1,12 +1,13 @@
 """Classification dataset construction from trusted Phase 1 accepted records."""
 
 import json
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 from ticket_pipeline.models import DatasetManifest, Ticket
-from ticket_pipeline.versioning import load_dataset_manifest
+from ticket_pipeline.versioning import load_dataset_manifest, sha256_hex
 
 from ticket_classification.models import ClassificationRecord
 
@@ -114,6 +115,53 @@ def target_value(ticket: Ticket, target_field: str) -> Any:
     return getattr(ticket, target_field)
 
 
+# Fields that define a ticket's own content, independent of which dataset
+# build produced it. ``language_detection`` and ``leakage_check`` are
+# deliberately excluded: those are Phase 1 processing artifacts whose values
+# (for example duplicate group ids) depend on the composition of the whole
+# dataset being processed, not on this record's own content, so including
+# them would make the identifier unstable across dataset regenerations even
+# when the record itself did not change.
+_CANONICAL_RECORD_ID_FIELDS: tuple[str, ...] = (
+    "subject",
+    "message",
+    "ticket_type",
+    "queue",
+    "priority",
+    "language",
+    "source_version",
+    "tags",
+)
+
+
+def _canonical_record_payload(ticket: Ticket) -> bytes:
+    payload = {name: getattr(ticket, name) for name in _CANONICAL_RECORD_ID_FIELDS}
+    return json.dumps(payload, sort_keys=True, ensure_ascii=True).encode("utf-8")
+
+
+def build_record_ids(tickets: Sequence[Ticket]) -> list[str]:
+    """Build stable, content-derived classification record identifiers.
+
+    The id is a SHA-256 digest of the record's own canonical content, so the
+    same record always gets the same id regardless of its position in
+    ``accepted.jsonl`` or which run produced the file. Two accepted records
+    that are genuinely identical in content receive the same digest; a
+    deterministic ``:<n>`` suffix disambiguates such true duplicates so every
+    id returned for one call stays unique.
+    """
+
+    occurrences: dict[str, int] = {}
+    record_ids: list[str] = []
+    for ticket in tickets:
+        digest = sha256_hex(_canonical_record_payload(ticket))
+        occurrence = occurrences.get(digest, 0)
+        occurrences[digest] = occurrence + 1
+        record_ids.append(
+            f"record:{digest}" if occurrence == 0 else f"record:{digest}:{occurrence}"
+        )
+    return record_ids
+
+
 def build_classification_records(
     tickets: list[Ticket],
     config: ClassificationAuditConfig | None = None,
@@ -121,13 +169,14 @@ def build_classification_records(
     """Build usable labeled records for future classifiers."""
 
     settings = config or ClassificationAuditConfig()
+    record_ids = build_record_ids(tickets)
     records: list[ClassificationRecord] = []
-    for index, ticket in enumerate(tickets):
+    for ticket, record_id in zip(tickets, record_ids):
         label = target_value(ticket, settings.target_field)
         if isinstance(label, str) and label.strip():
             records.append(
                 ClassificationRecord(
-                    record_id=f"accepted:{index}",
+                    record_id=record_id,
                     text=build_classification_text(ticket, settings.input_fields),
                     label=label,
                     source_fields=list(settings.input_fields),
@@ -138,7 +187,7 @@ def build_classification_records(
         ):
             records.append(
                 ClassificationRecord(
-                    record_id=f"accepted:{index}",
+                    record_id=record_id,
                     text=build_classification_text(ticket, settings.input_fields),
                     label=list(label),
                     source_fields=list(settings.input_fields),

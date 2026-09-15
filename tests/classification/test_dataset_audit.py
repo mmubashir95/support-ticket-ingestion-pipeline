@@ -9,6 +9,7 @@ from ticket_classification.dataset import (
     ClassificationAuditConfig,
     build_classification_records,
     build_classification_text,
+    build_record_ids,
     load_accepted_records,
 )
 from ticket_classification.models import DatasetReadinessStatus, FieldUsage
@@ -219,6 +220,41 @@ def test_missing_blank_invalid_and_real_unknown_labels_are_distinct() -> None:
     assert audit.missing_target_summary.blank_target_records == 1
     assert "Unknown" in audit.target_summary.class_names
     assert invalid.missing_target_summary.invalid_target_records == 1
+    # An all-invalid-target dataset must still be NOT_READY after removing
+    # the redundant `invalid_target_records == total_records` readiness
+    # clause: `records_with_usable_labels == 0` already covers this case.
+    assert invalid.dataset_readiness is DatasetReadinessStatus.NOT_READY
+
+
+def test_list_target_whitespace_only_items_are_blank_not_invalid() -> None:
+    audit = audit_classification_dataset(
+        [
+            ticket(tags=[]),
+            ticket(tags=[""]),
+            ticket(tags=["   "]),
+        ],
+        ClassificationAuditConfig(
+            target_field="tags",
+            input_fields=("subject", "message"),
+            rare_class_min_samples=1,
+        ),
+    )
+
+    assert audit.missing_target_summary.blank_target_records == 3
+    assert audit.missing_target_summary.invalid_target_records == 0
+    assert audit.missing_target_summary.valid_target_records == 0
+
+    valid = audit_classification_dataset(
+        [ticket(tags=["Billing", "Refund"])],
+        ClassificationAuditConfig(
+            target_field="tags",
+            input_fields=("subject", "message"),
+            rare_class_min_samples=1,
+        ),
+    )
+
+    assert valid.missing_target_summary.valid_target_records == 1
+    assert valid.target_summary.class_names == ["Billing", "Refund"]
 
 
 def test_suspicious_label_formatting_is_reported_without_merging() -> None:
@@ -268,21 +304,24 @@ def test_empty_dataset_and_all_missing_labels_are_not_ready() -> None:
 
 
 def test_duplicate_inputs_with_same_and_conflicting_labels_are_reported_safely() -> None:
+    conflict_a = ticket(subject="Conflict", message="Same text", ticket_type="Request")
+    conflict_b = ticket(subject="Conflict", message="Same text", ticket_type="Problem")
     audit = audit_classification_dataset(
         [
             ticket(subject="Same", message="Same text", ticket_type="Incident"),
             ticket(subject="Same", message="Same text", ticket_type="Incident"),
-            ticket(subject="Conflict", message="Same text", ticket_type="Request"),
-            ticket(subject="Conflict", message="Same text", ticket_type="Problem"),
+            conflict_a,
+            conflict_b,
         ],
         ClassificationAuditConfig(rare_class_min_samples=1),
     )
+    expected_ids = sorted(build_record_ids([conflict_a, conflict_b]))
 
     assert audit.conflicting_labels.duplicated_input_groups == 2
     assert audit.conflicting_labels.groups_with_consistent_labels == 1
     assert audit.conflicting_labels.groups_with_conflicting_labels == 1
     example = audit.conflicting_labels.conflicting_examples[0]
-    assert example["record_ids"] == ["accepted:2", "accepted:3"]
+    assert sorted(example["record_ids"]) == expected_ids
     assert example["labels"] == ["Problem", "Request"]
     assert "Same text" not in json.dumps(example)
 
@@ -337,14 +376,51 @@ def test_readiness_ready_ready_with_warnings_and_not_ready() -> None:
 
 
 def test_classification_records_include_id_text_label_and_source_fields() -> None:
-    records = build_classification_records(
-        [ticket(ticket_type="Incident"), ticket(ticket_type="Request")]
-    )
+    incident = ticket(ticket_type="Incident")
+    request = ticket(ticket_type="Request")
+    records = build_classification_records([incident, request])
+    expected_ids = build_record_ids([incident, request])
 
-    assert records[0].record_id == "accepted:0"
+    assert records[0].record_id == expected_ids[0]
+    assert records[1].record_id == expected_ids[1]
     assert records[0].label == "Incident"
     assert records[0].source_fields == ["subject", "message"]
     assert records[0].text == "Login issue\n\nCannot log in to my account."
+
+
+def test_content_derived_record_ids_are_pure_functions_of_record_content() -> None:
+    original = ticket(ticket_type="Incident")
+    same_content = ticket(ticket_type="Incident")
+    different_priority = ticket(ticket_type="Incident", priority="low")
+
+    original_id = build_record_ids([original])[0]
+    same_content_id = build_record_ids([same_content])[0]
+    different_id = build_record_ids([different_priority])[0]
+
+    assert original_id.startswith("record:")
+    assert original_id == same_content_id
+    assert original_id != different_id
+
+
+def test_content_derived_record_ids_are_stable_across_reordering() -> None:
+    incident = ticket(ticket_type="Incident")
+    request = ticket(ticket_type="Request")
+
+    forward = build_record_ids([incident, request])
+    backward = build_record_ids([request, incident])
+
+    assert forward[0] == backward[1]
+    assert forward[1] == backward[0]
+
+
+def test_content_derived_record_ids_disambiguate_true_duplicates() -> None:
+    first = ticket(ticket_type="Incident")
+    duplicate = ticket(ticket_type="Incident")
+
+    ids = build_record_ids([first, duplicate])
+
+    assert ids[0] != ids[1]
+    assert ids[1] == f"{ids[0]}:1"
 
 
 def test_deterministic_json_and_markdown_outputs(tmp_path) -> None:
@@ -366,6 +442,38 @@ def test_deterministic_json_and_markdown_outputs(tmp_path) -> None:
     assert artifacts.markdown_path.read_text(encoding="utf-8") == markdown
 
 
+def test_unicode_input_survives_audit_and_json_output_without_corruption() -> None:
+    # The audit never echoes raw ticket text (subject/message) into its
+    # output by design (see the conflicting-label privacy test above), so
+    # unicode integrity is exercised through the target label, which the
+    # audit does surface via class names and class distribution.
+    audit = audit_classification_dataset(
+        [
+            ticket(
+                subject="Problème de paiement 支払い",
+                message="Impossible de se connecter 😀 café",
+                ticket_type="退款",
+            ),
+            ticket(
+                subject="退款请求",
+                message="需要退款",
+                ticket_type="Emoji 😀 Label",
+            ),
+        ],
+        ClassificationAuditConfig(rare_class_min_samples=1),
+    )
+
+    payload = classification_audit_to_json(audit)
+    reloaded = json.loads(payload)
+
+    assert "退款" in payload
+    assert "😀" in payload
+    assert "\\u" not in payload
+    assert set(audit.target_summary.class_names) == {"退款", "Emoji 😀 Label"}
+    assert audit.dataset_readiness is not DatasetReadinessStatus.NOT_READY
+    assert reloaded["dataset_readiness"] == audit.dataset_readiness.value
+
+
 def test_accepted_jsonl_loader_validates_phase1_records(tmp_path) -> None:
     accepted_path = tmp_path / "accepted.jsonl"
     accepted_path.write_text(
@@ -383,6 +491,21 @@ def test_accepted_jsonl_loader_validates_phase1_records(tmp_path) -> None:
     records = load_accepted_records(accepted_path)
 
     assert [record.ticket_type for record in records] == ["Incident", "Request"]
+
+
+def test_missing_manifest_path_fails_clearly_instead_of_silently_ignoring(tmp_path) -> None:
+    accepted_path = tmp_path / "accepted.jsonl"
+    accepted_path.write_text(
+        json.dumps(ticket(ticket_type="Incident").model_dump(mode="json")) + "\n",
+        encoding="utf-8",
+    )
+    missing_manifest_path = tmp_path / "does_not_exist_manifest.json"
+
+    with pytest.raises(FileNotFoundError):
+        run_classification_dataset_audit(
+            accepted_path,
+            manifest_path=missing_manifest_path,
+        )
 
 
 def test_integration_consumes_phase1_accepted_artifact_and_persists_audit(tmp_path) -> None:

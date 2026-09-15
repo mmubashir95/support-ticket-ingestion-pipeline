@@ -436,7 +436,7 @@ detection, or leakage checks. Its source is the trusted Phase 1
 The default classification data contract is:
 
 ```text
-record_id: accepted:<zero-based accepted-record index>
+record_id: record:<sha256 of the record's own canonical fields>
 input text: subject + blank line + message
 target label: ticket_type
 source fields used for input: subject, message
@@ -451,6 +451,20 @@ and generated Phase 1 fields such as `language_detection` and `leakage_check`
 are not original customer input. Classification-specific leakage risks are
 reported separately so future model training can avoid using fields that encode
 the target or arrive after the prediction point.
+
+Record ids are content-derived, not positional: `build_record_ids` hashes each
+record's own `subject`, `message`, `ticket_type`, `queue`, `priority`,
+`language`, `source_version`, and `tags` values (SHA-256, via the repository's
+existing hashing convention), so the same record gets the same id regardless
+of where it lands in `accepted.jsonl` or which pipeline run produced the file.
+`language_detection` and `leakage_check` are deliberately excluded from the
+hash because those Phase 1-generated fields (for example duplicate group ids)
+depend on the composition of the whole dataset being processed, not on the
+record's own content, and including them would make the id unstable across
+dataset regenerations even when the record itself did not change. Two records
+that are genuinely identical in every hashed field receive the same digest,
+disambiguated with a deterministic `:<n>` suffix so ids stay unique within one
+audit run.
 
 Run the audit from Python:
 

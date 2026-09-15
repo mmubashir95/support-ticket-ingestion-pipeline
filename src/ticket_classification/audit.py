@@ -10,6 +10,7 @@ from ticket_pipeline.models import DatasetManifest, Ticket
 from ticket_classification.dataset import (
     ClassificationAuditConfig,
     build_classification_text,
+    build_record_ids,
     target_value,
 )
 from ticket_classification.models import (
@@ -76,10 +77,12 @@ def audit_classification_dataset(
         build_classification_text(ticket, settings.input_fields)
         for ticket in ticket_list
     ]
+    record_ids = build_record_ids(ticket_list)
     text_length_summary = _summarize_text_lengths(input_texts, settings)
     conflicting_labels = _duplicate_input_summary(
         input_texts,
         [state[1] for state in label_states],
+        record_ids,
     )
     input_field_policy = _input_field_policy(settings)
     leakage_risks = _classification_leakage_risks(input_field_policy)
@@ -89,7 +92,6 @@ def audit_classification_dataset(
         rare_classes=rare_classes,
         text_length_summary=text_length_summary,
         conflicting_labels=conflicting_labels,
-        leakage_risks=leakage_risks,
     )
     readiness = _readiness_status(
         task_type=task_type,
@@ -157,17 +159,18 @@ def _classify_label(value: object) -> tuple[str, str | list[str] | None]:
     if value is None:
         return "missing", None
     if isinstance(value, str):
-        if value == "":
-            return "blank", None
         if value.strip() == "":
             return "blank", None
         return "valid", value
     if isinstance(value, list):
         if not value:
             return "blank", None
-        if all(isinstance(item, str) and item.strip() for item in value):
+        if not all(isinstance(item, str) for item in value):
+            return "invalid", None
+        stripped_items = [item.strip() for item in value]
+        if all(stripped_items):
             return "valid", value
-        if any(isinstance(item, str) and item == "" for item in value):
+        if all(item == "" for item in stripped_items):
             return "blank", None
         return "invalid", None
     return "invalid", None
@@ -317,12 +320,13 @@ def _summarize_text_lengths(
 def _duplicate_input_summary(
     texts: Sequence[str],
     labels: Sequence[str | list[str] | None],
+    record_ids: Sequence[str],
 ) -> DuplicateInputSummary:
     groups: dict[str, list[tuple[str, str | list[str] | None]]] = defaultdict(list)
-    for index, (text, label) in enumerate(zip(texts, labels)):
+    for record_id, text, label in zip(record_ids, texts, labels):
         if label is None:
             continue
-        groups[text].append((f"accepted:{index}", label))
+        groups[text].append((record_id, label))
 
     duplicated = [group for group in groups.values() if len(group) > 1]
     consistent = 0
@@ -413,8 +417,11 @@ def _warnings(
     rare_classes: Sequence[ClassDistributionItem],
     text_length_summary: TextLengthSummary,
     conflicting_labels: DuplicateInputSummary,
-    leakage_risks: Sequence[LeakageRiskItem],
 ) -> list[str]:
+    # Leakage-risk fields (see `_input_field_policy`) are a structural policy
+    # about the Ticket schema itself, not a property of this particular
+    # dataset, so their presence is reported via `leakage_risks` but does not
+    # generate a warning here or affect readiness.
     warnings: list[str] = []
     if target_summary.records_with_missing_labels:
         warnings.append("Some records are missing the configured target field.")
@@ -450,7 +457,6 @@ def _readiness_status(
         task_type == "not_supervised"
         or target_summary.records_with_usable_labels == 0
         or target_summary.unique_class_count < 2
-        or target_summary.records_with_invalid_labels == target_summary.total_records
     ):
         return DatasetReadinessStatus.NOT_READY
     if warnings:
