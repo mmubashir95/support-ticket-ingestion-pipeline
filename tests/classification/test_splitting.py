@@ -6,7 +6,13 @@ import pytest
 from pydantic import ValidationError
 
 from ticket_classification.models import ClassificationRecord
-from ticket_classification.splitting import SplitConfig, split_classification_records
+from ticket_classification.splitting import (
+    SplitIntegrityError,
+    SplitResult,
+    SplitConfig,
+    split_classification_records,
+    validate_split_integrity,
+)
 
 
 DATASET_VERSION = "ds_6fa2f19cf683"
@@ -38,6 +44,20 @@ def stratified_config(seed: int = 42) -> SplitConfig:
 
 def split_ids(group: list[ClassificationRecord]) -> list[str]:
     return [record.record_id for record in group]
+
+
+def validate(
+    source: list[ClassificationRecord],
+    config: SplitConfig,
+    result: SplitResult,
+    expected_dataset_version: str = DATASET_VERSION,
+):
+    return validate_split_integrity(
+        source,
+        config,
+        result,
+        expected_dataset_version=expected_dataset_version,
+    )
 
 
 def test_valid_split_configuration_is_accepted() -> None:
@@ -280,3 +300,233 @@ def test_too_small_class_fails_stratification_clearly() -> None:
 
     with pytest.raises(ValueError, match="'too-small' has 1"):
         split_classification_records(source, stratified_config())
+
+
+def test_valid_stratified_split_passes_integrity_validation() -> None:
+    source = records(80)
+    config = stratified_config()
+    result = split_classification_records(source, config)
+
+    report = validate(source, config, result)
+
+    assert report.dataset_version == DATASET_VERSION
+    assert report.expected_total == 80
+    assert report.actual_total == 80
+    assert (report.train_count, report.validation_count, report.test_count) == (
+        56,
+        12,
+        12,
+    )
+    assert report.overlap_count == 0
+    assert report.missing_count == 0
+    assert report.extra_count == 0
+    assert report.duplicate_assignment_count == 0
+
+
+@pytest.mark.parametrize(
+    ("source_group", "destination_group", "expected_pair"),
+    [
+        ("train", "validation", "train/validation"),
+        ("train", "test", "train/test"),
+        ("validation", "test", "validation/test"),
+    ],
+)
+def test_split_overlap_fails_integrity_validation(
+    source_group: str,
+    destination_group: str,
+    expected_pair: str,
+) -> None:
+    source = records(80)
+    config = stratified_config()
+    result = split_classification_records(source, config)
+    groups = {
+        "train": list(result.train),
+        "validation": list(result.validation),
+        "test": list(result.test),
+    }
+    groups[destination_group].append(groups[source_group][0])
+    tampered = SplitResult(**groups)
+
+    with pytest.raises(SplitIntegrityError, match=expected_pair):
+        validate(source, config, tampered)
+
+
+def test_missing_record_fails_integrity_validation() -> None:
+    source = records(80)
+    config = stratified_config()
+    result = split_classification_records(source, config)
+    tampered = SplitResult(
+        train=result.train,
+        validation=result.validation,
+        test=result.test[:-1],
+    )
+
+    with pytest.raises(SplitIntegrityError, match=r"missing=1"):
+        validate(source, config, tampered)
+
+
+def test_duplicate_assignment_within_one_group_fails() -> None:
+    source = records(80)
+    config = stratified_config()
+    result = split_classification_records(source, config)
+    tampered = SplitResult(
+        train=[*result.train, result.train[0]],
+        validation=result.validation,
+        test=result.test,
+    )
+
+    with pytest.raises(SplitIntegrityError, match=r"duplicate_count=1"):
+        validate(source, config, tampered)
+
+
+def test_foreign_record_fails_integrity_validation() -> None:
+    source = records(80)
+    config = stratified_config()
+    result = split_classification_records(source, config)
+    foreign = ClassificationRecord(
+        record_id="record:foreign",
+        text="Foreign ticket",
+        label="class-0",
+        source_fields=["subject", "message"],
+    )
+    tampered = SplitResult(
+        train=[*result.train, foreign],
+        validation=result.validation,
+        test=result.test,
+    )
+
+    with pytest.raises(SplitIntegrityError, match=r"foreign records: extra=1"):
+        validate(source, config, tampered)
+
+
+def test_wrong_individual_split_counts_fail() -> None:
+    source = records(80)
+    config = stratified_config()
+    result = split_classification_records(source, config)
+    tampered = SplitResult(
+        train=[*result.train, result.test[0]],
+        validation=result.validation,
+        test=result.test[1:],
+    )
+
+    with pytest.raises(SplitIntegrityError, match="counts do not match"):
+        validate(source, config, tampered)
+
+
+def test_dataset_version_mismatch_fails_integrity_validation() -> None:
+    source = records(80)
+    config = stratified_config()
+    result = split_classification_records(source, config)
+
+    with pytest.raises(SplitIntegrityError, match="dataset version mismatch"):
+        validate(source, config, result, expected_dataset_version="ds_other")
+
+
+def test_missing_class_in_stratified_split_fails() -> None:
+    source = records(80)
+    config = stratified_config()
+    result = split_classification_records(source, config)
+    target_label = result.validation[0].label
+    validation_targets = [
+        record for record in result.validation if record.label == target_label
+    ]
+    train_replacements = [
+        record for record in result.train if record.label != target_label
+    ][: len(validation_targets)]
+    target_ids = set(split_ids(validation_targets))
+    replacement_ids = set(split_ids(train_replacements))
+    tampered = SplitResult(
+        train=[
+            *(record for record in result.train if record.record_id not in replacement_ids),
+            *validation_targets,
+        ],
+        validation=[
+            *(record for record in result.validation if record.record_id not in target_ids),
+            *train_replacements,
+        ],
+        test=result.test,
+    )
+
+    with pytest.raises(SplitIntegrityError, match="is missing classes"):
+        validate(source, config, tampered)
+
+
+def test_broken_stratified_proportions_fail() -> None:
+    source = [
+        ClassificationRecord(
+            record_id=f"binary:{index:03d}",
+            text=f"Ticket {index}",
+            label="A" if index < 100 else "B",
+            source_fields=["subject", "message"],
+        )
+        for index in range(200)
+    ]
+    config = stratified_config()
+    result = split_classification_records(source, config)
+    validation_b = [record for record in result.validation if record.label == "B"]
+    train_a = [record for record in result.train if record.label == "A"]
+    validation_to_move = validation_b[:-1]
+    train_to_move = train_a[: len(validation_to_move)]
+    validation_move_ids = set(split_ids(validation_to_move))
+    train_move_ids = set(split_ids(train_to_move))
+    tampered = SplitResult(
+        train=[
+            *(record for record in result.train if record.record_id not in train_move_ids),
+            *validation_to_move,
+        ],
+        validation=[
+            *(
+                record
+                for record in result.validation
+                if record.record_id not in validation_move_ids
+            ),
+            *train_to_move,
+        ],
+        test=result.test,
+    )
+
+    with pytest.raises(SplitIntegrityError, match="class distribution is invalid"):
+        validate(source, config, tampered)
+
+
+def test_non_stratified_integrity_does_not_require_class_preservation() -> None:
+    source = [
+        ClassificationRecord(
+            record_id=f"non-stratified:{index:02d}",
+            text=f"Ticket {index}",
+            label="A" if index < 10 else "B",
+            source_fields=["subject", "message"],
+        )
+        for index in range(20)
+    ]
+    config = basic_config()
+    deliberately_skewed = SplitResult(
+        train=source[:14],
+        validation=source[14:17],
+        test=source[17:],
+    )
+
+    report = validate(source, config, deliberately_skewed)
+
+    assert set(report.class_counts["test"]) == {"B"}
+
+
+def test_integrity_validation_preserves_input_and_split_order() -> None:
+    source = records(80)
+    config = stratified_config()
+    result = split_classification_records(source, config)
+    original_source_ids = split_ids(source)
+    original_group_ids = (
+        split_ids(result.train),
+        split_ids(result.validation),
+        split_ids(result.test),
+    )
+
+    validate(source, config, result)
+
+    assert split_ids(source) == original_source_ids
+    assert (
+        split_ids(result.train),
+        split_ids(result.validation),
+        split_ids(result.test),
+    ) == original_group_ids
