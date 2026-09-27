@@ -2,6 +2,7 @@
 
 import math
 import random
+from collections import Counter
 from collections.abc import Sequence
 from dataclasses import dataclass
 
@@ -15,6 +16,7 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+from sklearn.model_selection import train_test_split
 
 from ticket_classification.models import ClassificationRecord
 
@@ -66,24 +68,22 @@ def split_classification_records(
     records: Sequence[ClassificationRecord],
     config: SplitConfig,
 ) -> SplitResult:
-    """Assign records using a deterministic, non-stratified random shuffle.
+    """Assign records using a deterministic random or stratified split.
 
     Train and validation counts are floored from their configured ratios. The
     test group receives every remaining record, ensuring exact coverage even
     when the ratios do not produce whole-number counts.
     """
 
-    if config.stratify:
-        raise ValueError(
-            "stratify=True is not supported by the basic splitter; "
-            "stratification belongs to Phase 2.2.5"
-        )
     if not records:
         raise ValueError("records must contain at least one classification record")
 
     record_ids = [record.record_id for record in records]
     if len(record_ids) != len(set(record_ids)):
         raise ValueError("records must have unique record_id values")
+
+    if config.stratify:
+        return _stratified_split(records, config)
 
     shuffled = list(records)
     random.Random(config.random_seed).shuffle(shuffled)
@@ -97,3 +97,81 @@ def split_classification_records(
         validation=shuffled[train_count:validation_end],
         test=shuffled[validation_end:],
     )
+
+
+def _stratified_split(
+    records: Sequence[ClassificationRecord],
+    config: SplitConfig,
+) -> SplitResult:
+    labels: list[str] = []
+    for record in records:
+        if not isinstance(record.label, str):
+            raise ValueError(
+                "stratified splitting requires one string label per record"
+            )
+        labels.append(record.label)
+
+    class_counts = Counter(labels)
+    too_small = {
+        label: count for label, count in class_counts.items() if count < 3
+    }
+    if too_small:
+        details = ", ".join(
+            f"{label!r} has {count}" for label, count in sorted(too_small.items())
+        )
+        raise ValueError(
+            "stratified splitting requires at least 3 records per class so each "
+            f"class can appear in train, validation, and test; {details}"
+        )
+
+    total = len(records)
+    train_count = math.floor(total * config.train_ratio)
+    validation_count = math.floor(total * config.validation_ratio)
+    test_count = total - train_count - validation_count
+    class_count = len(class_counts)
+    split_counts = {
+        "train": train_count,
+        "validation": validation_count,
+        "test": test_count,
+    }
+    undersized_splits = [
+        name for name, count in split_counts.items() if count < class_count
+    ]
+    if undersized_splits:
+        names = ", ".join(undersized_splits)
+        raise ValueError(
+            "stratified splitting cannot place every class in each split: "
+            f"{names} contain fewer records than the {class_count} classes"
+        )
+
+    seed_generator = random.Random(config.random_seed)
+    first_seed = seed_generator.randrange(2**32)
+    second_seed = seed_generator.randrange(2**32)
+    try:
+        train, temporary = train_test_split(
+            list(records),
+            train_size=train_count,
+            test_size=validation_count + test_count,
+            random_state=first_seed,
+            shuffle=True,
+            stratify=labels,
+        )
+        temporary_labels = [record.label for record in temporary]
+        validation, test = train_test_split(
+            temporary,
+            train_size=validation_count,
+            test_size=test_count,
+            random_state=second_seed,
+            shuffle=True,
+            stratify=temporary_labels,
+        )
+    except ValueError as error:
+        counts = ", ".join(
+            f"{label!r}={count}" for label, count in sorted(class_counts.items())
+        )
+        raise ValueError(
+            "stratified splitting is not possible for the configured ratios and "
+            f"class counts ({counts}): {error}"
+        ) from error
+
+    return SplitResult(train=train, validation=validation, test=test)

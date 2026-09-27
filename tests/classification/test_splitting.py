@@ -1,5 +1,7 @@
 """Tests for the frozen classification split configuration."""
 
+from collections import Counter
+
 import pytest
 from pydantic import ValidationError
 
@@ -28,6 +30,10 @@ def basic_config(seed: int = 42) -> SplitConfig:
         random_seed=seed,
         stratify=False,
     )
+
+
+def stratified_config(seed: int = 42) -> SplitConfig:
+    return SplitConfig(dataset_version=DATASET_VERSION, random_seed=seed)
 
 
 def split_ids(group: list[ClassificationRecord]) -> list[str]:
@@ -191,8 +197,86 @@ def test_duplicate_record_ids_are_rejected() -> None:
         split_classification_records(source, basic_config())
 
 
-def test_basic_splitter_rejects_stratification() -> None:
-    config = SplitConfig(dataset_version=DATASET_VERSION, stratify=True)
+def test_stratified_split_is_supported() -> None:
+    result = split_classification_records(records(80), stratified_config())
 
-    with pytest.raises(ValueError, match="Phase 2.2.5"):
-        split_classification_records(records(), config)
+    assert len(result.train) == 56
+    assert len(result.validation) == 12
+    assert len(result.test) == 12
+
+
+def test_same_seed_produces_same_stratified_assignments() -> None:
+    source = records(80)
+
+    first = split_classification_records(source, stratified_config(seed=42))
+    second = split_classification_records(source, stratified_config(seed=42))
+
+    assert split_ids(first.train) == split_ids(second.train)
+    assert split_ids(first.validation) == split_ids(second.validation)
+    assert split_ids(first.test) == split_ids(second.test)
+
+
+def test_every_class_appears_in_every_stratified_split() -> None:
+    source = records(80)
+    result = split_classification_records(source, stratified_config())
+    expected_labels = {record.label for record in source}
+
+    assert {record.label for record in result.train} == expected_labels
+    assert {record.label for record in result.validation} == expected_labels
+    assert {record.label for record in result.test} == expected_labels
+
+
+def test_stratified_class_proportions_stay_close_to_full_dataset() -> None:
+    source = records(200)
+    result = split_classification_records(source, stratified_config())
+    full_counts = Counter(record.label for record in source)
+
+    for group in (result.train, result.validation, result.test):
+        group_counts = Counter(record.label for record in group)
+        for label, full_count in full_counts.items():
+            full_proportion = full_count / len(source)
+            group_proportion = group_counts[label] / len(group)
+            assert group_proportion == pytest.approx(full_proportion, abs=0.02)
+
+
+def test_stratified_split_has_no_overlap_and_complete_coverage() -> None:
+    source = records(83)
+    result = split_classification_records(source, stratified_config())
+
+    train_ids = set(split_ids(result.train))
+    validation_ids = set(split_ids(result.validation))
+    test_ids = set(split_ids(result.test))
+    assert train_ids.isdisjoint(validation_ids)
+    assert train_ids.isdisjoint(test_ids)
+    assert validation_ids.isdisjoint(test_ids)
+    assert train_ids | validation_ids | test_ids == set(split_ids(source))
+    assert len(result.train) + len(result.validation) + len(result.test) == len(source)
+
+
+def test_stratified_split_does_not_mutate_input_order() -> None:
+    source = records(80)
+    original_ids = split_ids(source)
+
+    split_classification_records(source, stratified_config())
+
+    assert split_ids(source) == original_ids
+
+
+def test_stratified_split_with_different_seeds_changes_assignments() -> None:
+    source = records(200)
+
+    seed_42 = split_classification_records(source, stratified_config(seed=42))
+    seed_7 = split_classification_records(source, stratified_config(seed=7))
+
+    assert split_ids(seed_42.train) != split_ids(seed_7.train)
+    assert Counter(record.label for record in seed_42.train) == Counter(
+        record.label for record in seed_7.train
+    )
+
+
+def test_too_small_class_fails_stratification_clearly() -> None:
+    source = records(40)
+    source[-1] = source[-1].model_copy(update={"label": "too-small"})
+
+    with pytest.raises(ValueError, match="'too-small' has 1"):
+        split_classification_records(source, stratified_config())
