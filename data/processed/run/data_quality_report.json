@@ -1,0 +1,88 @@
+{
+  "dataset_summary": {
+    "acceptance_rate": 1.0,
+    "accepted_records": 28587,
+    "rejected_records": 0,
+    "rejection_rate": 0.0,
+    "total_input_records": 28587
+  },
+  "dataset_version": {
+    "config_fingerprint": "ecee451dcf13f8e4b1ba2d589375944c6f69a8cb742a0bfdf750bc7a5cf0d1ed",
+    "dataset_version": "ds_6fa2f19cf683",
+    "input_fingerprint": "14487016d94b782e79d3faec9249cc13867ac3725a11cb040d891d1a18c4310e",
+    "output_fingerprint": "faff39c223d35220f367780ff325d38e8b6ad987551d9630edf15580036ca768",
+    "pipeline_version": "0.1.0"
+  },
+  "deduplication_summary": {
+    "exact": {
+      "duplicate_groups": 0,
+      "duplicate_records_detected": 0,
+      "records_evaluated": 28587
+    },
+    "semantic": {
+      "duplicate_candidate_groups": 0,
+      "duplicate_candidate_records_detected": 0,
+      "records_evaluated": 0,
+      "skipped_exact_duplicate_records": 0,
+      "threshold": null
+    }
+  },
+  "language_summary": {
+    "by_language": {
+      "de": 8894,
+      "en": 19626,
+      "es": 4,
+      "fr": 2,
+      "pt": 4,
+      "unknown": 57
+    },
+    "checks_performed": 28587,
+    "detected_records": 28530,
+    "failed_records": 0,
+    "low_confidence_records": 57,
+    "percentages_by_language": {
+      "de": 0.31112,
+      "en": 0.686536,
+      "es": 0.00014,
+      "fr": 7e-05,
+      "pt": 0.00014,
+      "unknown": 0.001994
+    },
+    "unknown_records": 57
+  },
+  "leakage_summary": {
+    "checks_performed": 28587,
+    "clean_records": 7,
+    "failed_records": 0,
+    "issues_by_field": {
+      "answer": 28580
+    },
+    "issues_by_type": {
+      "future_field": 28580
+    },
+    "violations_detected": 28580,
+    "warning_records": 28580,
+    "warnings_detected": 28580
+  },
+  "pii_summary": {
+    "entities_by_type": {
+      "phone": 1
+    },
+    "limitations": [],
+    "records_with_pii": 1,
+    "total_entities_masked": 1
+  },
+  "preprocessing_summary": {
+    "limitations": [
+      "Preprocessing stages currently expose text output but no transformation event counters; only caller-supplied metrics can be reported."
+    ],
+    "metrics": {}
+  },
+  "validation_summary": {
+    "issue_counts_by_reason": {},
+    "records_with_validation_issues": 0,
+    "schema_error_counts_by_field": {},
+    "schema_error_counts_by_type": {},
+    "validation_issue_events": 0
+  }
+}
