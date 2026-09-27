@@ -1,6 +1,9 @@
 """Validated configuration for future classification dataset splitting."""
 
 import math
+import random
+from collections.abc import Sequence
+from dataclasses import dataclass
 
 from pydantic import (
     BaseModel,
@@ -12,6 +15,17 @@ from pydantic import (
     field_validator,
     model_validator,
 )
+
+from ticket_classification.models import ClassificationRecord
+
+
+@dataclass(frozen=True, slots=True)
+class SplitResult:
+    """One in-memory assignment of classification records to split groups."""
+
+    train: list[ClassificationRecord]
+    validation: list[ClassificationRecord]
+    test: list[ClassificationRecord]
 
 
 class SplitConfig(BaseModel):
@@ -46,3 +60,40 @@ class SplitConfig(BaseModel):
                 f"(received {total:.12g})"
             )
         return self
+
+
+def split_classification_records(
+    records: Sequence[ClassificationRecord],
+    config: SplitConfig,
+) -> SplitResult:
+    """Assign records using a deterministic, non-stratified random shuffle.
+
+    Train and validation counts are floored from their configured ratios. The
+    test group receives every remaining record, ensuring exact coverage even
+    when the ratios do not produce whole-number counts.
+    """
+
+    if config.stratify:
+        raise ValueError(
+            "stratify=True is not supported by the basic splitter; "
+            "stratification belongs to Phase 2.2.5"
+        )
+    if not records:
+        raise ValueError("records must contain at least one classification record")
+
+    record_ids = [record.record_id for record in records]
+    if len(record_ids) != len(set(record_ids)):
+        raise ValueError("records must have unique record_id values")
+
+    shuffled = list(records)
+    random.Random(config.random_seed).shuffle(shuffled)
+
+    train_count = math.floor(len(shuffled) * config.train_ratio)
+    validation_count = math.floor(len(shuffled) * config.validation_ratio)
+    validation_end = train_count + validation_count
+
+    return SplitResult(
+        train=shuffled[:train_count],
+        validation=shuffled[train_count:validation_end],
+        test=shuffled[validation_end:],
+    )
