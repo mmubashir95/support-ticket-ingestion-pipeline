@@ -30,6 +30,8 @@
     "stratification_key": "label"
   },
   "stratified": true,
+  "target": "ticket_type",
+  "task_type": "single_label_multiclass",
   "test_count": 4289,
   "test_ratio": 0.15,
   "test_record_ids": [

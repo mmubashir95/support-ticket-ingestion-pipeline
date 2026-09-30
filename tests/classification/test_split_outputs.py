@@ -134,6 +134,8 @@ def test_manifest_freezes_dataset_version_seed_ratios_and_policy(tmp_path: Path)
     manifest = load_split_manifest(artifacts.manifest_path)
 
     assert manifest.dataset_version == config.dataset_version
+    assert manifest.target == config.target_field
+    assert manifest.task_type == "single_label_multiclass"
     assert manifest.random_seed == config.random_seed
     assert manifest.train_ratio == config.train_ratio
     assert manifest.validation_ratio == config.validation_ratio

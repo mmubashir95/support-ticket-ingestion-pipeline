@@ -52,6 +52,8 @@ class SplitManifest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     dataset_version: StrictStr
+    target: StrictStr
+    task_type: Literal["single_label_multiclass"] = "single_label_multiclass"
     random_seed: StrictInt
     split_policy: SplitPolicy
     train_ratio: float = Field(gt=0.0, lt=1.0)
@@ -166,6 +168,7 @@ def build_split_manifest(
 
     return SplitManifest(
         dataset_version=report.dataset_version,
+        target=config.target_field,
         random_seed=config.random_seed,
         split_policy=SplitPolicy(
             stratification_key="label" if config.stratify else None

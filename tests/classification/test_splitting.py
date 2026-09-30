@@ -76,6 +76,7 @@ def test_valid_split_configuration_is_accepted() -> None:
     assert config.test_ratio == 0.15
     assert config.random_seed == 42
     assert config.stratify is True
+    assert config.target_field == "ticket_type"
 
 
 @pytest.mark.parametrize(
@@ -126,6 +127,12 @@ def test_dataset_version_must_not_be_blank(dataset_version: str) -> None:
         SplitConfig(dataset_version=dataset_version)
 
 
+@pytest.mark.parametrize("target_field", ["", "   "])
+def test_target_field_must_not_be_blank(target_field: str) -> None:
+    with pytest.raises(ValidationError, match="non-blank string"):
+        SplitConfig(dataset_version=DATASET_VERSION, target_field=target_field)
+
+
 def test_split_configuration_defaults_are_frozen() -> None:
     config = SplitConfig(dataset_version=DATASET_VERSION)
 
@@ -134,6 +141,7 @@ def test_split_configuration_defaults_are_frozen() -> None:
     assert config.test_ratio == 0.15
     assert config.random_seed == 42
     assert config.stratify is True
+    assert config.target_field == "ticket_type"
 
 
 def test_split_configuration_json_round_trip_preserves_values() -> None:

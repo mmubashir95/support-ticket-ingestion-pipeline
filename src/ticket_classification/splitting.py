@@ -21,6 +21,9 @@ from sklearn.model_selection import train_test_split
 from ticket_classification.models import ClassificationRecord
 
 
+DEFAULT_SPLIT_TARGET_FIELD = "ticket_type"
+
+
 @dataclass(frozen=True, slots=True)
 class SplitResult:
     """One in-memory assignment of classification records to split groups."""
@@ -66,12 +69,13 @@ class SplitConfig(BaseModel):
     test_ratio: float = Field(default=0.15, gt=0.0, lt=1.0)
     random_seed: StrictInt = 42
     stratify: StrictBool = True
+    target_field: StrictStr = DEFAULT_SPLIT_TARGET_FIELD
 
-    @field_validator("dataset_version")
+    @field_validator("dataset_version", "target_field")
     @classmethod
-    def validate_dataset_version(cls, value: str) -> str:
+    def validate_non_blank_string(cls, value: str) -> str:
         if not value.strip():
-            raise ValueError("dataset_version must be a non-blank string")
+            raise ValueError("value must be a non-blank string")
         return value
 
     @model_validator(mode="after")
