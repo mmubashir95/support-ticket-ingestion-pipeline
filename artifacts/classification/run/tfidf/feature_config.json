@@ -1,0 +1,19 @@
+{
+  "analyzer": "word",
+  "feature_type": "tfidf",
+  "input_fields": [
+    "subject",
+    "message"
+  ],
+  "input_policy": "subject + message",
+  "lowercase": true,
+  "max_df": null,
+  "max_features": null,
+  "min_df": 2,
+  "ngram_range": [
+    1,
+    2
+  ],
+  "separator": "\n\n",
+  "sublinear_tf": false
+}

@@ -1,0 +1,29 @@
+{
+  "dataset_version": "ds_6fa2f19cf683",
+  "feature_count": 83743,
+  "feature_type": "tfidf",
+  "feature_version": "tfidf_3275ba614aa6",
+  "fit_split": "train",
+  "matrix_format": "csr",
+  "matrix_shapes": {
+    "test": [
+      4289,
+      83743
+    ],
+    "train": [
+      20010,
+      83743
+    ],
+    "validation": [
+      4288,
+      83743
+    ]
+  },
+  "non_zero_counts": {
+    "test": 395599,
+    "train": 1917943,
+    "validation": 396050
+  },
+  "split_version": "split_d1f67d41500f",
+  "vocabulary_size": 83743
+}

@@ -130,6 +130,10 @@ def test_classification_text_uses_subject_and_message_deterministically() -> Non
         ticket(subject=None, message="Cannot log in."),
         ("subject", "message"),
     ) == "Cannot log in."
+    assert build_classification_text(
+        ticket(subject="Login issue", message="   "),
+        ("subject", "message"),
+    ) == "Login issue"
 
 
 def test_default_audit_detects_single_label_multiclass_contract() -> None:

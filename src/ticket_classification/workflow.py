@@ -10,6 +10,15 @@ from ticket_classification.dataset import (
     load_optional_dataset_manifest,
 )
 from ticket_classification.models import ClassificationDatasetAudit
+from ticket_classification.feature_outputs import (
+    FeatureArtifacts,
+    write_feature_artifacts,
+)
+from ticket_classification.features import (
+    TfidfConfig,
+    build_tfidf_features,
+    load_frozen_splits,
+)
 from ticket_classification.outputs import (
     ClassificationAuditArtifacts,
     write_classification_audit_outputs,
@@ -73,3 +82,17 @@ def run_classification_dataset_split(
         output_dir,
         expected_dataset_version=manifest.dataset_version,
     )
+
+
+def run_tfidf_feature_pipeline(
+    split_dir: str | Path,
+    output_dir: str | Path,
+    *,
+    config: TfidfConfig | None = None,
+) -> FeatureArtifacts:
+    """Build TF-IDF artifacts from the existing split without resplitting."""
+
+    settings = config or TfidfConfig()
+    splits = load_frozen_splits(split_dir)
+    result = build_tfidf_features(splits, settings)
+    return write_feature_artifacts(splits, result, settings, output_dir)
