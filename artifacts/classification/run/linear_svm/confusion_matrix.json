@@ -1,0 +1,86 @@
+{
+  "test": {
+    "column_labels": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "columns": "predicted_label",
+    "row_labels": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "rows": "actual_label",
+    "values": [
+      [
+        426,
+        4,
+        2,
+        7
+      ],
+      [
+        1,
+        1544,
+        175,
+        0
+      ],
+      [
+        1,
+        360,
+        536,
+        5
+      ],
+      [
+        2,
+        1,
+        1,
+        1224
+      ]
+    ]
+  },
+  "validation": {
+    "column_labels": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "columns": "predicted_label",
+    "row_labels": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "rows": "actual_label",
+    "values": [
+      [
+        421,
+        8,
+        0,
+        9
+      ],
+      [
+        0,
+        1554,
+        165,
+        1
+      ],
+      [
+        2,
+        342,
+        553,
+        5
+      ],
+      [
+        5,
+        0,
+        3,
+        1220
+      ]
+    ]
+  }
+}

@@ -1,0 +1,106 @@
+{
+  "inference_latency": {
+    "test": {
+      "aggregate_seconds": 0.010169986984692514,
+      "clock": "perf_counter",
+      "includes": "Linear SVM predict only; excludes TF-IDF transform and decision_function",
+      "mean_iteration_seconds": 0.002033997396938503,
+      "measured_iterations": 5,
+      "record_count": 4289,
+      "seconds_per_record": 4.742358118299144e-07,
+      "warmup_iterations": 1
+    },
+    "validation": {
+      "aggregate_seconds": 0.011032651993446052,
+      "clock": "perf_counter",
+      "includes": "Linear SVM predict only; excludes TF-IDF transform and decision_function",
+      "mean_iteration_seconds": 0.0022065303986892105,
+      "measured_iterations": 5,
+      "record_count": 4288,
+      "seconds_per_record": 5.145826489480435e-07,
+      "warmup_iterations": 1
+    }
+  },
+  "model_size_bytes": 2680643,
+  "test": {
+    "accuracy": 0.8696665889484728,
+    "class_order": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "macro_f1": 0.8720583084228815,
+    "macro_precision": 0.8851224089335367,
+    "macro_recall": 0.8647598416524024,
+    "per_class": {
+      "Change": {
+        "f1": 0.9804372842347526,
+        "precision": 0.9906976744186047,
+        "recall": 0.9703872437357631,
+        "support": 439
+      },
+      "Incident": {
+        "f1": 0.8509231193166161,
+        "precision": 0.8088004190675746,
+        "recall": 0.8976744186046511,
+        "support": 1720
+      },
+      "Problem": {
+        "f1": 0.6633663366336634,
+        "precision": 0.7507002801120448,
+        "recall": 0.5942350332594235,
+        "support": 902
+      },
+      "Request": {
+        "f1": 0.9935064935064936,
+        "precision": 0.9902912621359223,
+        "recall": 0.996742671009772,
+        "support": 1228
+      }
+    },
+    "weighted_f1": 0.8655589047967299,
+    "zero_division": 0
+  },
+  "training_time": 0.8050525569997262,
+  "validation": {
+    "accuracy": 0.8740671641791045,
+    "class_order": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "macro_f1": 0.8755045400209375,
+    "macro_precision": 0.8886664681689003,
+    "macro_recall": 0.8678107421589369,
+    "per_class": {
+      "Change": {
+        "f1": 0.9722863741339491,
+        "precision": 0.9836448598130841,
+        "recall": 0.9611872146118722,
+        "support": 438
+      },
+      "Incident": {
+        "f1": 0.8576158940397351,
+        "precision": 0.8161764705882353,
+        "recall": 0.9034883720930232,
+        "support": 1720
+      },
+      "Problem": {
+        "f1": 0.6814540973505854,
+        "precision": 0.7669902912621359,
+        "recall": 0.6130820399113082,
+        "support": 902
+      },
+      "Request": {
+        "f1": 0.9906617945594803,
+        "precision": 0.9878542510121457,
+        "recall": 0.993485342019544,
+        "support": 1228
+      }
+    },
+    "weighted_f1": 0.8703743118349543,
+    "zero_division": 0
+  }
+}

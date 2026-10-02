@@ -2,7 +2,10 @@
 
 from pathlib import Path
 
-from ticket_classification.classical_outputs import run_logistic_regression_baseline
+from ticket_classification.classical_outputs import (
+    run_linear_svm_baseline,
+    run_logistic_regression_baseline,
+)
 from ticket_classification.audit import audit_classification_dataset
 from ticket_classification.dataset import (
     ClassificationAuditConfig,

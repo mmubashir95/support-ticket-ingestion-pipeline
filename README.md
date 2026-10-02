@@ -596,6 +596,83 @@ when rerunning the same workflow, so choose a separate output directory to retai
 multiple runs. Load joblib artifacts only from trusted sources and use compatible
 scikit-learn versions; the experiment records its dependency versions.
 
-Run tests with `.venv/bin/python -m pytest`. This phase introduces no class weight
-experiments, search, threshold tuning, calibration, SVM, Transformer, API,
-advanced error analysis, or benchmark infrastructure. Phase 2.5 remains future work.
+Run tests with `.venv/bin/python -m pytest`. Phase 2.4 introduces no class weight
+experiments, search, threshold tuning, calibration, Transformer, API, advanced
+error analysis, or benchmark infrastructure.
+
+## Phase 2.5 — Linear SVM baseline
+
+The second sparse-text baseline consumes the same frozen split and TF-IDF
+artifacts as Logistic Regression:
+
+```bash
+PYTHONPATH=src .venv/bin/python - <<'PY'
+from ticket_classification.workflow import run_linear_svm_baseline
+
+manifest = run_linear_svm_baseline(
+    "artifacts/classification/run/splits",
+    "artifacts/classification/run/tfidf",
+    "artifacts/classification/run/linear_svm",
+)
+print(manifest["experiment_id"], manifest["evaluation_metrics"])
+PY
+```
+
+`LinearSVMConfig` freezes `LinearSVC` at `C=1.0`, `class_weight=None`,
+`max_iterations=1000`, `tolerance=1e-4`, `dual="auto"`, and
+`random_seed=42`. There is no search or class-weight experiment. Convergence
+warnings fail training rather than being silently accepted.
+
+The workflow validates dataset, split, feature, label, shape, and row identity
+before fitting only `X_train` and `y_train`. It loads the saved TF-IDF
+vectorizer and CSR matrices and never calls `fit` or `fit_transform` on a
+vectorizer. Validation and test predictions use their frozen matrices.
+
+Generated files under `artifacts/classification/run/linear_svm/`:
+
+| File | Contents |
+|---|---|
+| `model.joblib` | Fitted `LinearSVC` model |
+| `config.json` | Frozen SVM configuration |
+| `metrics.json` | Shared validation/test metrics, timing, training time, and model size |
+| `confusion_matrix.json` | Matrices with explicit actual-row and predicted-column labels |
+| `validation_predictions.jsonl` | Traceable labels and raw per-class decision scores |
+| `test_predictions.jsonl` | The same contract for the frozen test split |
+| `experiment_manifest.json` | Source identities, label mapping, environment, artifact paths, and reload verification |
+
+Prediction rows map each raw margin to the explicit model class order:
+
+```json
+{
+  "record_id": "record:...",
+  "actual_label": "Incident",
+  "predicted_label": "Incident",
+  "decision_score_class_order": ["Change", "Incident", "Problem", "Request"],
+  "decision_scores": {
+    "Change": -1.2,
+    "Incident": 1.42,
+    "Problem": 0.18,
+    "Request": -0.31
+  },
+  "score_type": "raw_linear_svm_decision_function",
+  "scores_are_probabilities": false
+}
+```
+
+Decision scores are raw separating-hyperplane margins. They are not
+probabilities and receive no sigmoid, softmax, calibration, or normalization.
+For this four-class dataset, `decision_function` returns one score per class.
+The reusable helper also documents scikit-learn's binary case by exposing the
+single signed margin in negative/positive class orientation.
+
+Basic CPU timing runs one warm-up and five measured full-matrix `predict`
+calls. It records aggregate time, mean iteration time, and time per record.
+It excludes TF-IDF transform, decision-score generation, loading, validation,
+and persistence. This remains a lightweight Phase 2.5 measurement rather than
+the full Phase 2.11 benchmark.
+
+The saved model is reloaded and required to reproduce every validation/test
+prediction exactly and every decision score within `rtol=atol=1e-12`.
+Test results are persisted for final evaluation only and are not used to change
+`C`, features, class weights, or model behavior. Phase 2.6 will perform the
+formal model comparison and error analysis.

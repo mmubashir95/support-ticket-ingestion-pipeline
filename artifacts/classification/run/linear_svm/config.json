@@ -1,0 +1,9 @@
+{
+  "C": 1.0,
+  "class_weight": null,
+  "dual": "auto",
+  "max_iterations": 1000,
+  "model_type": "linear_svm",
+  "random_seed": 42,
+  "tolerance": 0.0001
+}
