@@ -1,0 +1,490 @@
+{
+  "test": {
+    "linear_svm": {
+      "confusion_matrix": {
+        "column_labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "columns": "predicted_label",
+        "row_labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "rows": "actual_label",
+        "values": [
+          [
+            426,
+            4,
+            2,
+            7
+          ],
+          [
+            1,
+            1544,
+            175,
+            0
+          ],
+          [
+            1,
+            360,
+            536,
+            5
+          ],
+          [
+            2,
+            1,
+            1,
+            1224
+          ]
+        ]
+      },
+      "off_diagonal_pairs": [
+        {
+          "actual_class": "Problem",
+          "error_count": 360,
+          "error_rate": 0.3991130820399113,
+          "predicted_class": "Incident"
+        },
+        {
+          "actual_class": "Incident",
+          "error_count": 175,
+          "error_rate": 0.10174418604651163,
+          "predicted_class": "Problem"
+        },
+        {
+          "actual_class": "Change",
+          "error_count": 7,
+          "error_rate": 0.015945330296127564,
+          "predicted_class": "Request"
+        },
+        {
+          "actual_class": "Problem",
+          "error_count": 5,
+          "error_rate": 0.005543237250554324,
+          "predicted_class": "Request"
+        },
+        {
+          "actual_class": "Change",
+          "error_count": 4,
+          "error_rate": 0.009111617312072893,
+          "predicted_class": "Incident"
+        },
+        {
+          "actual_class": "Change",
+          "error_count": 2,
+          "error_rate": 0.004555808656036446,
+          "predicted_class": "Problem"
+        },
+        {
+          "actual_class": "Request",
+          "error_count": 2,
+          "error_rate": 0.0016286644951140066,
+          "predicted_class": "Change"
+        },
+        {
+          "actual_class": "Incident",
+          "error_count": 1,
+          "error_rate": 0.0005813953488372093,
+          "predicted_class": "Change"
+        },
+        {
+          "actual_class": "Problem",
+          "error_count": 1,
+          "error_rate": 0.0011086474501108647,
+          "predicted_class": "Change"
+        },
+        {
+          "actual_class": "Request",
+          "error_count": 1,
+          "error_rate": 0.0008143322475570033,
+          "predicted_class": "Incident"
+        },
+        {
+          "actual_class": "Request",
+          "error_count": 1,
+          "error_rate": 0.0008143322475570033,
+          "predicted_class": "Problem"
+        }
+      ],
+      "per_class_errors": {
+        "Change": {
+          "false_negative_count": 13,
+          "false_positive_count": 4
+        },
+        "Incident": {
+          "false_negative_count": 176,
+          "false_positive_count": 365
+        },
+        "Problem": {
+          "false_negative_count": 366,
+          "false_positive_count": 178
+        },
+        "Request": {
+          "false_negative_count": 4,
+          "false_positive_count": 12
+        }
+      }
+    },
+    "logistic_regression": {
+      "confusion_matrix": {
+        "column_labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "columns": "predicted_label",
+        "row_labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "rows": "actual_label",
+        "values": [
+          [
+            410,
+            13,
+            1,
+            15
+          ],
+          [
+            0,
+            1601,
+            118,
+            1
+          ],
+          [
+            0,
+            514,
+            382,
+            6
+          ],
+          [
+            2,
+            3,
+            1,
+            1222
+          ]
+        ]
+      },
+      "off_diagonal_pairs": [
+        {
+          "actual_class": "Problem",
+          "error_count": 514,
+          "error_rate": 0.5698447893569845,
+          "predicted_class": "Incident"
+        },
+        {
+          "actual_class": "Incident",
+          "error_count": 118,
+          "error_rate": 0.0686046511627907,
+          "predicted_class": "Problem"
+        },
+        {
+          "actual_class": "Change",
+          "error_count": 15,
+          "error_rate": 0.03416856492027335,
+          "predicted_class": "Request"
+        },
+        {
+          "actual_class": "Change",
+          "error_count": 13,
+          "error_rate": 0.029612756264236904,
+          "predicted_class": "Incident"
+        },
+        {
+          "actual_class": "Problem",
+          "error_count": 6,
+          "error_rate": 0.0066518847006651885,
+          "predicted_class": "Request"
+        },
+        {
+          "actual_class": "Request",
+          "error_count": 3,
+          "error_rate": 0.0024429967426710096,
+          "predicted_class": "Incident"
+        },
+        {
+          "actual_class": "Request",
+          "error_count": 2,
+          "error_rate": 0.0016286644951140066,
+          "predicted_class": "Change"
+        },
+        {
+          "actual_class": "Change",
+          "error_count": 1,
+          "error_rate": 0.002277904328018223,
+          "predicted_class": "Problem"
+        },
+        {
+          "actual_class": "Incident",
+          "error_count": 1,
+          "error_rate": 0.0005813953488372093,
+          "predicted_class": "Request"
+        },
+        {
+          "actual_class": "Request",
+          "error_count": 1,
+          "error_rate": 0.0008143322475570033,
+          "predicted_class": "Problem"
+        }
+      ],
+      "per_class_errors": {
+        "Change": {
+          "false_negative_count": 29,
+          "false_positive_count": 2
+        },
+        "Incident": {
+          "false_negative_count": 119,
+          "false_positive_count": 530
+        },
+        "Problem": {
+          "false_negative_count": 520,
+          "false_positive_count": 120
+        },
+        "Request": {
+          "false_negative_count": 6,
+          "false_positive_count": 22
+        }
+      }
+    }
+  },
+  "validation": {
+    "linear_svm": {
+      "confusion_matrix": {
+        "column_labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "columns": "predicted_label",
+        "row_labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "rows": "actual_label",
+        "values": [
+          [
+            421,
+            8,
+            0,
+            9
+          ],
+          [
+            0,
+            1554,
+            165,
+            1
+          ],
+          [
+            2,
+            342,
+            553,
+            5
+          ],
+          [
+            5,
+            0,
+            3,
+            1220
+          ]
+        ]
+      },
+      "off_diagonal_pairs": [
+        {
+          "actual_class": "Problem",
+          "error_count": 342,
+          "error_rate": 0.37915742793791574,
+          "predicted_class": "Incident"
+        },
+        {
+          "actual_class": "Incident",
+          "error_count": 165,
+          "error_rate": 0.09593023255813954,
+          "predicted_class": "Problem"
+        },
+        {
+          "actual_class": "Change",
+          "error_count": 9,
+          "error_rate": 0.02054794520547945,
+          "predicted_class": "Request"
+        },
+        {
+          "actual_class": "Change",
+          "error_count": 8,
+          "error_rate": 0.0182648401826484,
+          "predicted_class": "Incident"
+        },
+        {
+          "actual_class": "Problem",
+          "error_count": 5,
+          "error_rate": 0.005543237250554324,
+          "predicted_class": "Request"
+        },
+        {
+          "actual_class": "Request",
+          "error_count": 5,
+          "error_rate": 0.004071661237785016,
+          "predicted_class": "Change"
+        },
+        {
+          "actual_class": "Request",
+          "error_count": 3,
+          "error_rate": 0.0024429967426710096,
+          "predicted_class": "Problem"
+        },
+        {
+          "actual_class": "Problem",
+          "error_count": 2,
+          "error_rate": 0.0022172949002217295,
+          "predicted_class": "Change"
+        },
+        {
+          "actual_class": "Incident",
+          "error_count": 1,
+          "error_rate": 0.0005813953488372093,
+          "predicted_class": "Request"
+        }
+      ],
+      "per_class_errors": {
+        "Change": {
+          "false_negative_count": 17,
+          "false_positive_count": 7
+        },
+        "Incident": {
+          "false_negative_count": 166,
+          "false_positive_count": 350
+        },
+        "Problem": {
+          "false_negative_count": 349,
+          "false_positive_count": 168
+        },
+        "Request": {
+          "false_negative_count": 8,
+          "false_positive_count": 15
+        }
+      }
+    },
+    "logistic_regression": {
+      "confusion_matrix": {
+        "column_labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "columns": "predicted_label",
+        "row_labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "rows": "actual_label",
+        "values": [
+          [
+            408,
+            13,
+            0,
+            17
+          ],
+          [
+            0,
+            1588,
+            127,
+            5
+          ],
+          [
+            0,
+            489,
+            411,
+            2
+          ],
+          [
+            5,
+            1,
+            0,
+            1222
+          ]
+        ]
+      },
+      "off_diagonal_pairs": [
+        {
+          "actual_class": "Problem",
+          "error_count": 489,
+          "error_rate": 0.5421286031042128,
+          "predicted_class": "Incident"
+        },
+        {
+          "actual_class": "Incident",
+          "error_count": 127,
+          "error_rate": 0.07383720930232558,
+          "predicted_class": "Problem"
+        },
+        {
+          "actual_class": "Change",
+          "error_count": 17,
+          "error_rate": 0.03881278538812785,
+          "predicted_class": "Request"
+        },
+        {
+          "actual_class": "Change",
+          "error_count": 13,
+          "error_rate": 0.02968036529680365,
+          "predicted_class": "Incident"
+        },
+        {
+          "actual_class": "Incident",
+          "error_count": 5,
+          "error_rate": 0.0029069767441860465,
+          "predicted_class": "Request"
+        },
+        {
+          "actual_class": "Request",
+          "error_count": 5,
+          "error_rate": 0.004071661237785016,
+          "predicted_class": "Change"
+        },
+        {
+          "actual_class": "Problem",
+          "error_count": 2,
+          "error_rate": 0.0022172949002217295,
+          "predicted_class": "Request"
+        },
+        {
+          "actual_class": "Request",
+          "error_count": 1,
+          "error_rate": 0.0008143322475570033,
+          "predicted_class": "Incident"
+        }
+      ],
+      "per_class_errors": {
+        "Change": {
+          "false_negative_count": 30,
+          "false_positive_count": 5
+        },
+        "Incident": {
+          "false_negative_count": 132,
+          "false_positive_count": 503
+        },
+        "Problem": {
+          "false_negative_count": 491,
+          "false_positive_count": 127
+        },
+        "Request": {
+          "false_negative_count": 6,
+          "false_positive_count": 24
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,2921 @@
+{
+  "analysis_id": "comparison_b525f02c687e",
+  "class_weighting_assessment": {
+    "class_counts_full": {
+      "Change": 2922,
+      "Incident": 11466,
+      "Problem": 6012,
+      "Request": 8187
+    },
+    "class_weighting_investigation_warranted": true,
+    "evidence_classes": [
+      "Problem"
+    ],
+    "policy": "Exploratory evidence gate: unequal frozen counts and below-macro validation recall in a less frequent class; not an optimization rule",
+    "reasoning": "Less frequent classes with below-macro recall warrant a controlled Phase 2.9 investigation; inspect FP/FN trade-offs and label-review candidates first.",
+    "validation_evidence": {
+      "Change": {
+        "linear_svm": {
+          "f1": 0.9722863741339491,
+          "false_negative_count": 17,
+          "false_positive_count": 7,
+          "precision": 0.9836448598130841,
+          "recall": 0.9611872146118722,
+          "support": 438
+        },
+        "logistic_regression": {
+          "f1": 0.9588719153936546,
+          "false_negative_count": 30,
+          "false_positive_count": 5,
+          "precision": 0.9878934624697336,
+          "recall": 0.9315068493150684,
+          "support": 438
+        }
+      },
+      "Incident": {
+        "linear_svm": {
+          "f1": 0.8576158940397351,
+          "false_negative_count": 166,
+          "false_positive_count": 350,
+          "precision": 0.8161764705882353,
+          "recall": 0.9034883720930232,
+          "support": 1720
+        },
+        "logistic_regression": {
+          "f1": 0.8333770663867751,
+          "false_negative_count": 132,
+          "false_positive_count": 503,
+          "precision": 0.7594452415112386,
+          "recall": 0.9232558139534883,
+          "support": 1720
+        }
+      },
+      "Problem": {
+        "linear_svm": {
+          "f1": 0.6814540973505854,
+          "false_negative_count": 349,
+          "false_positive_count": 168,
+          "precision": 0.7669902912621359,
+          "recall": 0.6130820399113082,
+          "support": 902
+        },
+        "logistic_regression": {
+          "f1": 0.5708333333333333,
+          "false_negative_count": 491,
+          "false_positive_count": 127,
+          "precision": 0.7639405204460966,
+          "recall": 0.4556541019955654,
+          "support": 902
+        }
+      },
+      "Request": {
+        "linear_svm": {
+          "f1": 0.9906617945594803,
+          "false_negative_count": 8,
+          "false_positive_count": 15,
+          "precision": 0.9878542510121457,
+          "recall": 0.993485342019544,
+          "support": 1228
+        },
+        "logistic_regression": {
+          "f1": 0.9878738884397736,
+          "false_negative_count": 6,
+          "false_positive_count": 24,
+          "precision": 0.9807383627608347,
+          "recall": 0.995114006514658,
+          "support": 1228
+        }
+      }
+    }
+  },
+  "conclusion": {
+    "class_f1_regressions": [],
+    "largest_f1_gain_class": "Problem",
+    "latency_limitation": "Recorded predict-only CPU times exclude TF-IDF; LR one cold pass versus SVM one warmup/five measured passes. Indicative only, not a controlled benchmark.",
+    "preferred_baseline": "linear_svm",
+    "reasoning": "Validation Macro F1 is the primary ranking criterion; ties use macro recall, macro precision, then weighted F1. Supporting metrics, per-class gains/regressions, minority behavior and engineering trade-offs qualify the recommendation below. Test is descriptive and does not tune the choice.",
+    "recall_tradeoffs": [
+      "Incident",
+      "Request"
+    ],
+    "selection_metric_priority": [
+      "macro_f1",
+      "macro_recall",
+      "macro_precision",
+      "weighted_f1"
+    ],
+    "selection_split": "validation",
+    "short_validation_error_rate_delta": 0.022624434389140274,
+    "svm_class_f1_improvements": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "svm_supporting_metric_improvements": [
+      "macro_f1",
+      "macro_recall",
+      "macro_precision",
+      "weighted_f1"
+    ],
+    "tradeoffs": {
+      "accuracy": 0.027751865671641784,
+      "cpu_inference_seconds_per_record": -1.9681147396520608e-07,
+      "macro_f1": 0.03776548913255329,
+      "macro_precision": 0.015662071371924324,
+      "macro_recall": 0.04142804921424181,
+      "model_size_bytes": -132,
+      "training_time_seconds": -2.766649232002237,
+      "weighted_f1": 0.03516086621965997
+    }
+  },
+  "confusion": {
+    "test": {
+      "linear_svm": {
+        "confusion_matrix": {
+          "column_labels": [
+            "Change",
+            "Incident",
+            "Problem",
+            "Request"
+          ],
+          "columns": "predicted_label",
+          "row_labels": [
+            "Change",
+            "Incident",
+            "Problem",
+            "Request"
+          ],
+          "rows": "actual_label",
+          "values": [
+            [
+              426,
+              4,
+              2,
+              7
+            ],
+            [
+              1,
+              1544,
+              175,
+              0
+            ],
+            [
+              1,
+              360,
+              536,
+              5
+            ],
+            [
+              2,
+              1,
+              1,
+              1224
+            ]
+          ]
+        },
+        "off_diagonal_pairs": [
+          {
+            "actual_class": "Problem",
+            "error_count": 360,
+            "error_rate": 0.3991130820399113,
+            "predicted_class": "Incident"
+          },
+          {
+            "actual_class": "Incident",
+            "error_count": 175,
+            "error_rate": 0.10174418604651163,
+            "predicted_class": "Problem"
+          },
+          {
+            "actual_class": "Change",
+            "error_count": 7,
+            "error_rate": 0.015945330296127564,
+            "predicted_class": "Request"
+          },
+          {
+            "actual_class": "Problem",
+            "error_count": 5,
+            "error_rate": 0.005543237250554324,
+            "predicted_class": "Request"
+          },
+          {
+            "actual_class": "Change",
+            "error_count": 4,
+            "error_rate": 0.009111617312072893,
+            "predicted_class": "Incident"
+          },
+          {
+            "actual_class": "Change",
+            "error_count": 2,
+            "error_rate": 0.004555808656036446,
+            "predicted_class": "Problem"
+          },
+          {
+            "actual_class": "Request",
+            "error_count": 2,
+            "error_rate": 0.0016286644951140066,
+            "predicted_class": "Change"
+          },
+          {
+            "actual_class": "Incident",
+            "error_count": 1,
+            "error_rate": 0.0005813953488372093,
+            "predicted_class": "Change"
+          },
+          {
+            "actual_class": "Problem",
+            "error_count": 1,
+            "error_rate": 0.0011086474501108647,
+            "predicted_class": "Change"
+          },
+          {
+            "actual_class": "Request",
+            "error_count": 1,
+            "error_rate": 0.0008143322475570033,
+            "predicted_class": "Incident"
+          },
+          {
+            "actual_class": "Request",
+            "error_count": 1,
+            "error_rate": 0.0008143322475570033,
+            "predicted_class": "Problem"
+          }
+        ],
+        "per_class_errors": {
+          "Change": {
+            "false_negative_count": 13,
+            "false_positive_count": 4
+          },
+          "Incident": {
+            "false_negative_count": 176,
+            "false_positive_count": 365
+          },
+          "Problem": {
+            "false_negative_count": 366,
+            "false_positive_count": 178
+          },
+          "Request": {
+            "false_negative_count": 4,
+            "false_positive_count": 12
+          }
+        }
+      },
+      "logistic_regression": {
+        "confusion_matrix": {
+          "column_labels": [
+            "Change",
+            "Incident",
+            "Problem",
+            "Request"
+          ],
+          "columns": "predicted_label",
+          "row_labels": [
+            "Change",
+            "Incident",
+            "Problem",
+            "Request"
+          ],
+          "rows": "actual_label",
+          "values": [
+            [
+              410,
+              13,
+              1,
+              15
+            ],
+            [
+              0,
+              1601,
+              118,
+              1
+            ],
+            [
+              0,
+              514,
+              382,
+              6
+            ],
+            [
+              2,
+              3,
+              1,
+              1222
+            ]
+          ]
+        },
+        "off_diagonal_pairs": [
+          {
+            "actual_class": "Problem",
+            "error_count": 514,
+            "error_rate": 0.5698447893569845,
+            "predicted_class": "Incident"
+          },
+          {
+            "actual_class": "Incident",
+            "error_count": 118,
+            "error_rate": 0.0686046511627907,
+            "predicted_class": "Problem"
+          },
+          {
+            "actual_class": "Change",
+            "error_count": 15,
+            "error_rate": 0.03416856492027335,
+            "predicted_class": "Request"
+          },
+          {
+            "actual_class": "Change",
+            "error_count": 13,
+            "error_rate": 0.029612756264236904,
+            "predicted_class": "Incident"
+          },
+          {
+            "actual_class": "Problem",
+            "error_count": 6,
+            "error_rate": 0.0066518847006651885,
+            "predicted_class": "Request"
+          },
+          {
+            "actual_class": "Request",
+            "error_count": 3,
+            "error_rate": 0.0024429967426710096,
+            "predicted_class": "Incident"
+          },
+          {
+            "actual_class": "Request",
+            "error_count": 2,
+            "error_rate": 0.0016286644951140066,
+            "predicted_class": "Change"
+          },
+          {
+            "actual_class": "Change",
+            "error_count": 1,
+            "error_rate": 0.002277904328018223,
+            "predicted_class": "Problem"
+          },
+          {
+            "actual_class": "Incident",
+            "error_count": 1,
+            "error_rate": 0.0005813953488372093,
+            "predicted_class": "Request"
+          },
+          {
+            "actual_class": "Request",
+            "error_count": 1,
+            "error_rate": 0.0008143322475570033,
+            "predicted_class": "Problem"
+          }
+        ],
+        "per_class_errors": {
+          "Change": {
+            "false_negative_count": 29,
+            "false_positive_count": 2
+          },
+          "Incident": {
+            "false_negative_count": 119,
+            "false_positive_count": 530
+          },
+          "Problem": {
+            "false_negative_count": 520,
+            "false_positive_count": 120
+          },
+          "Request": {
+            "false_negative_count": 6,
+            "false_positive_count": 22
+          }
+        }
+      }
+    },
+    "validation": {
+      "linear_svm": {
+        "confusion_matrix": {
+          "column_labels": [
+            "Change",
+            "Incident",
+            "Problem",
+            "Request"
+          ],
+          "columns": "predicted_label",
+          "row_labels": [
+            "Change",
+            "Incident",
+            "Problem",
+            "Request"
+          ],
+          "rows": "actual_label",
+          "values": [
+            [
+              421,
+              8,
+              0,
+              9
+            ],
+            [
+              0,
+              1554,
+              165,
+              1
+            ],
+            [
+              2,
+              342,
+              553,
+              5
+            ],
+            [
+              5,
+              0,
+              3,
+              1220
+            ]
+          ]
+        },
+        "off_diagonal_pairs": [
+          {
+            "actual_class": "Problem",
+            "error_count": 342,
+            "error_rate": 0.37915742793791574,
+            "predicted_class": "Incident"
+          },
+          {
+            "actual_class": "Incident",
+            "error_count": 165,
+            "error_rate": 0.09593023255813954,
+            "predicted_class": "Problem"
+          },
+          {
+            "actual_class": "Change",
+            "error_count": 9,
+            "error_rate": 0.02054794520547945,
+            "predicted_class": "Request"
+          },
+          {
+            "actual_class": "Change",
+            "error_count": 8,
+            "error_rate": 0.0182648401826484,
+            "predicted_class": "Incident"
+          },
+          {
+            "actual_class": "Problem",
+            "error_count": 5,
+            "error_rate": 0.005543237250554324,
+            "predicted_class": "Request"
+          },
+          {
+            "actual_class": "Request",
+            "error_count": 5,
+            "error_rate": 0.004071661237785016,
+            "predicted_class": "Change"
+          },
+          {
+            "actual_class": "Request",
+            "error_count": 3,
+            "error_rate": 0.0024429967426710096,
+            "predicted_class": "Problem"
+          },
+          {
+            "actual_class": "Problem",
+            "error_count": 2,
+            "error_rate": 0.0022172949002217295,
+            "predicted_class": "Change"
+          },
+          {
+            "actual_class": "Incident",
+            "error_count": 1,
+            "error_rate": 0.0005813953488372093,
+            "predicted_class": "Request"
+          }
+        ],
+        "per_class_errors": {
+          "Change": {
+            "false_negative_count": 17,
+            "false_positive_count": 7
+          },
+          "Incident": {
+            "false_negative_count": 166,
+            "false_positive_count": 350
+          },
+          "Problem": {
+            "false_negative_count": 349,
+            "false_positive_count": 168
+          },
+          "Request": {
+            "false_negative_count": 8,
+            "false_positive_count": 15
+          }
+        }
+      },
+      "logistic_regression": {
+        "confusion_matrix": {
+          "column_labels": [
+            "Change",
+            "Incident",
+            "Problem",
+            "Request"
+          ],
+          "columns": "predicted_label",
+          "row_labels": [
+            "Change",
+            "Incident",
+            "Problem",
+            "Request"
+          ],
+          "rows": "actual_label",
+          "values": [
+            [
+              408,
+              13,
+              0,
+              17
+            ],
+            [
+              0,
+              1588,
+              127,
+              5
+            ],
+            [
+              0,
+              489,
+              411,
+              2
+            ],
+            [
+              5,
+              1,
+              0,
+              1222
+            ]
+          ]
+        },
+        "off_diagonal_pairs": [
+          {
+            "actual_class": "Problem",
+            "error_count": 489,
+            "error_rate": 0.5421286031042128,
+            "predicted_class": "Incident"
+          },
+          {
+            "actual_class": "Incident",
+            "error_count": 127,
+            "error_rate": 0.07383720930232558,
+            "predicted_class": "Problem"
+          },
+          {
+            "actual_class": "Change",
+            "error_count": 17,
+            "error_rate": 0.03881278538812785,
+            "predicted_class": "Request"
+          },
+          {
+            "actual_class": "Change",
+            "error_count": 13,
+            "error_rate": 0.02968036529680365,
+            "predicted_class": "Incident"
+          },
+          {
+            "actual_class": "Incident",
+            "error_count": 5,
+            "error_rate": 0.0029069767441860465,
+            "predicted_class": "Request"
+          },
+          {
+            "actual_class": "Request",
+            "error_count": 5,
+            "error_rate": 0.004071661237785016,
+            "predicted_class": "Change"
+          },
+          {
+            "actual_class": "Problem",
+            "error_count": 2,
+            "error_rate": 0.0022172949002217295,
+            "predicted_class": "Request"
+          },
+          {
+            "actual_class": "Request",
+            "error_count": 1,
+            "error_rate": 0.0008143322475570033,
+            "predicted_class": "Incident"
+          }
+        ],
+        "per_class_errors": {
+          "Change": {
+            "false_negative_count": 30,
+            "false_positive_count": 5
+          },
+          "Incident": {
+            "false_negative_count": 132,
+            "false_positive_count": 503
+          },
+          "Problem": {
+            "false_negative_count": 491,
+            "false_positive_count": 127
+          },
+          "Request": {
+            "false_negative_count": 6,
+            "false_positive_count": 24
+          }
+        }
+      }
+    }
+  },
+  "context": {
+    "class_counts_full": {
+      "Change": 2922,
+      "Incident": 11466,
+      "Problem": 6012,
+      "Request": 8187
+    },
+    "class_order": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "dataset_version": "ds_6fa2f19cf683",
+    "engineering_environment": {
+      "linear_svm": {
+        "hardware": {
+          "machine": "x86_64",
+          "platform": "macOS-26.7.1-x86_64-i386-64bit-Mach-O"
+        },
+        "versions": {
+          "joblib": "1.5.3",
+          "numpy": "2.5.2",
+          "python": "3.13.7",
+          "sklearn": "1.9.0"
+        }
+      },
+      "logistic_regression": {
+        "hardware": {
+          "machine": "x86_64",
+          "platform": "macOS-26.7.1-x86_64-i386-64bit-Mach-O"
+        },
+        "versions": {
+          "joblib": "1.5.3",
+          "numpy": "2.5.2",
+          "python": "3.13.7",
+          "sklearn": "1.9.0"
+        }
+      }
+    },
+    "evaluation_protocol": "evaluate_predictions; explicit class order; zero_division=0; validation selection, test descriptive only",
+    "experiments": {
+      "linear_svm": "svm_ad774dbd53f7",
+      "logistic_regression": "lr_7157dc062a89"
+    },
+    "feature_configuration": {
+      "analyzer": "word",
+      "feature_type": "tfidf",
+      "input_fields": [
+        "subject",
+        "message"
+      ],
+      "input_policy": "subject + message",
+      "lowercase": true,
+      "max_df": null,
+      "max_features": null,
+      "min_df": 2,
+      "ngram_range": [
+        1,
+        2
+      ],
+      "separator": "\n\n",
+      "sublinear_tf": false
+    },
+    "feature_count": 83743,
+    "feature_type": "tfidf",
+    "feature_version": "tfidf_3275ba614aa6",
+    "fit_split": "train",
+    "label_mapping": {
+      "Change": 0,
+      "Incident": 1,
+      "Problem": 2,
+      "Request": 3
+    },
+    "length_rule": {
+      "limited_context_rule": "audit word count < 3",
+      "long": ">= full-dataset nearest-rank p95 (ties included)",
+      "long_cutoff": 742,
+      "measure": "character count of frozen subject + message text",
+      "short": "<= full-dataset nearest-rank p5 (ties included)",
+      "short_cutoff": 112
+    },
+    "matrix_format": "csr",
+    "matrix_shapes": {
+      "test": [
+        4289,
+        83743
+      ],
+      "train": [
+        20010,
+        83743
+      ],
+      "validation": [
+        4288,
+        83743
+      ]
+    },
+    "non_zero_counts": {
+      "test": 395599,
+      "train": 1917943,
+      "validation": 396050
+    },
+    "source_references": {
+      "linear_svm": "artifacts/classification/run/linear_svm",
+      "logistic_regression": "artifacts/classification/run/logistic_regression"
+    },
+    "split_version": "split_d1f67d41500f",
+    "top_k": 20,
+    "vocabulary_size": 83743
+  },
+  "disagreements": {
+    "test": {
+      "both_wrong_different": 5,
+      "lr_correct_svm_wrong": 88,
+      "svm_correct_lr_wrong": 203
+    },
+    "validation": {
+      "both_wrong_different": 7,
+      "lr_correct_svm_wrong": 65,
+      "svm_correct_lr_wrong": 184
+    }
+  },
+  "feature_importance": {
+    "models": {
+      "linear_svm": {
+        "Change": {
+          "negative": [
+            {
+              "feature": "detailed",
+              "weight": -1.4419704992018514
+            },
+            {
+              "feature": "problem",
+              "weight": -1.4282745843636744
+            },
+            {
+              "feature": "details",
+              "weight": -1.3495304341341277
+            },
+            {
+              "feature": "on",
+              "weight": -1.3355293935173291
+            },
+            {
+              "feature": "detaillierte",
+              "weight": -1.3181274399188787
+            },
+            {
+              "feature": "have",
+              "weight": -1.3113151005117065
+            },
+            {
+              "feature": "despite",
+              "weight": -1.2631335842650278
+            },
+            {
+              "feature": "issue",
+              "weight": -1.2515155264545734
+            },
+            {
+              "feature": "wurde",
+              "weight": -1.2190211100321835
+            },
+            {
+              "feature": "könnten sie",
+              "weight": -1.1656168427467515
+            },
+            {
+              "feature": "wurden",
+              "weight": -1.151931616285537
+            },
+            {
+              "feature": "erfahren",
+              "weight": -1.1450461189865402
+            },
+            {
+              "feature": "with",
+              "weight": -1.1079873946241972
+            },
+            {
+              "feature": "you provide",
+              "weight": -1.1001073786431927
+            },
+            {
+              "feature": "geben",
+              "weight": -1.095290956935229
+            },
+            {
+              "feature": "about",
+              "weight": -1.0625174967329603
+            },
+            {
+              "feature": "information on",
+              "weight": -1.0579346409772579
+            },
+            {
+              "feature": "due to",
+              "weight": -1.040661859622719
+            },
+            {
+              "feature": "comprehensive",
+              "weight": -1.0383403061054703
+            },
+            {
+              "feature": "due",
+              "weight": -1.0196678567398805
+            }
+          ],
+          "positive": [
+            {
+              "feature": "update",
+              "weight": 2.945156608026605
+            },
+            {
+              "feature": "aktualisierung",
+              "weight": 2.353826842803677
+            },
+            {
+              "feature": "improve",
+              "weight": 2.316888470165273
+            },
+            {
+              "feature": "enhance",
+              "weight": 2.2338554001991864
+            },
+            {
+              "feature": "verbessern",
+              "weight": 2.2303990515976158
+            },
+            {
+              "feature": "request",
+              "weight": 2.1187113975381755
+            },
+            {
+              "feature": "advanced",
+              "weight": 1.7919863726932674
+            },
+            {
+              "feature": "revise",
+              "weight": 1.7220197330091025
+            },
+            {
+              "feature": "enhancement",
+              "weight": 1.6172535898489095
+            },
+            {
+              "feature": "enhanced",
+              "weight": 1.6029986523249684
+            },
+            {
+              "feature": "verbesserung",
+              "weight": 1.584297401462347
+            },
+            {
+              "feature": "improved",
+              "weight": 1.584143037102781
+            },
+            {
+              "feature": "erweiterte",
+              "weight": 1.5466573713803902
+            },
+            {
+              "feature": "upgrade",
+              "weight": 1.486531454934886
+            },
+            {
+              "feature": "enhancements",
+              "weight": 1.4420069142621084
+            },
+            {
+              "feature": "beantragen",
+              "weight": 1.3526937089095985
+            },
+            {
+              "feature": "optimierung",
+              "weight": 1.2592551184133027
+            },
+            {
+              "feature": "update der",
+              "weight": 1.2554668386274397
+            },
+            {
+              "feature": "an update",
+              "weight": 1.255360446510221
+            },
+            {
+              "feature": "boost",
+              "weight": 1.2489340784651488
+            }
+          ]
+        },
+        "Incident": {
+          "negative": [
+            {
+              "feature": "für",
+              "weight": -1.6707621227639118
+            },
+            {
+              "feature": "data overload",
+              "weight": -1.6549437952931554
+            },
+            {
+              "feature": "frequent",
+              "weight": -1.634715680069362
+            },
+            {
+              "feature": "updating",
+              "weight": -1.6280956137663891
+            },
+            {
+              "feature": "updating the",
+              "weight": -1.6114980871292768
+            },
+            {
+              "feature": "breaches",
+              "weight": -1.5140139085887874
+            },
+            {
+              "feature": "rechnung",
+              "weight": -1.492490165622465
+            },
+            {
+              "feature": "kaspersky",
+              "weight": -1.4794101459159874
+            },
+            {
+              "feature": "crashes which",
+              "weight": -1.4792827680101677
+            },
+            {
+              "feature": "terraform",
+              "weight": -1.4609945691626358
+            },
+            {
+              "feature": "requesting",
+              "weight": -1.4479601969737275
+            },
+            {
+              "feature": "systems due",
+              "weight": -1.4367924108047554
+            },
+            {
+              "feature": "enhance",
+              "weight": -1.4331179823663276
+            },
+            {
+              "feature": "bigcommerce",
+              "weight": -1.3877156026544044
+            },
+            {
+              "feature": "client",
+              "weight": -1.3735516289266025
+            },
+            {
+              "feature": "efficiency",
+              "weight": -1.3689401620121966
+            },
+            {
+              "feature": "security vulnerabilities",
+              "weight": -1.3449257082143986
+            },
+            {
+              "feature": "launch",
+              "weight": -1.3437830514881064
+            },
+            {
+              "feature": "request",
+              "weight": -1.3391415033552154
+            },
+            {
+              "feature": "cloud",
+              "weight": -1.3356070271206688
+            }
+          ],
+          "positive": [
+            {
+              "feature": "incident",
+              "weight": 2.698616007480575
+            },
+            {
+              "feature": "initial",
+              "weight": 2.20587986175983
+            },
+            {
+              "feature": "erste",
+              "weight": 1.9380849194051313
+            },
+            {
+              "feature": "error",
+              "weight": 1.8786306057959155
+            },
+            {
+              "feature": "several",
+              "weight": 1.788306747150641
+            },
+            {
+              "feature": "or hardware",
+              "weight": 1.738442130255542
+            },
+            {
+              "feature": "vorfall",
+              "weight": 1.7244933928389052
+            },
+            {
+              "feature": "outage",
+              "weight": 1.7196124682889469
+            },
+            {
+              "feature": "multiple products",
+              "weight": 1.6465817683839379
+            },
+            {
+              "feature": "an incident",
+              "weight": 1.5970747876930702
+            },
+            {
+              "feature": "beeinträchtigt",
+              "weight": 1.5696945203203136
+            },
+            {
+              "feature": "access attempt",
+              "weight": 1.563700389905941
+            },
+            {
+              "feature": "issue",
+              "weight": 1.5613842556971955
+            },
+            {
+              "feature": "einen",
+              "weight": 1.4945213421610117
+            },
+            {
+              "feature": "services the",
+              "weight": 1.4436046456782254
+            },
+            {
+              "feature": "konflikte",
+              "weight": 1.4111442768640512
+            },
+            {
+              "feature": "kampagne",
+              "weight": 1.3826637495473455
+            },
+            {
+              "feature": "attempt",
+              "weight": 1.3800466980603618
+            },
+            {
+              "feature": "restarting services",
+              "weight": 1.378660581527146
+            },
+            {
+              "feature": "crashes in",
+              "weight": 1.3696028267834677
+            }
+          ]
+        },
+        "Problem": {
+          "negative": [
+            {
+              "feature": "incident",
+              "weight": -1.9435726646028284
+            },
+            {
+              "feature": "initial",
+              "weight": -1.8743578540154027
+            },
+            {
+              "feature": "or hardware",
+              "weight": -1.7463223228418638
+            },
+            {
+              "feature": "erste",
+              "weight": -1.66027825419993
+            },
+            {
+              "feature": "several",
+              "weight": -1.6150742016781543
+            },
+            {
+              "feature": "multiple products",
+              "weight": -1.6117339405997007
+            },
+            {
+              "feature": "access attempt",
+              "weight": -1.500174813917735
+            },
+            {
+              "feature": "product",
+              "weight": -1.4191808112839062
+            },
+            {
+              "feature": "but have",
+              "weight": -1.4139559363370593
+            },
+            {
+              "feature": "vorfall",
+              "weight": -1.4091626684373604
+            },
+            {
+              "feature": "these",
+              "weight": -1.3904322934452804
+            },
+            {
+              "feature": "services the",
+              "weight": -1.3679407511521857
+            },
+            {
+              "feature": "an incident",
+              "weight": -1.3609209169879208
+            },
+            {
+              "feature": "optimization system",
+              "weight": -1.3111836549347613
+            },
+            {
+              "feature": "crashes in",
+              "weight": -1.262160742819533
+            },
+            {
+              "feature": "updates or",
+              "weight": -1.2341037905354832
+            },
+            {
+              "feature": "attempt",
+              "weight": -1.2263424535117518
+            },
+            {
+              "feature": "an unexpected",
+              "weight": -1.2089457452429468
+            },
+            {
+              "feature": "data synchronization",
+              "weight": -1.2049683159894709
+            },
+            {
+              "feature": "take to",
+              "weight": -1.1892021429070017
+            }
+          ],
+          "positive": [
+            {
+              "feature": "trotz",
+              "weight": 2.078474221019679
+            },
+            {
+              "feature": "frequent",
+              "weight": 1.888055513698787
+            },
+            {
+              "feature": "facing",
+              "weight": 1.8328486764172292
+            },
+            {
+              "feature": "breaches",
+              "weight": 1.8221800199105358
+            },
+            {
+              "feature": "despite",
+              "weight": 1.7970161309758539
+            },
+            {
+              "feature": "rechnung",
+              "weight": 1.7739767230429726
+            },
+            {
+              "feature": "for security",
+              "weight": 1.6952105590276787
+            },
+            {
+              "feature": "security vulnerabilities",
+              "weight": 1.6632741173272334
+            },
+            {
+              "feature": "updating the",
+              "weight": 1.6135355767832902
+            },
+            {
+              "feature": "updating",
+              "weight": 1.5358261330741
+            },
+            {
+              "feature": "data overload",
+              "weight": 1.5311011737826614
+            },
+            {
+              "feature": "systems due",
+              "weight": 1.5026824336141096
+            },
+            {
+              "feature": "ladezeiten",
+              "weight": 1.4005121623571903
+            },
+            {
+              "feature": "data access",
+              "weight": 1.3927133358884634
+            },
+            {
+              "feature": "client engagement",
+              "weight": 1.374170827626107
+            },
+            {
+              "feature": "subscription",
+              "weight": 1.371751834658258
+            },
+            {
+              "feature": "difficulties in",
+              "weight": 1.3695395562643182
+            },
+            {
+              "feature": "user load",
+              "weight": 1.363862647856462
+            },
+            {
+              "feature": "unstimmigkeiten",
+              "weight": 1.3625205223253052
+            },
+            {
+              "feature": "datenschutzbeschränkung",
+              "weight": 1.358604061883798
+            }
+          ]
+        },
+        "Request": {
+          "negative": [
+            {
+              "feature": "update",
+              "weight": -2.004080350844009
+            },
+            {
+              "feature": "aktualisierung",
+              "weight": -1.6563555200858537
+            },
+            {
+              "feature": "problem",
+              "weight": -1.654626446034809
+            },
+            {
+              "feature": "issue",
+              "weight": -1.5889698711689562
+            },
+            {
+              "feature": "issues",
+              "weight": -1.5373044354721
+            },
+            {
+              "feature": "probleme",
+              "weight": -1.2943938019158416
+            },
+            {
+              "feature": "software",
+              "weight": -1.2101627428318518
+            },
+            {
+              "feature": "enhanced",
+              "weight": -1.1929108618089557
+            },
+            {
+              "feature": "updates",
+              "weight": -1.1806867131162897
+            },
+            {
+              "feature": "facing",
+              "weight": -1.1386162584131774
+            },
+            {
+              "feature": "das",
+              "weight": -1.1361441414387772
+            },
+            {
+              "feature": "improve",
+              "weight": -1.1216725014467457
+            },
+            {
+              "feature": "the",
+              "weight": -1.1175008318866686
+            },
+            {
+              "feature": "problems",
+              "weight": -1.1154621147704877
+            },
+            {
+              "feature": "our",
+              "weight": -1.0900584605546555
+            },
+            {
+              "feature": "improved",
+              "weight": -1.082122831054005
+            },
+            {
+              "feature": "implementing",
+              "weight": -1.0604190263374846
+            },
+            {
+              "feature": "this",
+              "weight": -1.0272370003275766
+            },
+            {
+              "feature": "aufgrund",
+              "weight": -0.9703869283241333
+            },
+            {
+              "feature": "concern",
+              "weight": -0.9627050302818033
+            }
+          ],
+          "positive": [
+            {
+              "feature": "details",
+              "weight": 2.491814863262358
+            },
+            {
+              "feature": "detailed",
+              "weight": 2.3048979289958806
+            },
+            {
+              "feature": "on",
+              "weight": 2.0824607042928416
+            },
+            {
+              "feature": "detaillierte",
+              "weight": 2.0383513813954743
+            },
+            {
+              "feature": "könnten sie",
+              "weight": 1.8657080526900058
+            },
+            {
+              "feature": "comprehensive",
+              "weight": 1.7639421847622299
+            },
+            {
+              "feature": "integrating",
+              "weight": 1.708097649291899
+            },
+            {
+              "feature": "für",
+              "weight": 1.663657402684688
+            },
+            {
+              "feature": "informationen",
+              "weight": 1.6153883591421014
+            },
+            {
+              "feature": "you",
+              "weight": 1.6012682714938418
+            },
+            {
+              "feature": "zur",
+              "weight": 1.5780294069356098
+            },
+            {
+              "feature": "provide",
+              "weight": 1.5503635007309087
+            },
+            {
+              "feature": "information on",
+              "weight": 1.5441402425514201
+            },
+            {
+              "feature": "documentation",
+              "weight": 1.5412415544838016
+            },
+            {
+              "feature": "bereitstellen",
+              "weight": 1.4832238540098075
+            },
+            {
+              "feature": "könnten",
+              "weight": 1.4825224417604284
+            },
+            {
+              "feature": "for",
+              "weight": 1.482078883089668
+            },
+            {
+              "feature": "sie",
+              "weight": 1.4689699730929238
+            },
+            {
+              "feature": "interessiert",
+              "weight": 1.4228933943390065
+            },
+            {
+              "feature": "können",
+              "weight": 1.4181834085241762
+            }
+          ]
+        }
+      },
+      "logistic_regression": {
+        "Change": {
+          "negative": [
+            {
+              "feature": "problem",
+              "weight": -2.7361039263544873
+            },
+            {
+              "feature": "have",
+              "weight": -2.3261005245585005
+            },
+            {
+              "feature": "issue",
+              "weight": -2.2672356257866237
+            },
+            {
+              "feature": "with",
+              "weight": -1.9106501773992346
+            },
+            {
+              "feature": "due to",
+              "weight": -1.8944258351777263
+            },
+            {
+              "feature": "due",
+              "weight": -1.8881936908856014
+            },
+            {
+              "feature": "wurden",
+              "weight": -1.851713366748905
+            },
+            {
+              "feature": "the",
+              "weight": -1.778724525602112
+            },
+            {
+              "feature": "wurde",
+              "weight": -1.7009604875693816
+            },
+            {
+              "feature": "on",
+              "weight": -1.629330927476567
+            },
+            {
+              "feature": "breach",
+              "weight": -1.5462830033221113
+            },
+            {
+              "feature": "issues",
+              "weight": -1.5430192492099064
+            },
+            {
+              "feature": "despite",
+              "weight": -1.5008119379266849
+            },
+            {
+              "feature": "das problem",
+              "weight": -1.4901266441155343
+            },
+            {
+              "feature": "problems",
+              "weight": -1.4805178993313828
+            },
+            {
+              "feature": "bei",
+              "weight": -1.475295939821812
+            },
+            {
+              "feature": "about",
+              "weight": -1.4589195504788357
+            },
+            {
+              "feature": "details",
+              "weight": -1.4128723853197451
+            },
+            {
+              "feature": "be",
+              "weight": -1.3254248198878043
+            },
+            {
+              "feature": "könnten sie",
+              "weight": -1.3101285539238356
+            }
+          ],
+          "positive": [
+            {
+              "feature": "update",
+              "weight": 4.851238638322828
+            },
+            {
+              "feature": "request",
+              "weight": 4.019388403502354
+            },
+            {
+              "feature": "improve",
+              "weight": 3.940788914088038
+            },
+            {
+              "feature": "enhance",
+              "weight": 3.7358231343668207
+            },
+            {
+              "feature": "aktualisierung",
+              "weight": 3.3385498727569973
+            },
+            {
+              "feature": "verbessern",
+              "weight": 3.2594302644244366
+            },
+            {
+              "feature": "verbesserung",
+              "weight": 2.6051678906190463
+            },
+            {
+              "feature": "our",
+              "weight": 2.5476200169625987
+            },
+            {
+              "feature": "to",
+              "weight": 2.42167441727587
+            },
+            {
+              "feature": "advanced",
+              "weight": 2.3010210091413197
+            },
+            {
+              "feature": "and",
+              "weight": 2.2570750645482387
+            },
+            {
+              "feature": "tools",
+              "weight": 2.1929602115548414
+            },
+            {
+              "feature": "um",
+              "weight": 2.1865381113352376
+            },
+            {
+              "feature": "for",
+              "weight": 2.184535372960475
+            },
+            {
+              "feature": "an update",
+              "weight": 2.1596196457868833
+            },
+            {
+              "feature": "enhancement",
+              "weight": 2.115492229975532
+            },
+            {
+              "feature": "enhanced",
+              "weight": 2.0607947962710296
+            },
+            {
+              "feature": "revise",
+              "weight": 2.0123756734675338
+            },
+            {
+              "feature": "current",
+              "weight": 1.9704577872765745
+            },
+            {
+              "feature": "verbesserung der",
+              "weight": 1.9649621499069456
+            }
+          ]
+        },
+        "Incident": {
+          "negative": [
+            {
+              "feature": "für",
+              "weight": -3.022385661310561
+            },
+            {
+              "feature": "for",
+              "weight": -2.823161621241282
+            },
+            {
+              "feature": "integration",
+              "weight": -2.3041558607541903
+            },
+            {
+              "feature": "enhance",
+              "weight": -2.167606222085134
+            },
+            {
+              "feature": "request",
+              "weight": -1.8872935757996172
+            },
+            {
+              "feature": "ich",
+              "weight": -1.6470642953673202
+            },
+            {
+              "feature": "zu",
+              "weight": -1.6408968580383163
+            },
+            {
+              "feature": "projektmanagement",
+              "weight": -1.6023184262706887
+            },
+            {
+              "feature": "sie",
+              "weight": -1.5608413468708406
+            },
+            {
+              "feature": "on",
+              "weight": -1.5442414932430413
+            },
+            {
+              "feature": "um",
+              "weight": -1.5216975702489792
+            },
+            {
+              "feature": "verbessern",
+              "weight": -1.4862869396107465
+            },
+            {
+              "feature": "improve",
+              "weight": -1.4279405464305268
+            },
+            {
+              "feature": "verbesserung",
+              "weight": -1.4278508538559176
+            },
+            {
+              "feature": "you",
+              "weight": -1.4185541652469464
+            },
+            {
+              "feature": "data",
+              "weight": -1.4009727008844852
+            },
+            {
+              "feature": "details",
+              "weight": -1.3979067554756228
+            },
+            {
+              "feature": "would",
+              "weight": -1.3950738157831535
+            },
+            {
+              "feature": "integrating",
+              "weight": -1.3902794935611573
+            },
+            {
+              "feature": "breaches",
+              "weight": -1.3832761402686597
+            }
+          ],
+          "positive": [
+            {
+              "feature": "incident",
+              "weight": 3.1433368043650023
+            },
+            {
+              "feature": "issue",
+              "weight": 2.938840201043155
+            },
+            {
+              "feature": "have",
+              "weight": 2.677356225128129
+            },
+            {
+              "feature": "problem",
+              "weight": 2.6315057940553235
+            },
+            {
+              "feature": "the",
+              "weight": 2.504730700677786
+            },
+            {
+              "feature": "system",
+              "weight": 2.480971508493074
+            },
+            {
+              "feature": "recent",
+              "weight": 2.3790086657378335
+            },
+            {
+              "feature": "initial",
+              "weight": 2.3165964219649524
+            },
+            {
+              "feature": "has",
+              "weight": 2.174531522495073
+            },
+            {
+              "feature": "several",
+              "weight": 2.074948665407113
+            },
+            {
+              "feature": "issues",
+              "weight": 2.0673015803361916
+            },
+            {
+              "feature": "wurde",
+              "weight": 2.06697441041537
+            },
+            {
+              "feature": "wurden",
+              "weight": 2.0521216394543518
+            },
+            {
+              "feature": "software",
+              "weight": 1.994734531729896
+            },
+            {
+              "feature": "outage",
+              "weight": 1.9854994863485083
+            },
+            {
+              "feature": "hat",
+              "weight": 1.9729483735146915
+            },
+            {
+              "feature": "das problem",
+              "weight": 1.94152553392473
+            },
+            {
+              "feature": "error",
+              "weight": 1.8782636243806365
+            },
+            {
+              "feature": "einen",
+              "weight": 1.783333162969829
+            },
+            {
+              "feature": "campaign",
+              "weight": 1.7711660006726584
+            }
+          ]
+        },
+        "Problem": {
+          "negative": [
+            {
+              "feature": "for",
+              "weight": -2.8367204883978507
+            },
+            {
+              "feature": "für",
+              "weight": -2.088962896897258
+            },
+            {
+              "feature": "tools",
+              "weight": -2.0702509950943915
+            },
+            {
+              "feature": "zur",
+              "weight": -1.6503437217579033
+            },
+            {
+              "feature": "data analytics",
+              "weight": -1.6175008745688777
+            },
+            {
+              "feature": "enhance",
+              "weight": -1.587008282520561
+            },
+            {
+              "feature": "informationen",
+              "weight": -1.5569931385913165
+            },
+            {
+              "feature": "integration",
+              "weight": -1.551369783439713
+            },
+            {
+              "feature": "incident",
+              "weight": -1.5349525210481865
+            },
+            {
+              "feature": "ich",
+              "weight": -1.46407871869846
+            },
+            {
+              "feature": "several",
+              "weight": -1.4124659234927892
+            },
+            {
+              "feature": "you",
+              "weight": -1.396698298542825
+            },
+            {
+              "feature": "improve",
+              "weight": -1.378156115868078
+            },
+            {
+              "feature": "product",
+              "weight": -1.363414066296538
+            },
+            {
+              "feature": "produkte",
+              "weight": -1.360504717754254
+            },
+            {
+              "feature": "optimierung",
+              "weight": -1.3583999350480322
+            },
+            {
+              "feature": "on",
+              "weight": -1.345611239454766
+            },
+            {
+              "feature": "analytics",
+              "weight": -1.3409563222712366
+            },
+            {
+              "feature": "initial",
+              "weight": -1.3264566268015143
+            },
+            {
+              "feature": "attempt",
+              "weight": -1.2821200963102155
+            }
+          ],
+          "positive": [
+            {
+              "feature": "problem",
+              "weight": 3.239831430589369
+            },
+            {
+              "feature": "facing",
+              "weight": 2.3999445184862105
+            },
+            {
+              "feature": "despite",
+              "weight": 2.3578069062812985
+            },
+            {
+              "feature": "problems",
+              "weight": 2.2330044521886583
+            },
+            {
+              "feature": "due to",
+              "weight": 2.1745517075135865
+            },
+            {
+              "feature": "due",
+              "weight": 2.1008517400918993
+            },
+            {
+              "feature": "the",
+              "weight": 2.0927717851112426
+            },
+            {
+              "feature": "issue",
+              "weight": 2.014142749483146
+            },
+            {
+              "feature": "trotz",
+              "weight": 1.829930051096207
+            },
+            {
+              "feature": "issues",
+              "weight": 1.7926899383203536
+            },
+            {
+              "feature": "with",
+              "weight": 1.7567983211238958
+            },
+            {
+              "feature": "probleme",
+              "weight": 1.7558667011965663
+            },
+            {
+              "feature": "outdated",
+              "weight": 1.7304072775527806
+            },
+            {
+              "feature": "frequent",
+              "weight": 1.7101501303961646
+            },
+            {
+              "feature": "have",
+              "weight": 1.7056585213890996
+            },
+            {
+              "feature": "das",
+              "weight": 1.6343252429154709
+            },
+            {
+              "feature": "updating",
+              "weight": 1.561027226088304
+            },
+            {
+              "feature": "attempts",
+              "weight": 1.4952232254752467
+            },
+            {
+              "feature": "data access",
+              "weight": 1.4637017855737746
+            },
+            {
+              "feature": "discrepancies",
+              "weight": 1.4493512314553245
+            }
+          ]
+        },
+        "Request": {
+          "negative": [
+            {
+              "feature": "problem",
+              "weight": -3.1352332982902
+            },
+            {
+              "feature": "the",
+              "weight": -2.8187779601869223
+            },
+            {
+              "feature": "update",
+              "weight": -2.714099441499655
+            },
+            {
+              "feature": "issue",
+              "weight": -2.6857473247396957
+            },
+            {
+              "feature": "das",
+              "weight": -2.4035851205733856
+            },
+            {
+              "feature": "issues",
+              "weight": -2.3169722694466417
+            },
+            {
+              "feature": "software",
+              "weight": -2.2919301636171103
+            },
+            {
+              "feature": "der",
+              "weight": -2.0702883824833
+            },
+            {
+              "feature": "have",
+              "weight": -2.0569142219587113
+            },
+            {
+              "feature": "probleme",
+              "weight": -1.9950248623334046
+            },
+            {
+              "feature": "our",
+              "weight": -1.9034147620952697
+            },
+            {
+              "feature": "die",
+              "weight": -1.864029578927577
+            },
+            {
+              "feature": "problems",
+              "weight": -1.8604325859803297
+            },
+            {
+              "feature": "updates",
+              "weight": -1.8524811687116869
+            },
+            {
+              "feature": "due",
+              "weight": -1.8359492729610585
+            },
+            {
+              "feature": "das problem",
+              "weight": -1.8335748674366024
+            },
+            {
+              "feature": "due to",
+              "weight": -1.8214624440898468
+            },
+            {
+              "feature": "aktualisierung",
+              "weight": -1.7557955535749576
+            },
+            {
+              "feature": "system",
+              "weight": -1.7201919683757763
+            },
+            {
+              "feature": "this",
+              "weight": -1.6055215556649745
+            }
+          ],
+          "positive": [
+            {
+              "feature": "on",
+              "weight": 4.519183660174402
+            },
+            {
+              "feature": "details",
+              "weight": 4.040662076394479
+            },
+            {
+              "feature": "you",
+              "weight": 3.9393862042515506
+            },
+            {
+              "feature": "für",
+              "weight": 3.5579390097021153
+            },
+            {
+              "feature": "for",
+              "weight": 3.475346736678688
+            },
+            {
+              "feature": "detailed",
+              "weight": 3.1902895113535723
+            },
+            {
+              "feature": "könnten sie",
+              "weight": 3.161193943809712
+            },
+            {
+              "feature": "zur",
+              "weight": 3.078346138665464
+            },
+            {
+              "feature": "sie",
+              "weight": 2.950281773003215
+            },
+            {
+              "feature": "integrating",
+              "weight": 2.8624795147031064
+            },
+            {
+              "feature": "could you",
+              "weight": 2.841924524026134
+            },
+            {
+              "feature": "about",
+              "weight": 2.749496434885353
+            },
+            {
+              "feature": "information on",
+              "weight": 2.7310454178870187
+            },
+            {
+              "feature": "informationen",
+              "weight": 2.706860946935585
+            },
+            {
+              "feature": "detaillierte",
+              "weight": 2.6528271807746444
+            },
+            {
+              "feature": "integration",
+              "weight": 2.6512516622584097
+            },
+            {
+              "feature": "you provide",
+              "weight": 2.603252895226272
+            },
+            {
+              "feature": "provide",
+              "weight": 2.575427784068193
+            },
+            {
+              "feature": "bereitstellen",
+              "weight": 2.570023757640667
+            },
+            {
+              "feature": "von",
+              "weight": 2.56589919575148
+            }
+          ]
+        }
+      }
+    },
+    "overlap": {
+      "Change": {
+        "negative": {
+          "lr_only": [
+            "be",
+            "bei",
+            "breach",
+            "das problem",
+            "issues",
+            "problems",
+            "the"
+          ],
+          "shared": [
+            "about",
+            "despite",
+            "details",
+            "due",
+            "due to",
+            "have",
+            "issue",
+            "könnten sie",
+            "on",
+            "problem",
+            "with",
+            "wurde",
+            "wurden"
+          ],
+          "svm_only": [
+            "comprehensive",
+            "detailed",
+            "detaillierte",
+            "erfahren",
+            "geben",
+            "information on",
+            "you provide"
+          ]
+        },
+        "positive": {
+          "lr_only": [
+            "and",
+            "current",
+            "for",
+            "our",
+            "to",
+            "tools",
+            "um",
+            "verbesserung der"
+          ],
+          "shared": [
+            "advanced",
+            "aktualisierung",
+            "an update",
+            "enhance",
+            "enhanced",
+            "enhancement",
+            "improve",
+            "request",
+            "revise",
+            "update",
+            "verbessern",
+            "verbesserung"
+          ],
+          "svm_only": [
+            "beantragen",
+            "boost",
+            "enhancements",
+            "erweiterte",
+            "improved",
+            "optimierung",
+            "update der",
+            "upgrade"
+          ]
+        }
+      },
+      "Incident": {
+        "negative": {
+          "lr_only": [
+            "data",
+            "details",
+            "for",
+            "ich",
+            "improve",
+            "integrating",
+            "integration",
+            "on",
+            "projektmanagement",
+            "sie",
+            "um",
+            "verbessern",
+            "verbesserung",
+            "would",
+            "you",
+            "zu"
+          ],
+          "shared": [
+            "breaches",
+            "enhance",
+            "für",
+            "request"
+          ],
+          "svm_only": [
+            "bigcommerce",
+            "client",
+            "cloud",
+            "crashes which",
+            "data overload",
+            "efficiency",
+            "frequent",
+            "kaspersky",
+            "launch",
+            "rechnung",
+            "requesting",
+            "security vulnerabilities",
+            "systems due",
+            "terraform",
+            "updating",
+            "updating the"
+          ]
+        },
+        "positive": {
+          "lr_only": [
+            "campaign",
+            "das problem",
+            "has",
+            "hat",
+            "have",
+            "issues",
+            "problem",
+            "recent",
+            "software",
+            "system",
+            "the",
+            "wurde",
+            "wurden"
+          ],
+          "shared": [
+            "einen",
+            "error",
+            "incident",
+            "initial",
+            "issue",
+            "outage",
+            "several"
+          ],
+          "svm_only": [
+            "access attempt",
+            "an incident",
+            "attempt",
+            "beeinträchtigt",
+            "crashes in",
+            "erste",
+            "kampagne",
+            "konflikte",
+            "multiple products",
+            "or hardware",
+            "restarting services",
+            "services the",
+            "vorfall"
+          ]
+        }
+      },
+      "Problem": {
+        "negative": {
+          "lr_only": [
+            "analytics",
+            "data analytics",
+            "enhance",
+            "for",
+            "für",
+            "ich",
+            "improve",
+            "informationen",
+            "integration",
+            "on",
+            "optimierung",
+            "produkte",
+            "tools",
+            "you",
+            "zur"
+          ],
+          "shared": [
+            "attempt",
+            "incident",
+            "initial",
+            "product",
+            "several"
+          ],
+          "svm_only": [
+            "access attempt",
+            "an incident",
+            "an unexpected",
+            "but have",
+            "crashes in",
+            "data synchronization",
+            "erste",
+            "multiple products",
+            "optimization system",
+            "or hardware",
+            "services the",
+            "take to",
+            "these",
+            "updates or",
+            "vorfall"
+          ]
+        },
+        "positive": {
+          "lr_only": [
+            "attempts",
+            "das",
+            "discrepancies",
+            "due",
+            "due to",
+            "have",
+            "issue",
+            "issues",
+            "outdated",
+            "problem",
+            "probleme",
+            "problems",
+            "the",
+            "with"
+          ],
+          "shared": [
+            "data access",
+            "despite",
+            "facing",
+            "frequent",
+            "trotz",
+            "updating"
+          ],
+          "svm_only": [
+            "breaches",
+            "client engagement",
+            "data overload",
+            "datenschutzbeschränkung",
+            "difficulties in",
+            "for security",
+            "ladezeiten",
+            "rechnung",
+            "security vulnerabilities",
+            "subscription",
+            "systems due",
+            "unstimmigkeiten",
+            "updating the",
+            "user load"
+          ]
+        }
+      },
+      "Request": {
+        "negative": {
+          "lr_only": [
+            "das problem",
+            "der",
+            "die",
+            "due",
+            "due to",
+            "have",
+            "system"
+          ],
+          "shared": [
+            "aktualisierung",
+            "das",
+            "issue",
+            "issues",
+            "our",
+            "problem",
+            "probleme",
+            "problems",
+            "software",
+            "the",
+            "this",
+            "update",
+            "updates"
+          ],
+          "svm_only": [
+            "aufgrund",
+            "concern",
+            "enhanced",
+            "facing",
+            "implementing",
+            "improve",
+            "improved"
+          ]
+        },
+        "positive": {
+          "lr_only": [
+            "about",
+            "could you",
+            "integration",
+            "von",
+            "you provide"
+          ],
+          "shared": [
+            "bereitstellen",
+            "detailed",
+            "detaillierte",
+            "details",
+            "for",
+            "für",
+            "information on",
+            "informationen",
+            "integrating",
+            "könnten sie",
+            "on",
+            "provide",
+            "sie",
+            "you",
+            "zur"
+          ],
+          "svm_only": [
+            "comprehensive",
+            "documentation",
+            "interessiert",
+            "können",
+            "könnten"
+          ]
+        }
+      }
+    },
+    "semantics": "Strongest signed model weights/associations, not causal explanations or probabilities",
+    "top_k": 20
+  },
+  "length_groups": {
+    "test": {
+      "all": {
+        "linear_svm": {
+          "error_count": 559,
+          "error_rate": 0.13033341105152715
+        },
+        "logistic_regression": {
+          "error_count": 674,
+          "error_rate": 0.1571461879225927
+        },
+        "record_count": 4289
+      },
+      "long": {
+        "linear_svm": {
+          "elevated_vs_all": true,
+          "error_count": 34,
+          "error_rate": 0.14912280701754385
+        },
+        "logistic_regression": {
+          "elevated_vs_all": true,
+          "error_count": 40,
+          "error_rate": 0.17543859649122806
+        },
+        "record_count": 228
+      },
+      "short": {
+        "linear_svm": {
+          "elevated_vs_all": true,
+          "error_count": 38,
+          "error_rate": 0.19
+        },
+        "logistic_regression": {
+          "elevated_vs_all": true,
+          "error_count": 45,
+          "error_rate": 0.225
+        },
+        "record_count": 200
+      }
+    },
+    "validation": {
+      "all": {
+        "linear_svm": {
+          "error_count": 540,
+          "error_rate": 0.1259328358208955
+        },
+        "logistic_regression": {
+          "error_count": 659,
+          "error_rate": 0.15368470149253732
+        },
+        "record_count": 4288
+      },
+      "long": {
+        "linear_svm": {
+          "elevated_vs_all": false,
+          "error_count": 24,
+          "error_rate": 0.10666666666666667
+        },
+        "logistic_regression": {
+          "elevated_vs_all": false,
+          "error_count": 33,
+          "error_rate": 0.14666666666666667
+        },
+        "record_count": 225
+      },
+      "short": {
+        "linear_svm": {
+          "elevated_vs_all": true,
+          "error_count": 35,
+          "error_rate": 0.1583710407239819
+        },
+        "logistic_regression": {
+          "elevated_vs_all": false,
+          "error_count": 30,
+          "error_rate": 0.13574660633484162
+        },
+        "record_count": 221
+      }
+    }
+  },
+  "minority": {
+    "test": [
+      {
+        "class": "Change",
+        "full_dataset_count": 2922,
+        "linear_svm": {
+          "f1": 0.9804372842347526,
+          "false_negative_count": 13,
+          "false_positive_count": 4,
+          "precision": 0.9906976744186047,
+          "recall": 0.9703872437357631,
+          "support": 439
+        },
+        "logistic_regression": {
+          "f1": 0.963572267920094,
+          "false_negative_count": 29,
+          "false_positive_count": 2,
+          "precision": 0.9951456310679612,
+          "recall": 0.9339407744874715,
+          "support": 439
+        }
+      }
+    ],
+    "validation": [
+      {
+        "class": "Change",
+        "full_dataset_count": 2922,
+        "linear_svm": {
+          "f1": 0.9722863741339491,
+          "false_negative_count": 17,
+          "false_positive_count": 7,
+          "precision": 0.9836448598130841,
+          "recall": 0.9611872146118722,
+          "support": 438
+        },
+        "logistic_regression": {
+          "f1": 0.9588719153936546,
+          "false_negative_count": 30,
+          "false_positive_count": 5,
+          "precision": 0.9878934624697336,
+          "recall": 0.9315068493150684,
+          "support": 438
+        }
+      }
+    ]
+  },
+  "overall": {
+    "test": {
+      "linear_svm": {
+        "accuracy": 0.8696665889484728,
+        "class_order": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "cpu_inference_metadata": {
+          "aggregate_seconds": 0.010169986984692514,
+          "clock": "perf_counter",
+          "includes": "Linear SVM predict only; excludes TF-IDF transform and decision_function",
+          "mean_iteration_seconds": 0.002033997396938503,
+          "measured_iterations": 5,
+          "record_count": 4289,
+          "seconds_per_record": 4.742358118299144e-07,
+          "warmup_iterations": 1
+        },
+        "cpu_inference_seconds_per_record": 4.742358118299144e-07,
+        "macro_f1": 0.8720583084228815,
+        "macro_precision": 0.8851224089335367,
+        "macro_recall": 0.8647598416524024,
+        "model_name": "tfidf_linear_svm_baseline",
+        "model_size_bytes": 2680643,
+        "per_class": {
+          "Change": {
+            "f1": 0.9804372842347526,
+            "precision": 0.9906976744186047,
+            "recall": 0.9703872437357631,
+            "support": 439
+          },
+          "Incident": {
+            "f1": 0.8509231193166161,
+            "precision": 0.8088004190675746,
+            "recall": 0.8976744186046511,
+            "support": 1720
+          },
+          "Problem": {
+            "f1": 0.6633663366336634,
+            "precision": 0.7507002801120448,
+            "recall": 0.5942350332594235,
+            "support": 902
+          },
+          "Request": {
+            "f1": 0.9935064935064936,
+            "precision": 0.9902912621359223,
+            "recall": 0.996742671009772,
+            "support": 1228
+          }
+        },
+        "training_time_seconds": 0.8050525569997262,
+        "weighted_f1": 0.8655589047967299,
+        "zero_division": 0
+      },
+      "logistic_regression": {
+        "accuracy": 0.8428538120774073,
+        "class_order": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "cpu_inference_metadata": {
+          "clock": "perf_counter",
+          "includes": "Logistic Regression predict only; excludes TF-IDF transform and predict_proba",
+          "iterations": 1,
+          "record_count": 4289,
+          "seconds": 0.003074574997299351,
+          "seconds_per_record": 7.168512467473422e-07
+        },
+        "cpu_inference_seconds_per_record": 7.168512467473422e-07,
+        "macro_f1": 0.8319693240209273,
+        "macro_precision": 0.872426848215712,
+        "macro_recall": 0.8208430151082129,
+        "model_name": "tfidf_logistic_regression_baseline",
+        "model_size_bytes": 2680775,
+        "per_class": {
+          "Change": {
+            "f1": 0.963572267920094,
+            "precision": 0.9951456310679612,
+            "recall": 0.9339407744874715,
+            "support": 439
+          },
+          "Incident": {
+            "f1": 0.8314723448454947,
+            "precision": 0.7512904739558892,
+            "recall": 0.9308139534883721,
+            "support": 1720
+          },
+          "Problem": {
+            "f1": 0.5441595441595442,
+            "precision": 0.7609561752988048,
+            "recall": 0.42350332594235035,
+            "support": 902
+          },
+          "Request": {
+            "f1": 0.988673139158576,
+            "precision": 0.9823151125401929,
+            "recall": 0.995114006514658,
+            "support": 1228
+          }
+        },
+        "training_time_seconds": 3.5717017890019633,
+        "weighted_f1": 0.8295787322149247,
+        "zero_division": 0
+      }
+    },
+    "validation": {
+      "linear_svm": {
+        "accuracy": 0.8740671641791045,
+        "class_order": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "cpu_inference_metadata": {
+          "aggregate_seconds": 0.011032651993446052,
+          "clock": "perf_counter",
+          "includes": "Linear SVM predict only; excludes TF-IDF transform and decision_function",
+          "mean_iteration_seconds": 0.0022065303986892105,
+          "measured_iterations": 5,
+          "record_count": 4288,
+          "seconds_per_record": 5.145826489480435e-07,
+          "warmup_iterations": 1
+        },
+        "cpu_inference_seconds_per_record": 5.145826489480435e-07,
+        "macro_f1": 0.8755045400209375,
+        "macro_precision": 0.8886664681689003,
+        "macro_recall": 0.8678107421589369,
+        "model_name": "tfidf_linear_svm_baseline",
+        "model_size_bytes": 2680643,
+        "per_class": {
+          "Change": {
+            "f1": 0.9722863741339491,
+            "precision": 0.9836448598130841,
+            "recall": 0.9611872146118722,
+            "support": 438
+          },
+          "Incident": {
+            "f1": 0.8576158940397351,
+            "precision": 0.8161764705882353,
+            "recall": 0.9034883720930232,
+            "support": 1720
+          },
+          "Problem": {
+            "f1": 0.6814540973505854,
+            "precision": 0.7669902912621359,
+            "recall": 0.6130820399113082,
+            "support": 902
+          },
+          "Request": {
+            "f1": 0.9906617945594803,
+            "precision": 0.9878542510121457,
+            "recall": 0.993485342019544,
+            "support": 1228
+          }
+        },
+        "training_time_seconds": 0.8050525569997262,
+        "weighted_f1": 0.8703743118349543,
+        "zero_division": 0
+      },
+      "logistic_regression": {
+        "accuracy": 0.8463152985074627,
+        "class_order": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "cpu_inference_metadata": {
+          "clock": "perf_counter",
+          "includes": "Logistic Regression predict only; excludes TF-IDF transform and predict_proba",
+          "iterations": 1,
+          "record_count": 4288,
+          "seconds": 0.003050457999052014,
+          "seconds_per_record": 7.113941229132496e-07
+        },
+        "cpu_inference_seconds_per_record": 7.113941229132496e-07,
+        "macro_f1": 0.8377390508883842,
+        "macro_precision": 0.873004396796976,
+        "macro_recall": 0.8263826929446951,
+        "model_name": "tfidf_logistic_regression_baseline",
+        "model_size_bytes": 2680775,
+        "per_class": {
+          "Change": {
+            "f1": 0.9588719153936546,
+            "precision": 0.9878934624697336,
+            "recall": 0.9315068493150684,
+            "support": 438
+          },
+          "Incident": {
+            "f1": 0.8333770663867751,
+            "precision": 0.7594452415112386,
+            "recall": 0.9232558139534883,
+            "support": 1720
+          },
+          "Problem": {
+            "f1": 0.5708333333333333,
+            "precision": 0.7639405204460966,
+            "recall": 0.4556541019955654,
+            "support": 902
+          },
+          "Request": {
+            "f1": 0.9878738884397736,
+            "precision": 0.9807383627608347,
+            "recall": 0.995114006514658,
+            "support": 1228
+          }
+        },
+        "training_time_seconds": 3.5717017890019633,
+        "weighted_f1": 0.8352134456152943,
+        "zero_division": 0
+      }
+    }
+  },
+  "per_class": {
+    "test": [
+      {
+        "class": "Change",
+        "linear_svm": {
+          "f1": 0.9804372842347526,
+          "precision": 0.9906976744186047,
+          "recall": 0.9703872437357631,
+          "support": 439
+        },
+        "logistic_regression": {
+          "f1": 0.963572267920094,
+          "precision": 0.9951456310679612,
+          "recall": 0.9339407744874715,
+          "support": 439
+        },
+        "svm_minus_lr": {
+          "f1": 0.016865016314658643,
+          "precision": -0.004447956649356488,
+          "recall": 0.036446469248291646
+        }
+      },
+      {
+        "class": "Incident",
+        "linear_svm": {
+          "f1": 0.8509231193166161,
+          "precision": 0.8088004190675746,
+          "recall": 0.8976744186046511,
+          "support": 1720
+        },
+        "logistic_regression": {
+          "f1": 0.8314723448454947,
+          "precision": 0.7512904739558892,
+          "recall": 0.9308139534883721,
+          "support": 1720
+        },
+        "svm_minus_lr": {
+          "f1": 0.019450774471121424,
+          "precision": 0.05750994511168539,
+          "recall": -0.03313953488372101
+        }
+      },
+      {
+        "class": "Problem",
+        "linear_svm": {
+          "f1": 0.6633663366336634,
+          "precision": 0.7507002801120448,
+          "recall": 0.5942350332594235,
+          "support": 902
+        },
+        "logistic_regression": {
+          "f1": 0.5441595441595442,
+          "precision": 0.7609561752988048,
+          "recall": 0.42350332594235035,
+          "support": 902
+        },
+        "svm_minus_lr": {
+          "f1": 0.11920679247411925,
+          "precision": -0.010255895186759956,
+          "recall": 0.17073170731707316
+        }
+      },
+      {
+        "class": "Request",
+        "linear_svm": {
+          "f1": 0.9935064935064936,
+          "precision": 0.9902912621359223,
+          "recall": 0.996742671009772,
+          "support": 1228
+        },
+        "logistic_regression": {
+          "f1": 0.988673139158576,
+          "precision": 0.9823151125401929,
+          "recall": 0.995114006514658,
+          "support": 1228
+        },
+        "svm_minus_lr": {
+          "f1": 0.00483335434791754,
+          "precision": 0.007976149595729454,
+          "recall": 0.0016286644951140072
+        }
+      }
+    ],
+    "validation": [
+      {
+        "class": "Change",
+        "linear_svm": {
+          "f1": 0.9722863741339491,
+          "precision": 0.9836448598130841,
+          "recall": 0.9611872146118722,
+          "support": 438
+        },
+        "logistic_regression": {
+          "f1": 0.9588719153936546,
+          "precision": 0.9878934624697336,
+          "recall": 0.9315068493150684,
+          "support": 438
+        },
+        "svm_minus_lr": {
+          "f1": 0.013414458740294566,
+          "precision": -0.004248602656649503,
+          "recall": 0.029680365296803735
+        }
+      },
+      {
+        "class": "Incident",
+        "linear_svm": {
+          "f1": 0.8576158940397351,
+          "precision": 0.8161764705882353,
+          "recall": 0.9034883720930232,
+          "support": 1720
+        },
+        "logistic_regression": {
+          "f1": 0.8333770663867751,
+          "precision": 0.7594452415112386,
+          "recall": 0.9232558139534883,
+          "support": 1720
+        },
+        "svm_minus_lr": {
+          "f1": 0.024238827652960038,
+          "precision": 0.05673122907699668,
+          "recall": -0.019767441860465085
+        }
+      },
+      {
+        "class": "Problem",
+        "linear_svm": {
+          "f1": 0.6814540973505854,
+          "precision": 0.7669902912621359,
+          "recall": 0.6130820399113082,
+          "support": 902
+        },
+        "logistic_regression": {
+          "f1": 0.5708333333333333,
+          "precision": 0.7639405204460966,
+          "recall": 0.4556541019955654,
+          "support": 902
+        },
+        "svm_minus_lr": {
+          "f1": 0.11062076401725207,
+          "precision": 0.003049770816039299,
+          "recall": 0.15742793791574278
+        }
+      },
+      {
+        "class": "Request",
+        "linear_svm": {
+          "f1": 0.9906617945594803,
+          "precision": 0.9878542510121457,
+          "recall": 0.993485342019544,
+          "support": 1228
+        },
+        "logistic_regression": {
+          "f1": 0.9878738884397736,
+          "precision": 0.9807383627608347,
+          "recall": 0.995114006514658,
+          "support": 1228
+        },
+        "svm_minus_lr": {
+          "f1": 0.0027879061197066957,
+          "precision": 0.007115888251311042,
+          "recall": -0.0016286644951140072
+        }
+      }
+    ]
+  },
+  "review_counts": {
+    "test": {
+      "possible_ambiguity": 763,
+      "possible_label_issue": 466
+    },
+    "validation": {
+      "possible_ambiguity": 725,
+      "possible_label_issue": 468
+    }
+  }
+}

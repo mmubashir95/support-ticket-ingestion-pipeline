@@ -676,3 +676,80 @@ prediction exactly and every decision score within `rtol=atol=1e-12`.
 Test results are persisted for final evaluation only and are not used to change
 `C`, features, class weights, or model behavior. Phase 2.6 will perform the
 formal model comparison and error analysis.
+
+## Phase 2.6 — Classical Model Evaluation and Error Analysis
+
+Compare the **existing** Phase 2.4/2.5 models without fitting, tuning, changing
+labels, rebuilding TF-IDF, or changing the frozen split:
+
+```python
+from pathlib import Path
+from ticket_classification.workflow import run_classical_model_comparison
+
+root = Path("artifacts/classification/run")
+analysis = run_classical_model_comparison(
+    root / "splits",
+    root / "tfidf",
+    root / "logistic_regression",
+    root / "linear_svm",
+    root / "evaluation",
+    top_k=20,
+    audit_path=root / "classification_dataset_audit.json",
+)
+```
+
+The workflow reuses validated frozen input loading, the shared evaluator,
+model/vectorizer loaders, coefficient-to-feature mapping, audit length/count
+conventions, and atomic deterministic JSON/JSONL/Markdown persistence. Both
+manifests must match the frozen dataset/split/feature identities, feature
+configuration (including text policy), class order, and label mapping. LR's
+older manifest defines its mapping through class order. Prediction IDs and
+labels are checked against each frozen evaluation split; saved predictions
+and probability/decision-score vectors must reproduce the loaded models.
+Recomputed metrics and confusion matrices must match the persisted artifacts.
+Incompatibilities fail before any analysis output is written.
+
+`evaluation/classical_model_comparison.md` is generated from the shared
+structured analysis in `classical_model_comparison.json`. Additional JSON
+artifacts contain per-class comparisons, confusion matrices/pairs and feature
+importance/overlap. Each validation/test split has deterministic JSONL files:
+
+- `{split}_logistic_regression_errors.jsonl`
+- `{split}_linear_svm_errors.jsonl`
+- `{split}_model_disagreements.jsonl`
+- `{split}_possible_ambiguous_examples.jsonl`
+- `{split}_possible_label_issues.jsonl`
+
+Every error includes its frozen input text, record ID, actual/predicted label,
+model name, FP class and FN class. Use
+`class_errors(errors, label, "false_positive" | "false_negative")` from
+`ticket_classification.comparison` to inspect a specific class. LR probability
+vectors retain their explicit class order; SVM decision scores remain raw
+margins and are never interpreted as probabilities.
+
+Validation selects the classical baseline using Macro F1 as the primary
+criterion with precision, recall, weighted F1, per-class behavior and engineering
+trade-offs documented alongside it. Test results are descriptive final
+assessment, not tuning input. Short/long groups use character counts of the
+unchanged classification text and full-dataset nearest-rank p5/p95, including
+ties; p95 and limited-context word thresholds reuse the audit when supplied.
+All smallest classes are derived from frozen full-dataset counts.
+
+Review flags are deliberately broad heuristics: disagreement, both models
+wrong, or limited text suggest possible ambiguity; a shared wrong alternative
+suggests a possible label issue. Neither establishes a data-quality problem,
+and overlapping flags are allowed. Labels remain unchanged. Feature weights
+are model associations, not causal explanations. The class-weighting assessment
+is an explicitly documented exploratory evidence gate for Phase 2.9, not a
+weight-selection policy or experiment.
+
+Recorded CPU timings exclude TF-IDF transformation and score generation. LR
+used one cold pass, while SVM used a warmup and five measured passes, so their
+latency comparison is indicative rather than a controlled benchmark. Original
+measurement protocols and hardware/software metadata are preserved. Model size
+covers the serialized classifier only; both models share the vectorizer.
+
+Run `.venv/bin/python -m pytest tests/classification/test_comparison.py` for
+focused tests or `.venv/bin/python -m pytest` for all regressions. The next
+planned phase is **Phase 2.7 — Transformer Dataset and Tokenization**; no
+Transformer implementation is included in Phase 2.6.
