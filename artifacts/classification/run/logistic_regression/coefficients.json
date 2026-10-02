@@ -1,0 +1,355 @@
+{
+  "class_order": [
+    "Change",
+    "Incident",
+    "Problem",
+    "Request"
+  ],
+  "features_per_extreme": 10,
+  "per_class": {
+    "Change": {
+      "highest": [
+        {
+          "coefficient": 4.851238638322828,
+          "feature": "update"
+        },
+        {
+          "coefficient": 4.019388403502354,
+          "feature": "request"
+        },
+        {
+          "coefficient": 3.940788914088038,
+          "feature": "improve"
+        },
+        {
+          "coefficient": 3.7358231343668207,
+          "feature": "enhance"
+        },
+        {
+          "coefficient": 3.3385498727569973,
+          "feature": "aktualisierung"
+        },
+        {
+          "coefficient": 3.2594302644244366,
+          "feature": "verbessern"
+        },
+        {
+          "coefficient": 2.6051678906190463,
+          "feature": "verbesserung"
+        },
+        {
+          "coefficient": 2.5476200169625987,
+          "feature": "our"
+        },
+        {
+          "coefficient": 2.42167441727587,
+          "feature": "to"
+        },
+        {
+          "coefficient": 2.3010210091413197,
+          "feature": "advanced"
+        }
+      ],
+      "lowest": [
+        {
+          "coefficient": -2.7361039263544873,
+          "feature": "problem"
+        },
+        {
+          "coefficient": -2.3261005245585005,
+          "feature": "have"
+        },
+        {
+          "coefficient": -2.2672356257866237,
+          "feature": "issue"
+        },
+        {
+          "coefficient": -1.9106501773992346,
+          "feature": "with"
+        },
+        {
+          "coefficient": -1.8944258351777263,
+          "feature": "due to"
+        },
+        {
+          "coefficient": -1.8881936908856014,
+          "feature": "due"
+        },
+        {
+          "coefficient": -1.851713366748905,
+          "feature": "wurden"
+        },
+        {
+          "coefficient": -1.778724525602112,
+          "feature": "the"
+        },
+        {
+          "coefficient": -1.7009604875693816,
+          "feature": "wurde"
+        },
+        {
+          "coefficient": -1.629330927476567,
+          "feature": "on"
+        }
+      ]
+    },
+    "Incident": {
+      "highest": [
+        {
+          "coefficient": 3.1433368043650023,
+          "feature": "incident"
+        },
+        {
+          "coefficient": 2.938840201043155,
+          "feature": "issue"
+        },
+        {
+          "coefficient": 2.677356225128129,
+          "feature": "have"
+        },
+        {
+          "coefficient": 2.6315057940553235,
+          "feature": "problem"
+        },
+        {
+          "coefficient": 2.504730700677786,
+          "feature": "the"
+        },
+        {
+          "coefficient": 2.480971508493074,
+          "feature": "system"
+        },
+        {
+          "coefficient": 2.3790086657378335,
+          "feature": "recent"
+        },
+        {
+          "coefficient": 2.3165964219649524,
+          "feature": "initial"
+        },
+        {
+          "coefficient": 2.174531522495073,
+          "feature": "has"
+        },
+        {
+          "coefficient": 2.074948665407113,
+          "feature": "several"
+        }
+      ],
+      "lowest": [
+        {
+          "coefficient": -3.022385661310561,
+          "feature": "für"
+        },
+        {
+          "coefficient": -2.823161621241282,
+          "feature": "for"
+        },
+        {
+          "coefficient": -2.3041558607541903,
+          "feature": "integration"
+        },
+        {
+          "coefficient": -2.167606222085134,
+          "feature": "enhance"
+        },
+        {
+          "coefficient": -1.8872935757996172,
+          "feature": "request"
+        },
+        {
+          "coefficient": -1.6470642953673202,
+          "feature": "ich"
+        },
+        {
+          "coefficient": -1.6408968580383163,
+          "feature": "zu"
+        },
+        {
+          "coefficient": -1.6023184262706887,
+          "feature": "projektmanagement"
+        },
+        {
+          "coefficient": -1.5608413468708406,
+          "feature": "sie"
+        },
+        {
+          "coefficient": -1.5442414932430413,
+          "feature": "on"
+        }
+      ]
+    },
+    "Problem": {
+      "highest": [
+        {
+          "coefficient": 3.239831430589369,
+          "feature": "problem"
+        },
+        {
+          "coefficient": 2.3999445184862105,
+          "feature": "facing"
+        },
+        {
+          "coefficient": 2.3578069062812985,
+          "feature": "despite"
+        },
+        {
+          "coefficient": 2.2330044521886583,
+          "feature": "problems"
+        },
+        {
+          "coefficient": 2.1745517075135865,
+          "feature": "due to"
+        },
+        {
+          "coefficient": 2.1008517400918993,
+          "feature": "due"
+        },
+        {
+          "coefficient": 2.0927717851112426,
+          "feature": "the"
+        },
+        {
+          "coefficient": 2.014142749483146,
+          "feature": "issue"
+        },
+        {
+          "coefficient": 1.829930051096207,
+          "feature": "trotz"
+        },
+        {
+          "coefficient": 1.7926899383203536,
+          "feature": "issues"
+        }
+      ],
+      "lowest": [
+        {
+          "coefficient": -2.8367204883978507,
+          "feature": "for"
+        },
+        {
+          "coefficient": -2.088962896897258,
+          "feature": "für"
+        },
+        {
+          "coefficient": -2.0702509950943915,
+          "feature": "tools"
+        },
+        {
+          "coefficient": -1.6503437217579033,
+          "feature": "zur"
+        },
+        {
+          "coefficient": -1.6175008745688777,
+          "feature": "data analytics"
+        },
+        {
+          "coefficient": -1.587008282520561,
+          "feature": "enhance"
+        },
+        {
+          "coefficient": -1.5569931385913165,
+          "feature": "informationen"
+        },
+        {
+          "coefficient": -1.551369783439713,
+          "feature": "integration"
+        },
+        {
+          "coefficient": -1.5349525210481865,
+          "feature": "incident"
+        },
+        {
+          "coefficient": -1.46407871869846,
+          "feature": "ich"
+        }
+      ]
+    },
+    "Request": {
+      "highest": [
+        {
+          "coefficient": 4.519183660174402,
+          "feature": "on"
+        },
+        {
+          "coefficient": 4.040662076394479,
+          "feature": "details"
+        },
+        {
+          "coefficient": 3.9393862042515506,
+          "feature": "you"
+        },
+        {
+          "coefficient": 3.5579390097021153,
+          "feature": "für"
+        },
+        {
+          "coefficient": 3.475346736678688,
+          "feature": "for"
+        },
+        {
+          "coefficient": 3.1902895113535723,
+          "feature": "detailed"
+        },
+        {
+          "coefficient": 3.161193943809712,
+          "feature": "könnten sie"
+        },
+        {
+          "coefficient": 3.078346138665464,
+          "feature": "zur"
+        },
+        {
+          "coefficient": 2.950281773003215,
+          "feature": "sie"
+        },
+        {
+          "coefficient": 2.8624795147031064,
+          "feature": "integrating"
+        }
+      ],
+      "lowest": [
+        {
+          "coefficient": -3.1352332982902,
+          "feature": "problem"
+        },
+        {
+          "coefficient": -2.8187779601869223,
+          "feature": "the"
+        },
+        {
+          "coefficient": -2.714099441499655,
+          "feature": "update"
+        },
+        {
+          "coefficient": -2.6857473247396957,
+          "feature": "issue"
+        },
+        {
+          "coefficient": -2.4035851205733856,
+          "feature": "das"
+        },
+        {
+          "coefficient": -2.3169722694466417,
+          "feature": "issues"
+        },
+        {
+          "coefficient": -2.2919301636171103,
+          "feature": "software"
+        },
+        {
+          "coefficient": -2.0702883824833,
+          "feature": "der"
+        },
+        {
+          "coefficient": -2.0569142219587113,
+          "feature": "have"
+        },
+        {
+          "coefficient": -1.9950248623334046,
+          "feature": "probleme"
+        }
+      ]
+    }
+  }
+}

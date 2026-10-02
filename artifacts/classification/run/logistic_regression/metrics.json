@@ -1,0 +1,102 @@
+{
+  "inference_latency": {
+    "test": {
+      "clock": "perf_counter",
+      "includes": "Logistic Regression predict only; excludes TF-IDF transform and predict_proba",
+      "iterations": 1,
+      "record_count": 4289,
+      "seconds": 0.003074574997299351,
+      "seconds_per_record": 7.168512467473422e-07
+    },
+    "validation": {
+      "clock": "perf_counter",
+      "includes": "Logistic Regression predict only; excludes TF-IDF transform and predict_proba",
+      "iterations": 1,
+      "record_count": 4288,
+      "seconds": 0.003050457999052014,
+      "seconds_per_record": 7.113941229132496e-07
+    }
+  },
+  "model_size_bytes": 2680775,
+  "test": {
+    "accuracy": 0.8428538120774073,
+    "class_order": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "macro_f1": 0.8319693240209273,
+    "macro_precision": 0.872426848215712,
+    "macro_recall": 0.8208430151082129,
+    "per_class": {
+      "Change": {
+        "f1": 0.963572267920094,
+        "precision": 0.9951456310679612,
+        "recall": 0.9339407744874715,
+        "support": 439
+      },
+      "Incident": {
+        "f1": 0.8314723448454947,
+        "precision": 0.7512904739558892,
+        "recall": 0.9308139534883721,
+        "support": 1720
+      },
+      "Problem": {
+        "f1": 0.5441595441595442,
+        "precision": 0.7609561752988048,
+        "recall": 0.42350332594235035,
+        "support": 902
+      },
+      "Request": {
+        "f1": 0.988673139158576,
+        "precision": 0.9823151125401929,
+        "recall": 0.995114006514658,
+        "support": 1228
+      }
+    },
+    "weighted_f1": 0.8295787322149247,
+    "zero_division": 0
+  },
+  "training_time": 3.5717017890019633,
+  "validation": {
+    "accuracy": 0.8463152985074627,
+    "class_order": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "macro_f1": 0.8377390508883842,
+    "macro_precision": 0.873004396796976,
+    "macro_recall": 0.8263826929446951,
+    "per_class": {
+      "Change": {
+        "f1": 0.9588719153936546,
+        "precision": 0.9878934624697336,
+        "recall": 0.9315068493150684,
+        "support": 438
+      },
+      "Incident": {
+        "f1": 0.8333770663867751,
+        "precision": 0.7594452415112386,
+        "recall": 0.9232558139534883,
+        "support": 1720
+      },
+      "Problem": {
+        "f1": 0.5708333333333333,
+        "precision": 0.7639405204460966,
+        "recall": 0.4556541019955654,
+        "support": 902
+      },
+      "Request": {
+        "f1": 0.9878738884397736,
+        "precision": 0.9807383627608347,
+        "recall": 0.995114006514658,
+        "support": 1228
+      }
+    },
+    "weighted_f1": 0.8352134456152943,
+    "zero_division": 0
+  }
+}

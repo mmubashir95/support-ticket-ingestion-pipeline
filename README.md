@@ -520,3 +520,82 @@ probabilities, or resolve label issues automatically.
 
 Customer support ticket data source:
 https://huggingface.co/datasets/Tobi-Bueck/customer-support-tickets/tree/main
+
+## Phase 2.4 — Logistic Regression baseline
+
+Train one unweighted classifier using the frozen Phase 2.2 splits and already
+fitted Phase 2.3 TF-IDF artifacts:
+
+```bash
+PYTHONPATH=src .venv/bin/python - <<'PY'
+from ticket_classification.workflow import run_logistic_regression_baseline
+
+manifest = run_logistic_regression_baseline(
+    "artifacts/classification/run/splits",
+    "artifacts/classification/run/tfidf",
+    "artifacts/classification/run/logistic_regression",
+)
+print(manifest["experiment_id"], manifest["evaluation_metrics"])
+PY
+```
+
+The frozen default `LogisticRegressionConfig` uses `solver="lbfgs"`, L2
+regularization, `C=1.0`, `max_iterations=1000`, `class_weight=None`, and
+`random_seed=42`. L-BFGS is a straightforward sparse multiclass baseline;
+1,000 iterations allow convergence without a parameter search. L2 is the
+scikit-learn default and is recorded explicitly in our configuration. Unsupported
+solvers, penalties, weights and invalid numerical values fail validation.
+Convergence warnings raise an error; failed convergence is never recorded as a
+successful experiment.
+
+The workflow loads CSR matrices without refitting TF-IDF or changing split
+membership. It validates source versions, shapes, row identities, class coverage,
+and matrix alignment against the saved vectorizer's **transform** output
+(with a 1e-12 floating-point tolerance). Only training rows and labels enter
+`LogisticRegression.fit`. Test metrics are final baseline evaluation outputs;
+do not use them for tuning.
+
+Generated files under `artifacts/classification/run/logistic_regression/`:
+
+| File | Contents |
+|---|---|
+| `model.joblib` | Fitted classifier, including classes and coefficients |
+| `config.json` | Explicit reproducible baseline configuration |
+| `metrics.json` | Validation/test accuracy, macro precision/recall/F1, weighted F1, per-class precision/recall/F1/support, engineering measurements |
+| `confusion_matrix.json` | Validation/test matrices with explicit actual row and predicted column labels |
+| `validation_predictions.jsonl` | Record ID, actual/predicted labels, probability class order and probability vector |
+| `test_predictions.jsonl` | Same prediction contract for frozen test records |
+| `coefficients.json` | Ten highest/lowest feature weights per class for lightweight inspection |
+| `experiment_manifest.json` | Dataset/split/feature versions, configuration, source/artifact paths, metrics, UTC timestamp, dependency versions, hardware, reload verification |
+
+Class order is sorted from the frozen manifest and checked against `model.classes_`.
+Probabilities are direct `predict_proba` output in that order, with finite values,
+valid bounds and approximately unit sums. Predictions use `model.predict` and
+are checked to correspond to maximum probabilities, allowing numerical ties.
+Metrics explicitly include every frozen class and use `zero_division=0` when a
+class has no predictions. Confusion matrix rows represent actual classes and
+columns represent predicted classes.
+
+Training duration measures `fit` using `perf_counter`. Basic inference latency
+measures one `predict` call for the entire validation/test CSR matrix, excluding
+TF-IDF transformation, `predict_proba`, loading, validation and persistence.
+Seconds per record is batch duration divided by count, not single-ticket latency.
+These machine-dependent measurements are lightweight observations, not a P50/P95
+benchmark. Serialized size is the actual `model.joblib` size from disk.
+
+The workflow reloads the saved model and compares **all** validation/test
+predictions exactly and probabilities with `rtol=atol=1e-12`. The helper
+`coefficient_feature_mapping(model, vectorizer)` exposes all feature coefficients
+in the vectorizer's feature order. For a binary model, scikit-learn's one
+coefficient row represents class 1; the helper assigns its negative to class 0.
+Weights are model inspection values, not causal explanations.
+
+JSON uses sorted keys and UTF-8; source/config identities are deterministic.
+Timings and timestamps vary by run. Existing artifact directories are overwritten
+when rerunning the same workflow, so choose a separate output directory to retain
+multiple runs. Load joblib artifacts only from trusted sources and use compatible
+scikit-learn versions; the experiment records its dependency versions.
+
+Run tests with `.venv/bin/python -m pytest`. This phase introduces no class weight
+experiments, search, threshold tuning, calibration, SVM, Transformer, API,
+advanced error analysis, or benchmark infrastructure. Phase 2.5 remains future work.

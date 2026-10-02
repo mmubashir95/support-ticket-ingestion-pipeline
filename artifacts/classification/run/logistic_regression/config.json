@@ -1,0 +1,8 @@
+{
+  "C": 1.0,
+  "class_weight": null,
+  "max_iterations": 1000,
+  "penalty": "l2",
+  "random_seed": 42,
+  "solver": "lbfgs"
+}
