@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import numpy as np
+from sklearn.preprocessing import normalize
 
 from ticket_classification.audit import _percentile, _word_count
 from ticket_classification.classical import coefficient_feature_mapping, linear_svm_decision_scores
@@ -18,6 +19,12 @@ from ticket_pipeline.versioning import fingerprint_value
 
 MODELS = ("logistic_regression", "linear_svm")
 METRICS = ("macro_precision", "macro_recall", "macro_f1", "weighted_f1", "accuracy")
+# Fixed before reporting; never tuned against model results. A held-out record is
+# a near copy when some train record has cosine >= 0.8 and novel below 0.6.
+NEAR_COPY_MIN_COSINE = 0.8
+NOVEL_MAX_COSINE = 0.6
+COSINE_DECIMALS = 6
+SIMILARITY_BUCKETS = ("all", "near_copy", "intermediate", "novel")
 
 
 def validate_compatibility(manifests, metadata, configuration, classes):
@@ -197,6 +204,70 @@ def length_analysis(records, predictions, short_cutoff, long_cutoff):
     return result
 
 
+def nearest_train_matches(train_matrix, heldout_matrix, batch_size=500):
+    """Max cosine of each held-out row to any train row, and that train row index.
+
+    Rows are re-normalised so the dot product is cosine similarity; an empty
+    row scores 0. Uses the frozen TF-IDF matrices only, nothing is fitted.
+    """
+    if train_matrix.shape[1] != heldout_matrix.shape[1]:
+        raise ValueError("train and held-out matrices must share one feature space")
+    train, heldout = normalize(train_matrix), normalize(heldout_matrix)
+    best = np.zeros(heldout.shape[0])
+    index = np.zeros(heldout.shape[0], dtype=int)
+    for start in range(0, heldout.shape[0], batch_size):
+        block = (heldout[start:start + batch_size] @ train.T).toarray()
+        best[start:start + batch_size] = block.max(axis=1)
+        index[start:start + batch_size] = block.argmax(axis=1)
+    return np.round(best, COSINE_DECIMALS), index
+
+
+def similarity_bucket(cosine):
+    return ("near_copy" if cosine >= NEAR_COPY_MIN_COSINE else
+            "novel" if cosine < NOVEL_MAX_COSINE else "intermediate")
+
+
+def nearest_train_rows(records, train_records, best, index):
+    """Per-record nearest-train evidence; ids and labels only, no ticket text."""
+    if not (len(records) == len(best) == len(index)):
+        raise ValueError("nearest-train results must align with records")
+    rows = []
+    for record, cosine, position in zip(records, best, index):
+        neighbour = train_records[position] if cosine > 0 else None
+        rows.append({"record_id": record.record_id, "label": record.label, "cosine": float(cosine),
+                     "bucket": similarity_bucket(cosine),
+                     "nearest_train_record_id": neighbour.record_id if neighbour else None,
+                     "nearest_train_label": neighbour.label if neighbour else None,
+                     "label_matches_nearest_train": neighbour is not None and neighbour.label == record.label})
+    return rows
+
+
+def near_duplicate_analysis(neighbours, predictions, classes):
+    """Shared-evaluator metrics per similarity bucket for both models."""
+    record_ids = {row["record_id"] for row in index_predictions(neighbours).values()}
+    for name in MODELS:
+        if set(index_predictions(predictions[name])) != record_ids:
+            raise ValueError(f"{name}: prediction record identities differ from nearest-train rows")
+    result = {}
+    for bucket in SIMILARITY_BUCKETS:
+        members = [row for row in neighbours if bucket == "all" or row["bucket"] == bucket]
+        ids = {row["record_id"] for row in members}
+        entry = {"record_count": len(ids), "nearest_train_label_agreement":
+                 sum(row["label_matches_nearest_train"] for row in members) / len(members) if members else None}
+        for name in MODELS:
+            rows = [row for row in predictions[name] if row["record_id"] in ids]
+            if not rows:
+                entry[name] = None
+                continue
+            metrics, _ = evaluate_predictions([row["actual_label"] for row in rows],
+                                              [row["predicted_label"] for row in rows], classes)
+            entry[name] = {**{key: metrics[key] for key in METRICS},
+                           "per_class": {label: {key: metrics["per_class"][label][key] for key in ("f1", "support")}
+                                         for label in classes}}
+        result[bucket] = entry
+    return result
+
+
 def _read_json(path):
     return json.loads(Path(path).read_text(encoding="utf-8"))
 
@@ -285,10 +356,15 @@ def run_classical_model_comparison(split_dir, feature_dir, lr_dir, svm_dir, outp
                                "long": ">= full-dataset nearest-rank p95 (ties included)",
                                "short_cutoff": short_cutoff, "long_cutoff": long_cutoff,
                                "limited_context_rule": f"audit word count < {short_words}"},
+               "near_duplicate_rule": {"measure": "max cosine of each held-out row to any train row in the frozen TF-IDF space",
+                                       "near_copy": f">= {NEAR_COPY_MIN_COSINE}", "novel": f"< {NOVEL_MAX_COSINE}",
+                                       "intermediate": f"[{NOVEL_MAX_COSINE}, {NEAR_COPY_MIN_COSINE})",
+                                       "thresholds_fixed_before_reporting": True},
                "experiments": {name: manifests[name]["experiment_id"] for name in MODELS},
                "engineering_environment": {name: {key: manifests[name][key] for key in ("hardware", "versions")} for name in MODELS},
                "source_references": {name: str(path) for name, path in directories.items()}}
     comparison, per_class, confusion, minority, length_groups, disagreements, reviews = {}, {}, {}, {}, {}, {}, {}
+    near_duplicates = {}
     pending_jsonl = {}
     for split in ("validation", "test"):
         records = getattr(inputs.splits, split)
@@ -323,6 +399,10 @@ def run_classical_model_comparison(split_dir, feature_dir, lr_dir, svm_dir, outp
                                                         for label in classes}} for name in MODELS}
         minority[split] = minority_analysis(counts, per_class[split], errors)
         length_groups[split] = length_analysis(records, predictions, short_cutoff, long_cutoff)
+        best, nearest = nearest_train_matches(inputs.matrices["train"], inputs.matrices[split])
+        neighbours = nearest_train_rows(records, inputs.splits.train, best, nearest)
+        near_duplicates[split] = near_duplicate_analysis(neighbours, predictions, classes)
+        pending_jsonl[f"{split}_nearest_train.jsonl"] = neighbours
         differing = extract_disagreements(predictions[MODELS[0]], predictions[MODELS[1]])
         differing = [{**row, "text": texts[row["record_id"]]} for row in differing]
         disagreements[split] = {key: sum(row["category"] == key for row in differing) for key in
@@ -352,6 +432,10 @@ def run_classical_model_comparison(split_dir, feature_dir, lr_dir, svm_dir, outp
     selection_keys = ("macro_f1", "macro_recall", "macro_precision", "weighted_f1")
     lr_rank, svm_rank = (tuple(result[key] for key in selection_keys) for result in (lr, svm))
     winner = MODELS[1] if svm_rank > lr_rank else MODELS[0] if lr_rank > svm_rank else "tie"
+    novel = near_duplicates["validation"]["novel"]
+    novel_f1 = {name: novel[name]["macro_f1"] if novel[name] else None for name in MODELS}
+    ranking_holds_on_novel = (None if winner == "tie" or None in novel_f1.values() else
+                              max(MODELS, key=lambda name: novel_f1[name]) == winner)
     conclusion = {"preferred_baseline": winner, "selection_split": "validation",
                   "selection_metric_priority": list(selection_keys),
                   "svm_supporting_metric_improvements": [key for key in selection_keys if svm[key] > lr[key]],
@@ -362,8 +446,12 @@ def run_classical_model_comparison(split_dir, feature_dir, lr_dir, svm_dir, outp
                   "recall_tradeoffs": [row["class"] for row in per_class["validation"] if row["svm_minus_lr"]["recall"] < 0],
                   "largest_f1_gain_class": max(per_class["validation"], key=lambda row: row["svm_minus_lr"]["f1"])["class"],
                   "short_validation_error_rate_delta": length_groups["validation"]["short"][MODELS[1]]["error_rate"] - length_groups["validation"]["short"][MODELS[0]]["error_rate"],
-                  "latency_limitation": "Recorded predict-only CPU times exclude TF-IDF; LR one cold pass versus SVM one warmup/five measured passes. Indicative only, not a controlled benchmark."}
-    analysis = {"context": context, "overall": comparison, "per_class": per_class, "confusion": confusion,
+                  "latency_limitation": "Recorded predict-only CPU times exclude TF-IDF; LR one cold pass versus SVM one warmup/five measured passes. Indicative only, not a controlled benchmark.",
+                  "novel_validation_macro_f1": novel_f1, "novel_validation_record_count": novel["record_count"],
+                  "ranking_holds_on_novel_validation": ranking_holds_on_novel,
+                  "near_duplicate_disclosure": "Headline metrics include held-out tickets with templated near copies in train; novel-ticket metrics are the conservative estimate for unseen ticket wording."}
+    analysis = {"context": context, "overall": comparison, "near_duplicates": near_duplicates,
+                "per_class": per_class, "confusion": confusion,
                 "minority": minority, "length_groups": length_groups, "disagreements": disagreements,
                 "review_counts": reviews, "feature_importance": importance, "class_weighting_assessment": assessment,
                 "conclusion": conclusion}
@@ -400,6 +488,22 @@ def render_comparison_report(analysis):
     for split in ("validation", "test"):
         parts += [f"### {split.title()}", _table(["Metric", "LR", "SVM"],
                     [[key, *(f"{a['overall'][split][name][key]:.6f}" for name in MODELS)] for key in METRICS])]
+    def score(entry, key):
+        return f"{entry[key]:.4f}" if entry else "N/A"
+    rule = context["near_duplicate_rule"]
+    parts += ["## Near-Duplicate Sensitivity",
+              f"Each held-out ticket is matched to its most similar train ticket ({rule['measure']}). "
+              f"Buckets: near_copy {rule['near_copy']}, intermediate {rule['intermediate']}, novel {rule['novel']}; "
+              "thresholds were fixed before reporting and are not tuned. The split, features and models are unchanged.",
+              a["conclusion"]["near_duplicate_disclosure"],
+              _table(["Split", "Bucket", "N", "NN label agreement", "LR macro F1", "SVM macro F1", "LR accuracy", "SVM accuracy"],
+                     [[split, bucket, data["record_count"],
+                       f"{data['nearest_train_label_agreement']:.4f}" if data["nearest_train_label_agreement"] is not None else "N/A",
+                       *(score(data[name], "macro_f1") for name in MODELS), *(score(data[name], "accuracy") for name in MODELS)]
+                      for split, buckets in a["near_duplicates"].items() for bucket, data in buckets.items()]),
+              "NN label agreement is the share of tickets whose nearest train ticket has the same label. Per-record evidence "
+              "(ids, cosine, labels; no text): validation_nearest_train.jsonl and test_nearest_train.jsonl. "
+              "A class absent from a bucket contributes F1 0 to that bucket's macro F1; per-class support is in the JSON."]
     parts += ["## Per-Class Performance"]
     for split in ("validation", "test"):
         parts += [f"### {split.title()}", _table(["Class", "Support", "LR P", "SVM P", "LR R", "SVM R", "LR F1", "SVM F1", "Δ F1 (SVM−LR)"],
@@ -477,5 +581,9 @@ def render_comparison_report(analysis):
               "Validation differences (SVM minus LR): `" + json.dumps(a["conclusion"]["tradeoffs"], sort_keys=True) + "`.",
               "Classes with lower SVM validation F1: " + (", ".join(a["conclusion"]["class_f1_regressions"]) or "none") + ". Minority recall and error patterns above qualify this ranking; model size excludes the shared TF-IDF vectorizer. Engineering measurements are descriptive, with the timing caveat above.",
               "Largest validation F1 gain: " + a["conclusion"]["largest_f1_gain_class"] + ". Classes with lower SVM recall: " + (", ".join(a["conclusion"]["recall_tradeoffs"]) or "none") + ". SVM minus LR shortest-validation error rate: " + f"{a['conclusion']['short_validation_error_rate_delta']:+.4f}" + ". These trade-offs must remain visible despite the aggregate improvement.",
+              "Novel-ticket validation macro F1 (cosine " + context["near_duplicate_rule"]["novel"] + ", n=" + str(a["conclusion"]["novel_validation_record_count"]) + "): "
+              + ", ".join(f"{name} {value:.4f}" if value is not None else f"{name} N/A" for name, value in a["conclusion"]["novel_validation_macro_f1"].items())
+              + ". Preferred-baseline ranking holds on novel tickets: " + str(a["conclusion"]["ranking_holds_on_novel_validation"]).lower() + ". "
+              + a["conclusion"]["near_duplicate_disclosure"],
               "Next planned phase: Phase 2.7 — Transformer Dataset and Tokenization. No Transformer work is included here."]
     return "\n\n".join(parts) + "\n"

@@ -719,6 +719,28 @@ importance/overlap. Each validation/test split has deterministic JSONL files:
 - `{split}_model_disagreements.jsonl`
 - `{split}_possible_ambiguous_examples.jsonl`
 - `{split}_possible_label_issues.jsonl`
+- `{split}_nearest_train.jsonl`
+
+### Near-duplicate sensitivity
+
+The dataset is built from ticket templates, so many validation/test tickets have
+a close paraphrase in train even though no record appears in two splits. Phase
+2.6 measures this without changing the split, features, or models: each
+held-out ticket is matched to its most similar train ticket by cosine
+similarity in the frozen TF-IDF space. Thresholds are fixed in
+`ticket_classification.comparison` and are not tuned against results:
+
+| Bucket | Max cosine to train |
+| --- | --- |
+| `near_copy` | >= 0.8 |
+| `intermediate` | 0.6 – 0.8 |
+| `novel` | < 0.6 |
+
+The report shows the shared metrics for each bucket. Headline metrics include
+the near copies; **novel-ticket metrics are the conservative estimate** for
+unseen ticket wording, and later models (Phase 2.7+) should be reported on the
+same buckets. `{split}_nearest_train.jsonl` holds per-record evidence (record
+id, nearest train record id, cosine, both labels; no ticket text).
 
 Every error includes its frozen input text, record ID, actual/predicted label,
 model name, FP class and FN class. Use

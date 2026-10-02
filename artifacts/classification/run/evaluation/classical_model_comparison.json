@@ -1,5 +1,5 @@
 {
-  "analysis_id": "comparison_b525f02c687e",
+  "analysis_id": "comparison_72f5a873ac6e",
   "class_weighting_assessment": {
     "class_counts_full": {
       "Change": 2922,
@@ -92,7 +92,14 @@
     "class_f1_regressions": [],
     "largest_f1_gain_class": "Problem",
     "latency_limitation": "Recorded predict-only CPU times exclude TF-IDF; LR one cold pass versus SVM one warmup/five measured passes. Indicative only, not a controlled benchmark.",
+    "near_duplicate_disclosure": "Headline metrics include held-out tickets with templated near copies in train; novel-ticket metrics are the conservative estimate for unseen ticket wording.",
+    "novel_validation_macro_f1": {
+      "linear_svm": 0.8337633672892846,
+      "logistic_regression": 0.8019766538201591
+    },
+    "novel_validation_record_count": 2810,
     "preferred_baseline": "linear_svm",
+    "ranking_holds_on_novel_validation": true,
     "reasoning": "Validation Macro F1 is the primary ranking criterion; ties use macro recall, macro precision, then weighted F1. Supporting metrics, per-class gains/regressions, minority behavior and engineering trade-offs qualify the recommendation below. Test is descriptive and does not tune the choice.",
     "recall_tradeoffs": [
       "Incident",
@@ -715,6 +722,13 @@
         4288,
         83743
       ]
+    },
+    "near_duplicate_rule": {
+      "intermediate": "[0.6, 0.8)",
+      "measure": "max cosine of each held-out row to any train row in the frozen TF-IDF space",
+      "near_copy": ">= 0.8",
+      "novel": "< 0.6",
+      "thresholds_fixed_before_reporting": true
     },
     "non_zero_counts": {
       "test": 395599,
@@ -2523,6 +2537,444 @@
         }
       }
     ]
+  },
+  "near_duplicates": {
+    "test": {
+      "all": {
+        "linear_svm": {
+          "accuracy": 0.8696665889484728,
+          "macro_f1": 0.8720583084228815,
+          "macro_precision": 0.8851224089335367,
+          "macro_recall": 0.8647598416524024,
+          "per_class": {
+            "Change": {
+              "f1": 0.9804372842347526,
+              "support": 439
+            },
+            "Incident": {
+              "f1": 0.8509231193166161,
+              "support": 1720
+            },
+            "Problem": {
+              "f1": 0.6633663366336634,
+              "support": 902
+            },
+            "Request": {
+              "f1": 0.9935064935064936,
+              "support": 1228
+            }
+          },
+          "weighted_f1": 0.8655589047967299
+        },
+        "logistic_regression": {
+          "accuracy": 0.8428538120774073,
+          "macro_f1": 0.8319693240209273,
+          "macro_precision": 0.872426848215712,
+          "macro_recall": 0.8208430151082129,
+          "per_class": {
+            "Change": {
+              "f1": 0.963572267920094,
+              "support": 439
+            },
+            "Incident": {
+              "f1": 0.8314723448454947,
+              "support": 1720
+            },
+            "Problem": {
+              "f1": 0.5441595441595442,
+              "support": 902
+            },
+            "Request": {
+              "f1": 0.988673139158576,
+              "support": 1228
+            }
+          },
+          "weighted_f1": 0.8295787322149247
+        },
+        "nearest_train_label_agreement": 0.883889018419212,
+        "record_count": 4289
+      },
+      "intermediate": {
+        "linear_svm": {
+          "accuracy": 0.937015503875969,
+          "macro_f1": 0.937803232142632,
+          "macro_precision": 0.9461536982684593,
+          "macro_recall": 0.9315778897192268,
+          "per_class": {
+            "Change": {
+              "f1": 1.0,
+              "support": 114
+            },
+            "Incident": {
+              "f1": 0.9258836944127709,
+              "support": 426
+            },
+            "Problem": {
+              "f1": 0.827027027027027,
+              "support": 197
+            },
+            "Request": {
+              "f1": 0.99830220713073,
+              "support": 295
+            }
+          },
+          "weighted_f1": 0.9359010942322965
+        },
+        "logistic_regression": {
+          "accuracy": 0.8856589147286822,
+          "macro_f1": 0.8769856481007979,
+          "macro_precision": 0.9059505796398122,
+          "macro_recall": 0.8642758899926637,
+          "per_class": {
+            "Change": {
+              "f1": 0.9866666666666667,
+              "support": 114
+            },
+            "Incident": {
+              "f1": 0.8739130434782608,
+              "support": 426
+            },
+            "Problem": {
+              "f1": 0.6524390243902439,
+              "support": 197
+            },
+            "Request": {
+              "f1": 0.9949238578680203,
+              "support": 295
+            }
+          },
+          "weighted_f1": 0.8786821534861271
+        },
+        "nearest_train_label_agreement": 0.9961240310077519,
+        "record_count": 1032
+      },
+      "near_copy": {
+        "linear_svm": {
+          "accuracy": 0.9851116625310173,
+          "macro_f1": 0.9808897243107769,
+          "macro_precision": 0.9883720930232558,
+          "macro_recall": 0.975,
+          "per_class": {
+            "Change": {
+              "f1": 1.0,
+              "support": 47
+            },
+            "Incident": {
+              "f1": 0.9761904761904762,
+              "support": 123
+            },
+            "Problem": {
+              "f1": 0.9473684210526315,
+              "support": 60
+            },
+            "Request": {
+              "f1": 1.0,
+              "support": 173
+            }
+          },
+          "weighted_f1": 0.9848971062892965
+        },
+        "logistic_regression": {
+          "accuracy": 0.9454094292803971,
+          "macro_f1": 0.9239505589928545,
+          "macro_precision": 0.9583333333333333,
+          "macro_recall": 0.9110549132947976,
+          "per_class": {
+            "Change": {
+              "f1": 0.9894736842105263,
+              "support": 47
+            },
+            "Incident": {
+              "f1": 0.9213483146067416,
+              "support": 123
+            },
+            "Problem": {
+              "f1": 0.7878787878787878,
+              "support": 60
+            },
+            "Request": {
+              "f1": 0.9971014492753624,
+              "support": 173
+            }
+          },
+          "weighted_f1": 0.9419413991362008
+        },
+        "nearest_train_label_agreement": 1.0,
+        "record_count": 403
+      },
+      "novel": {
+        "linear_svm": {
+          "accuracy": 0.8290119131044149,
+          "macro_f1": 0.8380957851627556,
+          "macro_precision": 0.8522055603163012,
+          "macro_recall": 0.8315370226231833,
+          "per_class": {
+            "Change": {
+              "f1": 0.9689213893967094,
+              "support": 278
+            },
+            "Incident": {
+              "f1": 0.812,
+              "support": 1171
+            },
+            "Problem": {
+              "f1": 0.5812720848056537,
+              "support": 645
+            },
+            "Request": {
+              "f1": 0.9901896664486592,
+              "support": 760
+            }
+          },
+          "weighted_f1": 0.8225917265076781
+        },
+        "logistic_regression": {
+          "accuracy": 0.8128941836019622,
+          "macro_f1": 0.8061117290497782,
+          "macro_precision": 0.8504535481266672,
+          "macro_recall": 0.7964939733608956,
+          "per_class": {
+            "Change": {
+              "f1": 0.9491525423728814,
+              "support": 278
+            },
+            "Incident": {
+              "f1": 0.8078078078078078,
+              "support": 1171
+            },
+            "Problem": {
+              "f1": 0.48311156601842375,
+              "support": 645
+            },
+            "Request": {
+              "f1": 0.984375,
+              "support": 760
+            }
+          },
+          "weighted_f1": 0.795213493274172
+        },
+        "nearest_train_label_agreement": 0.8269096005606167,
+        "record_count": 2854
+      }
+    },
+    "validation": {
+      "all": {
+        "linear_svm": {
+          "accuracy": 0.8740671641791045,
+          "macro_f1": 0.8755045400209375,
+          "macro_precision": 0.8886664681689003,
+          "macro_recall": 0.8678107421589369,
+          "per_class": {
+            "Change": {
+              "f1": 0.9722863741339491,
+              "support": 438
+            },
+            "Incident": {
+              "f1": 0.8576158940397351,
+              "support": 1720
+            },
+            "Problem": {
+              "f1": 0.6814540973505854,
+              "support": 902
+            },
+            "Request": {
+              "f1": 0.9906617945594803,
+              "support": 1228
+            }
+          },
+          "weighted_f1": 0.8703743118349543
+        },
+        "logistic_regression": {
+          "accuracy": 0.8463152985074627,
+          "macro_f1": 0.8377390508883842,
+          "macro_precision": 0.873004396796976,
+          "macro_recall": 0.8263826929446951,
+          "per_class": {
+            "Change": {
+              "f1": 0.9588719153936546,
+              "support": 438
+            },
+            "Incident": {
+              "f1": 0.8333770663867751,
+              "support": 1720
+            },
+            "Problem": {
+              "f1": 0.5708333333333333,
+              "support": 902
+            },
+            "Request": {
+              "f1": 0.9878738884397736,
+              "support": 1228
+            }
+          },
+          "weighted_f1": 0.8352134456152943
+        },
+        "nearest_train_label_agreement": 0.8978544776119403,
+        "record_count": 4288
+      },
+      "intermediate": {
+        "linear_svm": {
+          "accuracy": 0.9432029795158287,
+          "macro_f1": 0.9448938174965572,
+          "macro_precision": 0.9547960905247518,
+          "macro_recall": 0.9382444515496583,
+          "per_class": {
+            "Change": {
+              "f1": 0.9954337899543378,
+              "support": 109
+            },
+            "Incident": {
+              "f1": 0.9375661375661376,
+              "support": 457
+            },
+            "Problem": {
+              "f1": 0.85,
+              "support": 216
+            },
+            "Request": {
+              "f1": 0.9965753424657534,
+              "support": 292
+            }
+          },
+          "weighted_f1": 0.9418715158033033
+        },
+        "logistic_regression": {
+          "accuracy": 0.8985102420856611,
+          "macro_f1": 0.892875994446512,
+          "macro_precision": 0.9246415280544162,
+          "macro_recall": 0.87905581817652,
+          "per_class": {
+            "Change": {
+              "f1": 0.9722222222222222,
+              "support": 109
+            },
+            "Incident": {
+              "f1": 0.8947368421052632,
+              "support": 457
+            },
+            "Problem": {
+              "f1": 0.713091922005571,
+              "support": 216
+            },
+            "Request": {
+              "f1": 0.9914529914529915,
+              "support": 292
+            }
+          },
+          "weighted_f1": 0.8923641412679743
+        },
+        "nearest_train_label_agreement": 0.9981378026070763,
+        "record_count": 1074
+      },
+      "near_copy": {
+        "linear_svm": {
+          "accuracy": 0.9851485148514851,
+          "macro_f1": 0.9847744360902255,
+          "macro_precision": 0.986241134751773,
+          "macro_recall": 0.9834158647108288,
+          "per_class": {
+            "Change": {
+              "f1": 1.0,
+              "support": 55
+            },
+            "Incident": {
+              "f1": 0.9785714285714285,
+              "support": 139
+            },
+            "Problem": {
+              "f1": 0.9605263157894737,
+              "support": 77
+            },
+            "Request": {
+              "f1": 1.0,
+              "support": 133
+            }
+          },
+          "weighted_f1": 0.9851038487307379
+        },
+        "logistic_regression": {
+          "accuracy": 0.943069306930693,
+          "macro_f1": 0.9382075369733682,
+          "macro_precision": 0.9551940851006733,
+          "macro_recall": 0.9283705503129964,
+          "per_class": {
+            "Change": {
+              "f1": 0.9908256880733946,
+              "support": 55
+            },
+            "Incident": {
+              "f1": 0.9251700680272109,
+              "support": 139
+            },
+            "Problem": {
+              "f1": 0.8405797101449275,
+              "support": 77
+            },
+            "Request": {
+              "f1": 0.9962546816479401,
+              "support": 133
+            }
+          },
+          "weighted_f1": 0.941387531287511
+        },
+        "nearest_train_label_agreement": 1.0,
+        "record_count": 404
+      },
+      "novel": {
+        "linear_svm": {
+          "accuracy": 0.8316725978647687,
+          "macro_f1": 0.8337633672892846,
+          "macro_precision": 0.8487049001982275,
+          "macro_recall": 0.8262045339208466,
+          "per_class": {
+            "Change": {
+              "f1": 0.957169459962756,
+              "support": 274
+            },
+            "Incident": {
+              "f1": 0.8120050020842018,
+              "support": 1124
+            },
+            "Problem": {
+              "f1": 0.5788982259570495,
+              "support": 609
+            },
+            "Request": {
+              "f1": 0.9869807811531308,
+              "support": 803
+            }
+          },
+          "weighted_f1": 0.8256415093403007
+        },
+        "logistic_regression": {
+          "accuracy": 0.8124555160142348,
+          "macro_f1": 0.8019766538201591,
+          "macro_precision": 0.8390472795626013,
+          "macro_recall": 0.7929531111430279,
+          "per_class": {
+            "Change": {
+              "f1": 0.9467680608365019,
+              "support": 274
+            },
+            "Incident": {
+              "f1": 0.7987346777382365,
+              "support": 1124
+            },
+            "Problem": {
+              "f1": 0.47720042417815484,
+              "support": 609
+            },
+            "Request": {
+              "f1": 0.9852034525277436,
+              "support": 803
+            }
+          },
+          "weighted_f1": 0.7967706964951081
+        },
+        "nearest_train_label_agreement": 0.8448398576512456,
+        "record_count": 2810
+      }
+    }
   },
   "overall": {
     "test": {

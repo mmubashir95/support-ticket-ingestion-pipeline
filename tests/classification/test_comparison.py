@@ -8,9 +8,12 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+from scipy.sparse import csr_matrix
+
 from ticket_classification.comparison import (
     MODELS, class_errors, compare_per_class, confusion_pairs, extract_disagreements,
     extract_errors, feature_overlap, index_predictions, length_analysis, minority_analysis,
+    near_duplicate_analysis, nearest_train_matches, nearest_train_rows,
     render_comparison_report, review_candidates, run_classical_model_comparison,
     top_features, validate_compatibility,
 )
@@ -145,6 +148,42 @@ def test_length_groups_and_error_rates():
     assert result['long'][MODELS[0]]['elevated_vs_all'] is True
 
 
+def test_nearest_train_matches_buckets_and_boundaries():
+    train = csr_matrix([[1., 0., 0.], [0., 1., 0.]])
+    heldout = csr_matrix([[2., 0., 0.],    # exact copy of train row 0 (unnormalised)
+                          [.6, .8, 0.],    # cosine 0.8 to train row 1: boundary is near_copy
+                          [.6, 0., .8],    # cosine 0.6 to train row 0: boundary is intermediate
+                          [0., 0., 1.],    # orthogonal to train: novel, no neighbour
+                          [0., 0., 0.]])   # empty row: novel, no neighbour
+    best, index = nearest_train_matches(train, heldout, batch_size=2)
+    assert best.tolist() == [1.0, .8, .6, 0.0, 0.0]
+    assert index[:3].tolist() == [0, 1, 0]
+    train_records = [SimpleNamespace(record_id='t0', label='A'), SimpleNamespace(record_id='t1', label='B')]
+    held = [SimpleNamespace(record_id=str(i), label=label) for i, label in enumerate('ABACA')]
+    rows = nearest_train_rows(held, train_records, best, index)
+    assert [r['bucket'] for r in rows] == ['near_copy', 'near_copy', 'intermediate', 'novel', 'novel']
+    assert [r['label_matches_nearest_train'] for r in rows] == [True, True, True, False, False]
+    assert rows[4]['nearest_train_record_id'] is None and 'text' not in rows[0]
+    with pytest.raises(ValueError, match='feature space'):
+        nearest_train_matches(train, csr_matrix([[1., 0.]]))
+
+
+def test_near_duplicate_analysis_scores_each_bucket_with_shared_evaluator():
+    lr, svm = predictions()
+    neighbours = [{'record_id': rid, 'bucket': bucket, 'label_matches_nearest_train': match}
+                  for rid, bucket, match in [('0', 'near_copy', True), ('1', 'near_copy', True),
+                                             ('2', 'novel', False), ('3', 'intermediate', True)]]
+    result = near_duplicate_analysis(neighbours, dict(zip(MODELS, (lr, svm))), ['A', 'B', 'C'])
+    assert [result[b]['record_count'] for b in ('all', 'near_copy', 'intermediate', 'novel')] == [4, 2, 1, 1]
+    assert result['near_copy']['nearest_train_label_agreement'] == 1.0
+    assert result['near_copy'][MODELS[0]]['accuracy'] == .5
+    assert result['novel'][MODELS[1]]['accuracy'] == 0.0
+    full = evaluate_predictions([r['actual_label'] for r in lr], [r['predicted_label'] for r in lr], ['A', 'B', 'C'])[0]
+    assert result['all'][MODELS[0]]['macro_f1'] == full['macro_f1']
+    with pytest.raises(ValueError, match='identities'):
+        near_duplicate_analysis(neighbours[:3], dict(zip(MODELS, (lr, svm))), ['A', 'B', 'C'])
+
+
 def test_frozen_workflow_report_deterministic_no_training(tmp_path, monkeypatch):
     import ticket_classification.classical as classical
     def forbidden(*args, **kwargs):
@@ -163,7 +202,8 @@ def test_frozen_workflow_report_deterministic_no_training(tmp_path, monkeypatch)
     report = render_comparison_report(a)
     assert report == render_comparison_report(copy.deepcopy(a))
     assert report == (arguments[-1] / 'classical_model_comparison.md').read_text()
-    for section in ['Experiment Context', 'Overall Metrics', 'Per-Class Performance', 'Confusion Matrix Analysis',
+    for section in ['Experiment Context', 'Overall Metrics', 'Near-Duplicate Sensitivity',
+                    'Per-Class Performance', 'Confusion Matrix Analysis',
                     'Most Confused Class Pairs', 'False Positive Analysis', 'False Negative Analysis',
                     'Minority-Class Analysis', 'Logistic Regression vs SVM Disagreements',
                     'Short / Long Ticket Analysis', 'Possible Ambiguous Tickets', 'Possible Label Issues',
@@ -172,7 +212,12 @@ def test_frozen_workflow_report_deterministic_no_training(tmp_path, monkeypatch)
         assert f'## {section}' in report
     assert a['overall']['test'][MODELS[1]]['macro_f1'] > .8
     assert a['conclusion']['selection_split'] == 'validation'
-    assert len(list(arguments[-1].glob('*.jsonl'))) == 10
+    assert len(list(arguments[-1].glob('*.jsonl'))) == 12
+    for split in ('validation', 'test'):
+        buckets = a['near_duplicates'][split]
+        assert sum(buckets[b]['record_count'] for b in ('near_copy', 'intermediate', 'novel')) == buckets['all']['record_count']
+        assert buckets['all'][MODELS[1]]['macro_f1'] == a['overall'][split][MODELS[1]]['macro_f1']
+    assert a['conclusion']['ranking_holds_on_novel_validation'] is True
     assert a['context']['class_counts_full']['Change'] == 2922
     before = {path.name: path.read_bytes() for path in arguments[-1].iterdir()}
     repeated = run_classical_model_comparison(*arguments, audit_path=ROOT / 'classification_dataset_audit.json')

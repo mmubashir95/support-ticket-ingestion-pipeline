@@ -34,6 +34,25 @@ All records were joined by record_id and checked against frozen labels, model pr
 | weighted_f1 | 0.829579 | 0.865559 |
 | accuracy | 0.842854 | 0.869667 |
 
+## Near-Duplicate Sensitivity
+
+Each held-out ticket is matched to its most similar train ticket (max cosine of each held-out row to any train row in the frozen TF-IDF space). Buckets: near_copy >= 0.8, intermediate [0.6, 0.8), novel < 0.6; thresholds were fixed before reporting and are not tuned. The split, features and models are unchanged.
+
+Headline metrics include held-out tickets with templated near copies in train; novel-ticket metrics are the conservative estimate for unseen ticket wording.
+
+| Split | Bucket | N | NN label agreement | LR macro F1 | SVM macro F1 | LR accuracy | SVM accuracy |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| validation | all | 4288 | 0.8979 | 0.8377 | 0.8755 | 0.8463 | 0.8741 |
+| validation | near_copy | 404 | 1.0000 | 0.9382 | 0.9848 | 0.9431 | 0.9851 |
+| validation | intermediate | 1074 | 0.9981 | 0.8929 | 0.9449 | 0.8985 | 0.9432 |
+| validation | novel | 2810 | 0.8448 | 0.8020 | 0.8338 | 0.8125 | 0.8317 |
+| test | all | 4289 | 0.8839 | 0.8320 | 0.8721 | 0.8429 | 0.8697 |
+| test | near_copy | 403 | 1.0000 | 0.9240 | 0.9809 | 0.9454 | 0.9851 |
+| test | intermediate | 1032 | 0.9961 | 0.8770 | 0.9378 | 0.8857 | 0.9370 |
+| test | novel | 2854 | 0.8269 | 0.8061 | 0.8381 | 0.8129 | 0.8290 |
+
+NN label agreement is the share of tickets whose nearest train ticket has the same label. Per-record evidence (ids, cosine, labels; no text): validation_nearest_train.jsonl and test_nearest_train.jsonl. A class absent from a bucket contributes F1 0 to that bucket's macro F1; per-class support is in the JSON.
+
 ## Per-Class Performance
 
 ### Validation
@@ -341,5 +360,7 @@ Validation differences (SVM minus LR): `{"accuracy": 0.027751865671641784, "cpu_
 Classes with lower SVM validation F1: none. Minority recall and error patterns above qualify this ranking; model size excludes the shared TF-IDF vectorizer. Engineering measurements are descriptive, with the timing caveat above.
 
 Largest validation F1 gain: Problem. Classes with lower SVM recall: Incident, Request. SVM minus LR shortest-validation error rate: +0.0226. These trade-offs must remain visible despite the aggregate improvement.
+
+Novel-ticket validation macro F1 (cosine < 0.6, n=2810): logistic_regression 0.8020, linear_svm 0.8338. Preferred-baseline ranking holds on novel tickets: true. Headline metrics include held-out tickets with templated near copies in train; novel-ticket metrics are the conservative estimate for unseen ticket wording.
 
 Next planned phase: Phase 2.7 — Transformer Dataset and Tokenization. No Transformer work is included here.
