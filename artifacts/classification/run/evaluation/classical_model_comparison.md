@@ -307,19 +307,8 @@ Overlap uses deterministic top-k sets per sign; differences do not establish cau
 
 | Split | LR (seconds) | SVM (seconds) |
 | --- | --- | --- |
-| validation | 3.57170179 | 0.805052557 |
-| test | 3.57170179 | 0.805052557 |
-
-## CPU Inference Latency
-
-| Split | LR (seconds/record) | SVM (seconds/record) |
-| --- | --- | --- |
-| validation | 7.11394123e-07 | 5.14582649e-07 |
-| test | 7.16851247e-07 | 4.74235812e-07 |
-
-Recorded predict-only CPU times exclude TF-IDF; LR one cold pass versus SVM one warmup/five measured passes. Indicative only, not a controlled benchmark.
-
-Original timing metadata is retained in classical_model_comparison.json. No P50/P95 or throughput measurements were available; no re-benchmark was run.
+| validation | 3.96374855 | 0.600932844 |
+| test | 3.96374855 | 0.600932844 |
 
 ## Model Size
 
@@ -327,6 +316,21 @@ Original timing metadata is retained in classical_model_comparison.json. No P50/
 | --- | --- | --- |
 | validation | 2680775 | 2680643 |
 | test | 2680775 | 2680643 |
+
+## CPU Inference Latency
+
+| Split | Measure | LR | SVM |
+| --- | --- | --- | --- |
+| validation | Batch, text to label (µs/record) | 70.9 | 75.5 |
+| validation | Batch throughput (records/s) | 14,110 | 13,241 |
+| validation | Single ticket, text to label (ms) | 0.713 | 0.683 |
+| validation | Classifier predict only (µs/record) | 0.462 | 0.436 |
+| test | Batch, text to label (µs/record) | 72.3 | 77.4 |
+| test | Batch throughput (records/s) | 13,829 | 12,917 |
+| test | Single ticket, text to label (ms) | 0.672 | 0.828 |
+| test | Classifier predict only (µs/record) | 0.431 | 0.679 |
+
+Both models use the shared text_to_label_v1 protocol on the same machine: raw text -> TF-IDF transform -> predict, medians after warm-up. The shared TF-IDF transform dominates; predict-only time is shown separately. Single-machine medians, not the Phase 2.11 P50/P95 benchmark; small differences are within run-to-run noise.
 
 ## Model Issues vs Data-Quality Issues
 
@@ -355,7 +359,7 @@ Validation Macro F1 is the primary ranking criterion; ties use macro recall, mac
 
 Supporting validation metrics higher for SVM: macro_f1, macro_recall, macro_precision, weighted_f1. Classes with higher SVM F1: Change, Incident, Problem, Request.
 
-Validation differences (SVM minus LR): `{"accuracy": 0.027751865671641784, "cpu_inference_seconds_per_record": -1.9681147396520608e-07, "macro_f1": 0.03776548913255329, "macro_precision": 0.015662071371924324, "macro_recall": 0.04142804921424181, "model_size_bytes": -132, "training_time_seconds": -2.766649232002237, "weighted_f1": 0.03516086621965997}`.
+Validation differences (SVM minus LR): `{"accuracy": 0.027751865671641784, "cpu_inference_seconds_per_record": 4.647181553855945e-06, "cpu_single_record_latency_seconds": -3.0629500543000177e-05, "macro_f1": 0.03776548913255329, "macro_precision": 0.015662071371924324, "macro_recall": 0.04142804921424181, "model_size_bytes": -132, "training_time_seconds": -3.362815705993853, "weighted_f1": 0.03516086621965997}`.
 
 Classes with lower SVM validation F1: none. Minority recall and error patterns above qualify this ranking; model size excludes the shared TF-IDF vectorizer. Engineering measurements are descriptive, with the timing caveat above.
 

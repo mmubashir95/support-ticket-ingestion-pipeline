@@ -136,24 +136,34 @@
   },
   "inference_latency": {
     "test": {
-      "aggregate_seconds": 0.010169986984692514,
+      "batch_seconds": 0.33205003250259324,
       "clock": "perf_counter",
-      "includes": "Linear SVM predict only; excludes TF-IDF transform and decision_function",
-      "mean_iteration_seconds": 0.002033997396938503,
-      "measured_iterations": 5,
+      "includes": "raw text -> TF-IDF transform -> model.predict",
+      "measured_iterations": 10,
+      "predict_only_seconds_per_record": 6.794194457943945e-07,
+      "protocol": "text_to_label_v1",
       "record_count": 4289,
-      "seconds_per_record": 4.742358118299144e-07,
-      "warmup_iterations": 1
+      "records_per_second": 12916.728143872426,
+      "seconds_per_record": 7.74189863610616e-05,
+      "single_record_median_seconds": 0.0008283655006380286,
+      "single_record_samples": 50,
+      "statistic": "median",
+      "warmup_iterations": 2
     },
     "validation": {
-      "aggregate_seconds": 0.011032651993446052,
+      "batch_seconds": 0.32383415850199526,
       "clock": "perf_counter",
-      "includes": "Linear SVM predict only; excludes TF-IDF transform and decision_function",
-      "mean_iteration_seconds": 0.0022065303986892105,
-      "measured_iterations": 5,
+      "includes": "raw text -> TF-IDF transform -> model.predict",
+      "measured_iterations": 10,
+      "predict_only_seconds_per_record": 4.361082080403823e-07,
+      "protocol": "text_to_label_v1",
       "record_count": 4288,
-      "seconds_per_record": 5.145826489480435e-07,
-      "warmup_iterations": 1
+      "records_per_second": 13241.345569706415,
+      "seconds_per_record": 7.552102577005487e-05,
+      "single_record_median_seconds": 0.0006826175012975,
+      "single_record_samples": 50,
+      "statistic": "median",
+      "warmup_iterations": 2
     }
   },
   "label_mapping": {
@@ -171,8 +181,8 @@
   "split_version": "split_d1f67d41500f",
   "target": "ticket_type",
   "task": "single_label_multiclass",
-  "timestamp": "2026-10-02T14:37:11.345734+00:00",
-  "training_time": 0.8050525569997262,
+  "timestamp": "2026-10-02T15:23:42.018818+00:00",
+  "training_time": 0.6009328440050012,
   "versions": {
     "joblib": "1.5.3",
     "numpy": "2.5.2",

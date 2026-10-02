@@ -107,13 +107,11 @@ def test_prediction_rows_hold_raw_scores_and_shared_evaluation():
     model = train_linear_svm(
         features.train, [record.label for record in splits.train]
     ).model
-    rows, timing = predict_linear_svm_records(
+    rows = predict_linear_svm_records(
         model,
         features.test,
         splits.test,
         model.classes_,
-        warmup_iterations=1,
-        measured_iterations=2,
     )
     assert len(rows) == len(splits.test)
     assert rows[0]["record_id"] == splits.test[0].record_id
@@ -122,9 +120,6 @@ def test_prediction_rows_hold_raw_scores_and_shared_evaluation():
     assert list(rows[0]["decision_scores"]) == list(model.classes_)
     assert rows[0]["scores_are_probabilities"] is False
     assert rows[0]["score_type"] == "raw_linear_svm_decision_function"
-    assert timing["warmup_iterations"] == 1
-    assert timing["measured_iterations"] == 2
-    assert timing["record_count"] == len(splits.test)
     metrics, matrix = evaluate_predictions(
         [row["actual_label"] for row in rows],
         [row["predicted_label"] for row in rows],

@@ -225,12 +225,19 @@ def test_frozen_workflow_report_deterministic_no_training(tmp_path, monkeypatch)
     assert before == {path.name: path.read_bytes() for path in arguments[-1].iterdir()}
 
 
-@pytest.mark.parametrize('mutation', ['ids', 'scores', 'metrics', 'confusion'])
+@pytest.mark.parametrize('mutation', ['ids', 'scores', 'metrics', 'confusion', 'timing'])
 def test_workflow_rejects_corrupt_outputs(tmp_path, mutation):
     import shutil
     directory = tmp_path / 'lr'
     shutil.copytree(ROOT / MODELS[0], directory)
-    if mutation in ('ids', 'scores'):
+    if mutation == 'timing':
+        # Timed differently from SVM: the comparison must refuse it as unfair.
+        for filename in ('metrics.json', 'experiment_manifest.json'):
+            path = directory / filename
+            value = json.loads(path.read_text())
+            value['inference_latency']['validation']['measured_iterations'] = 1
+            path.write_text(json.dumps(value))
+    elif mutation in ('ids', 'scores'):
         path = directory / 'validation_predictions.jsonl'
         rows = [json.loads(line) for line in path.read_text().splitlines()]
         if mutation == 'ids':

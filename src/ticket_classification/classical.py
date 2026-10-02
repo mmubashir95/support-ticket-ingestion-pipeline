@@ -1,6 +1,7 @@
 """Simple unweighted classical baselines over existing sparse features."""
 
 from dataclasses import dataclass
+import statistics
 from time import perf_counter
 from typing import Literal
 import warnings
@@ -115,30 +116,73 @@ def linear_svm_decision_scores(model, matrix):
     return scores
 
 
-def predict_linear_svm_records(
+INFERENCE_TIMING_PROTOCOL = "text_to_label_v1"
+
+
+def _elapsed(function):
+    start = perf_counter()
+    function()
+    return perf_counter() - start
+
+
+def measure_cpu_inference(
     model,
-    matrix,
-    records,
-    class_order,
+    vectorizer,
+    texts,
     *,
-    warmup_iterations=1,
-    measured_iterations=5,
+    warmup_iterations=2,
+    measured_iterations=10,
+    single_record_samples=50,
 ):
-    """Return traceable predictions, raw margins, and lightweight CPU timing."""
+    """Shared CPU timing for every classical model: text -> TF-IDF -> predict.
+
+    Batch figures are the median of repeated full-split passes after warm-up.
+    Single-record latency is the median over the first ``single_record_samples``
+    tickets classified one at a time. Predict-only time is kept separately so
+    the classifier's share of the end-to-end cost stays visible. These are
+    single-machine observations, not the Phase 2.11 benchmark.
+    """
+    texts = list(texts)
+    if not texts:
+        raise ValueError("timing requires at least one text")
+    if warmup_iterations < 0 or measured_iterations < 1 or single_record_samples < 1:
+        raise ValueError("timing iterations must include at least one measurement")
+
+    def text_to_label(batch):
+        return model.predict(vectorizer.transform(batch))
+
+    matrix = vectorizer.transform(texts)
+    for _ in range(warmup_iterations):
+        text_to_label(texts)
+        model.predict(matrix)
+    batch = statistics.median(_elapsed(lambda: text_to_label(texts)) for _ in range(measured_iterations))
+    predict_only = statistics.median(_elapsed(lambda: model.predict(matrix)) for _ in range(measured_iterations))
+    samples = texts[:single_record_samples]
+    text_to_label(samples[:1])
+    single = statistics.median(_elapsed(lambda: text_to_label([text])) for text in samples)
+    return {
+        "protocol": INFERENCE_TIMING_PROTOCOL,
+        "includes": "raw text -> TF-IDF transform -> model.predict",
+        "clock": "perf_counter",
+        "statistic": "median",
+        "record_count": len(texts),
+        "warmup_iterations": warmup_iterations,
+        "measured_iterations": measured_iterations,
+        "batch_seconds": batch,
+        "seconds_per_record": batch / len(texts),
+        "records_per_second": len(texts) / batch,
+        "predict_only_seconds_per_record": predict_only / len(texts),
+        "single_record_samples": len(samples),
+        "single_record_median_seconds": single,
+    }
+
+
+def predict_linear_svm_records(model, matrix, records, class_order):
+    """Return traceable predictions with raw margins; timing is measured separately."""
     validate_features(matrix, records, model.n_features_in_)
     if list(model.classes_) != list(class_order):
         raise ValueError("model classes differ from frozen class order")
-    if warmup_iterations < 0 or measured_iterations < 1:
-        raise ValueError("timing iterations must include at least one measurement")
-    for _ in range(warmup_iterations):
-        model.predict(matrix)
-    durations = []
-    predictions = None
-    for _ in range(measured_iterations):
-        start = perf_counter()
-        predictions = model.predict(matrix)
-        durations.append(perf_counter() - start)
-    assert predictions is not None
+    predictions = model.predict(matrix)
     scores = linear_svm_decision_scores(model, matrix)
     if predictions.shape != (len(records),):
         raise ValueError("prediction count differs from records")
@@ -167,28 +211,15 @@ def predict_linear_svm_records(
         }
         for record, prediction, score_row in zip(records, predictions, scores)
     ]
-    aggregate = float(sum(durations))
-    timing = {
-        "aggregate_seconds": aggregate,
-        "mean_iteration_seconds": aggregate / measured_iterations,
-        "seconds_per_record": aggregate / (measured_iterations * len(records)),
-        "record_count": len(records),
-        "warmup_iterations": warmup_iterations,
-        "measured_iterations": measured_iterations,
-        "includes": "Linear SVM predict only; excludes TF-IDF transform and decision_function",
-        "clock": "perf_counter",
-    }
-    return rows, timing
+    return rows
 
 
 def predict_records(model, matrix, records, class_order):
-    """Return traceable predictions and probabilities; time predict only."""
+    """Return traceable predictions and probabilities; timing is measured separately."""
     validate_features(matrix, records, model.n_features_in_)
     if list(model.classes_) != list(class_order):
         raise ValueError("model classes differ from frozen class order")
-    start = perf_counter()
     predictions = model.predict(matrix)
-    duration = perf_counter() - start
     probabilities = model.predict_proba(matrix)
     if predictions.shape != (len(records),):
         raise ValueError("prediction count differs from records")
@@ -210,11 +241,7 @@ def predict_records(model, matrix, records, class_order):
          "probabilities": probability.tolist()}
         for record, prediction, probability in zip(records, predictions, probabilities)
     ]
-    timing = {"seconds": duration, "record_count": len(records),
-              "seconds_per_record": duration / len(records),
-              "includes": "Logistic Regression predict only; excludes TF-IDF transform and predict_proba",
-              "iterations": 1, "clock": "perf_counter"}
-    return rows, timing
+    return rows
 
 
 def coefficient_feature_mapping(model, vectorizer):

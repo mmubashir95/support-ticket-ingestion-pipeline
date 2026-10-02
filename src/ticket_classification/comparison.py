@@ -7,7 +7,9 @@ import numpy as np
 from sklearn.preprocessing import normalize
 
 from ticket_classification.audit import _percentile, _word_count
-from ticket_classification.classical import coefficient_feature_mapping, linear_svm_decision_scores
+from ticket_classification.classical import (
+    INFERENCE_TIMING_PROTOCOL, coefficient_feature_mapping, linear_svm_decision_scores,
+)
 from ticket_classification.classical_outputs import (
     _load_validated_classical_inputs, _write_json, load_linear_svm, load_logistic_regression,
 )
@@ -25,6 +27,7 @@ NEAR_COPY_MIN_COSINE = 0.8
 NOVEL_MAX_COSINE = 0.6
 COSINE_DECIMALS = 6
 SIMILARITY_BUCKETS = ("all", "near_copy", "intermediate", "novel")
+TIMING_SETTINGS = ("protocol", "warmup_iterations", "measured_iterations", "single_record_samples", "record_count")
 
 
 def validate_compatibility(manifests, metadata, configuration, classes):
@@ -384,9 +387,16 @@ def run_classical_model_comparison(split_dir, feature_dir, lr_dir, svm_dir, outp
             timing = manifests[name]["inference_latency"][split]
             if timing["record_count"] != len(records) or timing["clock"] != "perf_counter":
                 raise ValueError(f"{name}: timing population/protocol differs")
+            reference = manifests[MODELS[0]]["inference_latency"][split]
+            if (timing.get("protocol") != INFERENCE_TIMING_PROTOCOL or
+                    any(timing[key] != reference[key] for key in TIMING_SETTINGS)):
+                raise ValueError(f"{name}: timing protocol differs between models")
             comparison[split][name] = {"model_name": manifests[name]["model_name"], **metrics,
                                       "training_time_seconds": manifests[name]["training_time"],
                                       "cpu_inference_seconds_per_record": timing["seconds_per_record"],
+                                      "cpu_records_per_second": timing["records_per_second"],
+                                      "cpu_single_record_latency_seconds": timing["single_record_median_seconds"],
+                                      "cpu_predict_only_seconds_per_record": timing["predict_only_seconds_per_record"],
                                       "cpu_inference_metadata": timing,
                                       "model_size_bytes": manifests[name]["model_size_bytes"]}
             results[name], matrices[name] = metrics, matrix
@@ -441,12 +451,16 @@ def run_classical_model_comparison(split_dir, feature_dir, lr_dir, svm_dir, outp
                   "svm_supporting_metric_improvements": [key for key in selection_keys if svm[key] > lr[key]],
                   "svm_class_f1_improvements": [row["class"] for row in per_class["validation"] if row["svm_minus_lr"]["f1"] > 0],
                   "reasoning": "Validation Macro F1 is the primary ranking criterion; ties use macro recall, macro precision, then weighted F1. Supporting metrics, per-class gains/regressions, minority behavior and engineering trade-offs qualify the recommendation below. Test is descriptive and does not tune the choice.",
-                  "tradeoffs": {key: svm[key] - lr[key] for key in (*METRICS, "training_time_seconds", "cpu_inference_seconds_per_record", "model_size_bytes")},
+                  "tradeoffs": {key: svm[key] - lr[key] for key in (*METRICS, "training_time_seconds", "cpu_inference_seconds_per_record",
+                                                                      "cpu_single_record_latency_seconds", "model_size_bytes")},
                   "class_f1_regressions": [row["class"] for row in per_class["validation"] if row["svm_minus_lr"]["f1"] < 0],
                   "recall_tradeoffs": [row["class"] for row in per_class["validation"] if row["svm_minus_lr"]["recall"] < 0],
                   "largest_f1_gain_class": max(per_class["validation"], key=lambda row: row["svm_minus_lr"]["f1"])["class"],
                   "short_validation_error_rate_delta": length_groups["validation"]["short"][MODELS[1]]["error_rate"] - length_groups["validation"]["short"][MODELS[0]]["error_rate"],
-                  "latency_limitation": "Recorded predict-only CPU times exclude TF-IDF; LR one cold pass versus SVM one warmup/five measured passes. Indicative only, not a controlled benchmark.",
+                  "latency_limitation": ("Both models use the shared " + INFERENCE_TIMING_PROTOCOL + " protocol on the same machine: "
+                                         "raw text -> TF-IDF transform -> predict, medians after warm-up. The shared TF-IDF transform "
+                                         "dominates; predict-only time is shown separately. Single-machine medians, not the Phase 2.11 "
+                                         "P50/P95 benchmark; small differences are within run-to-run noise."),
                   "novel_validation_macro_f1": novel_f1, "novel_validation_record_count": novel["record_count"],
                   "ranking_holds_on_novel_validation": ranking_holds_on_novel,
                   "near_duplicate_disclosure": "Headline metrics include held-out tickets with templated near copies in train; novel-ticket metrics are the conservative estimate for unseen ticket wording."}
@@ -562,12 +576,17 @@ def render_comparison_report(analysis):
                      [[label, direction, *( ", ".join(data[key]) for key in ("shared", "lr_only", "svm_only"))]
                       for label, signs in a["feature_importance"]["overlap"].items() for direction, data in signs.items()])]
     for heading, key, unit in (("Training Time", "training_time_seconds", "seconds"),
-                               ("CPU Inference Latency", "cpu_inference_seconds_per_record", "seconds/record"),
                                ("Model Size", "model_size_bytes", "bytes")):
         parts += [f"## {heading}", _table(["Split", f"LR ({unit})", f"SVM ({unit})"],
                   [[split, *(f"{a['overall'][split][name][key]:.9g}" for name in MODELS)] for split in ("validation", "test")])]
-        if heading == "CPU Inference Latency":
-            parts += [a["conclusion"]["latency_limitation"], "Original timing metadata is retained in classical_model_comparison.json. No P50/P95 or throughput measurements were available; no re-benchmark was run."]
+    cpu_rows = (("Batch, text to label (µs/record)", "cpu_inference_seconds_per_record", 1e6, ".1f"),
+                ("Batch throughput (records/s)", "cpu_records_per_second", 1, ",.0f"),
+                ("Single ticket, text to label (ms)", "cpu_single_record_latency_seconds", 1e3, ".3f"),
+                ("Classifier predict only (µs/record)", "cpu_predict_only_seconds_per_record", 1e6, ".3f"))
+    parts += ["## CPU Inference Latency", _table(["Split", "Measure", "LR", "SVM"],
+              [[split, label, *(format(a["overall"][split][name][key] * scale, spec) for name in MODELS)]
+               for split in ("validation", "test") for label, key, scale, spec in cpu_rows]),
+              a["conclusion"]["latency_limitation"]]
     parts += ["## Model Issues vs Data-Quality Issues", _table(["Category", "Interpretation"],
               [["Model error", "Prediction differs from frozen label; FP/FN artifacts"],
                ["Possible ambiguity", "Disagreement, both wrong, or limited context; heuristic review"],

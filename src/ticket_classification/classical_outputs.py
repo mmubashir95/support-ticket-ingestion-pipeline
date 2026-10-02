@@ -13,8 +13,8 @@ import sklearn
 
 from ticket_classification.classical import (
     LinearSVMConfig, LogisticRegressionConfig, coefficient_feature_mapping,
-    linear_svm_decision_scores, predict_linear_svm_records, predict_records,
-    train_linear_svm, train_logistic_regression, validate_features,
+    linear_svm_decision_scores, measure_cpu_inference, predict_linear_svm_records,
+    predict_records, train_linear_svm, train_logistic_regression, validate_features,
 )
 from ticket_classification.evaluation import evaluate_predictions
 from ticket_classification.feature_outputs import (
@@ -22,7 +22,9 @@ from ticket_classification.feature_outputs import (
     load_feature_metadata, load_sparse_features, load_vectorizer,
     _atomic_joblib_dump,
 )
-from ticket_classification.features import TfidfConfig, TfidfFeatureResult, load_frozen_splits
+from ticket_classification.features import (
+    TfidfConfig, TfidfFeatureResult, build_classification_text, load_frozen_splits,
+)
 from ticket_classification.split_outputs import _atomic_write_text
 from ticket_pipeline.versioning import fingerprint_value
 
@@ -131,7 +133,9 @@ def run_logistic_regression_baseline(split_dir, feature_dir, output_dir, *, conf
     metrics, confusion, timings = {}, {}, {}
     for name in ("validation", "test"):
         matrix, records = matrices[name], getattr(splits, name)
-        rows, timings[name] = predict_records(model, matrix, records, classes)
+        rows = predict_records(model, matrix, records, classes)
+        timings[name] = measure_cpu_inference(
+            model, vectorizer, [build_classification_text(record) for record in records])
         np.testing.assert_array_equal(model.predict(matrix), reloaded.predict(matrix))
         np.testing.assert_allclose(model.predict_proba(matrix), reloaded.predict_proba(matrix),
                                    rtol=1e-12, atol=1e-12)
@@ -187,7 +191,7 @@ def run_linear_svm_baseline(split_dir, feature_dir, output_dir, *, config=None):
     settings = config or LinearSVMConfig()
     inputs = _load_validated_classical_inputs(split_dir, feature_dir, phase="Phase 2.5")
     splits, matrices, classes = inputs.splits, inputs.matrices, inputs.classes
-    directory = inputs.feature_dir
+    directory, vectorizer = inputs.feature_dir, inputs.vectorizer
     feature_config, metadata = inputs.feature_config, inputs.feature_metadata
 
     trained = train_linear_svm(
@@ -207,8 +211,9 @@ def run_linear_svm_baseline(split_dir, feature_dir, output_dir, *, config=None):
     metrics, confusion, timings = {}, {}, {}
     for name in ("validation", "test"):
         matrix, records = matrices[name], getattr(splits, name)
-        rows, timings[name] = predict_linear_svm_records(
-            model, matrix, records, classes
+        rows = predict_linear_svm_records(model, matrix, records, classes)
+        timings[name] = measure_cpu_inference(
+            model, vectorizer, [build_classification_text(record) for record in records]
         )
         np.testing.assert_array_equal(model.predict(matrix), reloaded.predict(matrix))
         np.testing.assert_allclose(

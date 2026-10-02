@@ -576,12 +576,20 @@ Metrics explicitly include every frozen class and use `zero_division=0` when a
 class has no predictions. Confusion matrix rows represent actual classes and
 columns represent predicted classes.
 
-Training duration measures `fit` using `perf_counter`. Basic inference latency
-measures one `predict` call for the entire validation/test CSR matrix, excluding
-TF-IDF transformation, `predict_proba`, loading, validation and persistence.
-Seconds per record is batch duration divided by count, not single-ticket latency.
-These machine-dependent measurements are lightweight observations, not a P50/P95
-benchmark. Serialized size is the actual `model.joblib` size from disk.
+Training duration measures `fit` using `perf_counter`. CPU inference timing uses
+the shared `measure_cpu_inference` helper, identical for LR and SVM (protocol
+`text_to_label_v1`): it times the full path from raw text through TF-IDF
+transform to `predict`, and reports medians after warm-up:
+
+| Field | Meaning |
+| --- | --- |
+| `seconds_per_record`, `records_per_second` | Batch throughput over the whole split (2 warm-up, median of 10 passes) |
+| `single_record_median_seconds` | One ticket at a time, median over the first 50 tickets |
+| `predict_only_seconds_per_record` | Classifier `predict` alone, for reference |
+
+These machine-dependent measurements are lightweight observations, not the
+Phase 2.11 P50/P95 benchmark. Serialized size is the actual `model.joblib` size
+from disk.
 
 The workflow reloads the saved model and compares **all** validation/test
 predictions exactly and probabilities with `rtol=atol=1e-12`. The helper
@@ -665,11 +673,10 @@ For this four-class dataset, `decision_function` returns one score per class.
 The reusable helper also documents scikit-learn's binary case by exposing the
 single signed margin in negative/positive class orientation.
 
-Basic CPU timing runs one warm-up and five measured full-matrix `predict`
-calls. It records aggregate time, mean iteration time, and time per record.
-It excludes TF-IDF transform, decision-score generation, loading, validation,
-and persistence. This remains a lightweight Phase 2.5 measurement rather than
-the full Phase 2.11 benchmark.
+CPU timing uses the same shared `measure_cpu_inference` helper as Logistic
+Regression (text -> TF-IDF -> `predict`, medians after warm-up; see Phase 2.4),
+so the two baselines are timed identically. This remains a lightweight
+measurement rather than the full Phase 2.11 benchmark.
 
 The saved model is reloaded and required to reproduce every validation/test
 prediction exactly and every decision score within `rtol=atol=1e-12`.
@@ -765,10 +772,11 @@ are model associations, not causal explanations. The class-weighting assessment
 is an explicitly documented exploratory evidence gate for Phase 2.9, not a
 weight-selection policy or experiment.
 
-Recorded CPU timings exclude TF-IDF transformation and score generation. LR
-used one cold pass, while SVM used a warmup and five measured passes, so their
-latency comparison is indicative rather than a controlled benchmark. Original
-measurement protocols and hardware/software metadata are preserved. Model size
+The comparison refuses to run unless both models were timed with the same
+protocol and settings. The report shows batch throughput, single-ticket latency,
+and predict-only time separately; the shared TF-IDF transform dominates, so the
+two linear models are expected to be close. Hardware/software metadata is
+preserved; these are single-machine medians, not a benchmark. Model size
 covers the serialized classifier only; both models share the vectorizer.
 
 Run `.venv/bin/python -m pytest tests/classification/test_comparison.py` for

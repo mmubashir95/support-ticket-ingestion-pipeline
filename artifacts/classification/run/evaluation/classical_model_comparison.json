@@ -1,5 +1,5 @@
 {
-  "analysis_id": "comparison_72f5a873ac6e",
+  "analysis_id": "comparison_548009822f2d",
   "class_weighting_assessment": {
     "class_counts_full": {
       "Change": 2922,
@@ -91,7 +91,7 @@
   "conclusion": {
     "class_f1_regressions": [],
     "largest_f1_gain_class": "Problem",
-    "latency_limitation": "Recorded predict-only CPU times exclude TF-IDF; LR one cold pass versus SVM one warmup/five measured passes. Indicative only, not a controlled benchmark.",
+    "latency_limitation": "Both models use the shared text_to_label_v1 protocol on the same machine: raw text -> TF-IDF transform -> predict, medians after warm-up. The shared TF-IDF transform dominates; predict-only time is shown separately. Single-machine medians, not the Phase 2.11 P50/P95 benchmark; small differences are within run-to-run noise.",
     "near_duplicate_disclosure": "Headline metrics include held-out tickets with templated near copies in train; novel-ticket metrics are the conservative estimate for unseen ticket wording.",
     "novel_validation_macro_f1": {
       "linear_svm": 0.8337633672892846,
@@ -127,12 +127,13 @@
     ],
     "tradeoffs": {
       "accuracy": 0.027751865671641784,
-      "cpu_inference_seconds_per_record": -1.9681147396520608e-07,
+      "cpu_inference_seconds_per_record": 4.647181553855945e-06,
+      "cpu_single_record_latency_seconds": -3.0629500543000177e-05,
       "macro_f1": 0.03776548913255329,
       "macro_precision": 0.015662071371924324,
       "macro_recall": 0.04142804921424181,
       "model_size_bytes": -132,
-      "training_time_seconds": -2.766649232002237,
+      "training_time_seconds": -3.362815705993853,
       "weighted_f1": 0.03516086621965997
     }
   },
@@ -2987,16 +2988,24 @@
           "Request"
         ],
         "cpu_inference_metadata": {
-          "aggregate_seconds": 0.010169986984692514,
+          "batch_seconds": 0.33205003250259324,
           "clock": "perf_counter",
-          "includes": "Linear SVM predict only; excludes TF-IDF transform and decision_function",
-          "mean_iteration_seconds": 0.002033997396938503,
-          "measured_iterations": 5,
+          "includes": "raw text -> TF-IDF transform -> model.predict",
+          "measured_iterations": 10,
+          "predict_only_seconds_per_record": 6.794194457943945e-07,
+          "protocol": "text_to_label_v1",
           "record_count": 4289,
-          "seconds_per_record": 4.742358118299144e-07,
-          "warmup_iterations": 1
+          "records_per_second": 12916.728143872426,
+          "seconds_per_record": 7.74189863610616e-05,
+          "single_record_median_seconds": 0.0008283655006380286,
+          "single_record_samples": 50,
+          "statistic": "median",
+          "warmup_iterations": 2
         },
-        "cpu_inference_seconds_per_record": 4.742358118299144e-07,
+        "cpu_inference_seconds_per_record": 7.74189863610616e-05,
+        "cpu_predict_only_seconds_per_record": 6.794194457943945e-07,
+        "cpu_records_per_second": 12916.728143872426,
+        "cpu_single_record_latency_seconds": 0.0008283655006380286,
         "macro_f1": 0.8720583084228815,
         "macro_precision": 0.8851224089335367,
         "macro_recall": 0.8647598416524024,
@@ -3028,7 +3037,7 @@
             "support": 1228
           }
         },
-        "training_time_seconds": 0.8050525569997262,
+        "training_time_seconds": 0.6009328440050012,
         "weighted_f1": 0.8655589047967299,
         "zero_division": 0
       },
@@ -3041,14 +3050,24 @@
           "Request"
         ],
         "cpu_inference_metadata": {
+          "batch_seconds": 0.3101498325013381,
           "clock": "perf_counter",
-          "includes": "Logistic Regression predict only; excludes TF-IDF transform and predict_proba",
-          "iterations": 1,
+          "includes": "raw text -> TF-IDF transform -> model.predict",
+          "measured_iterations": 10,
+          "predict_only_seconds_per_record": 4.3075635314873023e-07,
+          "protocol": "text_to_label_v1",
           "record_count": 4289,
-          "seconds": 0.003074574997299351,
-          "seconds_per_record": 7.168512467473422e-07
+          "records_per_second": 13828.799988088002,
+          "seconds_per_record": 7.231285439527585e-05,
+          "single_record_median_seconds": 0.0006723389960825443,
+          "single_record_samples": 50,
+          "statistic": "median",
+          "warmup_iterations": 2
         },
-        "cpu_inference_seconds_per_record": 7.168512467473422e-07,
+        "cpu_inference_seconds_per_record": 7.231285439527585e-05,
+        "cpu_predict_only_seconds_per_record": 4.3075635314873023e-07,
+        "cpu_records_per_second": 13828.799988088002,
+        "cpu_single_record_latency_seconds": 0.0006723389960825443,
         "macro_f1": 0.8319693240209273,
         "macro_precision": 0.872426848215712,
         "macro_recall": 0.8208430151082129,
@@ -3080,7 +3099,7 @@
             "support": 1228
           }
         },
-        "training_time_seconds": 3.5717017890019633,
+        "training_time_seconds": 3.9637485499988543,
         "weighted_f1": 0.8295787322149247,
         "zero_division": 0
       }
@@ -3095,16 +3114,24 @@
           "Request"
         ],
         "cpu_inference_metadata": {
-          "aggregate_seconds": 0.011032651993446052,
+          "batch_seconds": 0.32383415850199526,
           "clock": "perf_counter",
-          "includes": "Linear SVM predict only; excludes TF-IDF transform and decision_function",
-          "mean_iteration_seconds": 0.0022065303986892105,
-          "measured_iterations": 5,
+          "includes": "raw text -> TF-IDF transform -> model.predict",
+          "measured_iterations": 10,
+          "predict_only_seconds_per_record": 4.361082080403823e-07,
+          "protocol": "text_to_label_v1",
           "record_count": 4288,
-          "seconds_per_record": 5.145826489480435e-07,
-          "warmup_iterations": 1
+          "records_per_second": 13241.345569706415,
+          "seconds_per_record": 7.552102577005487e-05,
+          "single_record_median_seconds": 0.0006826175012975,
+          "single_record_samples": 50,
+          "statistic": "median",
+          "warmup_iterations": 2
         },
-        "cpu_inference_seconds_per_record": 5.145826489480435e-07,
+        "cpu_inference_seconds_per_record": 7.552102577005487e-05,
+        "cpu_predict_only_seconds_per_record": 4.361082080403823e-07,
+        "cpu_records_per_second": 13241.345569706415,
+        "cpu_single_record_latency_seconds": 0.0006826175012975,
         "macro_f1": 0.8755045400209375,
         "macro_precision": 0.8886664681689003,
         "macro_recall": 0.8678107421589369,
@@ -3136,7 +3163,7 @@
             "support": 1228
           }
         },
-        "training_time_seconds": 0.8050525569997262,
+        "training_time_seconds": 0.6009328440050012,
         "weighted_f1": 0.8703743118349543,
         "zero_division": 0
       },
@@ -3149,14 +3176,24 @@
           "Request"
         ],
         "cpu_inference_metadata": {
+          "batch_seconds": 0.303907043999061,
           "clock": "perf_counter",
-          "includes": "Logistic Regression predict only; excludes TF-IDF transform and predict_proba",
-          "iterations": 1,
+          "includes": "raw text -> TF-IDF transform -> model.predict",
+          "measured_iterations": 10,
+          "predict_only_seconds_per_record": 4.6243027089809375e-07,
+          "protocol": "text_to_label_v1",
           "record_count": 4288,
-          "seconds": 0.003050457999052014,
-          "seconds_per_record": 7.113941229132496e-07
+          "records_per_second": 14109.577532573576,
+          "seconds_per_record": 7.087384421619892e-05,
+          "single_record_median_seconds": 0.0007132470018405002,
+          "single_record_samples": 50,
+          "statistic": "median",
+          "warmup_iterations": 2
         },
-        "cpu_inference_seconds_per_record": 7.113941229132496e-07,
+        "cpu_inference_seconds_per_record": 7.087384421619892e-05,
+        "cpu_predict_only_seconds_per_record": 4.6243027089809375e-07,
+        "cpu_records_per_second": 14109.577532573576,
+        "cpu_single_record_latency_seconds": 0.0007132470018405002,
         "macro_f1": 0.8377390508883842,
         "macro_precision": 0.873004396796976,
         "macro_recall": 0.8263826929446951,
@@ -3188,7 +3225,7 @@
             "support": 1228
           }
         },
-        "training_time_seconds": 3.5717017890019633,
+        "training_time_seconds": 3.9637485499988543,
         "weighted_f1": 0.8352134456152943,
         "zero_division": 0
       }

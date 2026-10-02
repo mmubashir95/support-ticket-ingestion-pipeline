@@ -8,8 +8,8 @@ from sklearn.exceptions import ConvergenceWarning
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 from ticket_classification.classical import (
-    LogisticRegressionConfig, coefficient_feature_mapping, predict_records,
-    train_logistic_regression, validate_features,
+    LogisticRegressionConfig, coefficient_feature_mapping, measure_cpu_inference,
+    predict_records, train_logistic_regression, validate_features,
 )
 from ticket_classification.classical_outputs import load_logistic_regression, run_logistic_regression_baseline
 from ticket_classification.evaluation import evaluate_predictions
@@ -46,20 +46,45 @@ def test_training_prediction_probability_reproducibility_and_binary_coefficients
     assert list(first.model.classes_) == ["Incident", "Request"]
     assert first.training_time >= 0
     np.testing.assert_allclose(first.model.coef_, second.model.coef_)
-    rows, timing = predict_records(first.model, features.test, splits.test, first.model.classes_)
+    rows = predict_records(first.model, features.test, splits.test, first.model.classes_)
     assert len(rows) == len(splits.test)
     assert rows[0]["record_id"] == splits.test[0].record_id
     assert rows[0]["predicted_label"] in first.model.classes_
     assert rows[0]["probability_class_order"] == list(first.model.classes_)
     assert sum(rows[0]["probabilities"]) == pytest.approx(1)
     assert len(rows[0]["probabilities"]) == 2
-    assert "predict only" in timing["includes"]
     mapping = coefficient_feature_mapping(first.model, features.vectorizer)
     feature = features.vectorizer.get_feature_names_out()[0]
     assert mapping["Request"][feature] == first.model.coef_[0, 0]
     assert mapping["Incident"][feature] == -first.model.coef_[0, 0]
     with pytest.raises(ValueError, match="class order"):
         predict_records(first.model, features.test, splits.test, ["Request", "Incident"])
+
+
+def test_shared_cpu_timing_covers_text_to_label_mechanics_only():
+    vectorizer = TfidfVectorizer()
+    matrix = vectorizer.fit_transform(["apple apple", "banana banana", "cherry cherry"])
+    model = train_logistic_regression(matrix, ["A", "B", "C"]).model
+    texts = ["apple", "banana", "cherry", "apple banana"]
+    calls = []
+    original = vectorizer.transform
+    vectorizer.transform = lambda batch: calls.append(len(batch)) or original(batch)
+    timing = measure_cpu_inference(model, vectorizer, texts, warmup_iterations=1,
+                                   measured_iterations=3, single_record_samples=2)
+    assert timing["protocol"] == "text_to_label_v1"
+    assert "TF-IDF transform" in timing["includes"]
+    assert timing["statistic"] == "median"
+    assert (timing["record_count"], timing["single_record_samples"]) == (4, 2)
+    assert timing["seconds_per_record"] == pytest.approx(timing["batch_seconds"] / 4)
+    assert timing["records_per_second"] == pytest.approx(4 / timing["batch_seconds"])
+    assert all(timing[key] > 0 for key in ("batch_seconds", "predict_only_seconds_per_record",
+                                           "single_record_median_seconds"))
+    # 1 untimed transform + 1 warm-up + 3 measured batches, then 1 warm-up + 2 single-ticket calls.
+    assert calls == [4, 4, 4, 4, 4, 1, 1, 1]
+    with pytest.raises(ValueError, match="at least one"):
+        measure_cpu_inference(model, vectorizer, [])
+    with pytest.raises(ValueError, match="measurement"):
+        measure_cpu_inference(model, vectorizer, texts, measured_iterations=0)
 
 
 def test_multiclass_training_and_feature_mapping():
