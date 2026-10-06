@@ -1,0 +1,20 @@
+{
+  "id_to_label": {
+    "0": "Change",
+    "1": "Incident",
+    "2": "Problem",
+    "3": "Request"
+  },
+  "label_order": [
+    "Change",
+    "Incident",
+    "Problem",
+    "Request"
+  ],
+  "label_to_id": {
+    "Change": 0,
+    "Incident": 1,
+    "Problem": 2,
+    "Request": 3
+  }
+}

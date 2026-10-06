@@ -29,6 +29,18 @@ from ticket_classification.outputs import (
     write_classification_audit_outputs,
 )
 from ticket_classification.split_outputs import SplitArtifacts, write_split_artifacts
+from ticket_classification.transformer import (
+    TransformerDatasetConfig,
+    analyze_token_lengths,
+    build_label_mapping,
+    build_transformer_datasets,
+    load_tokenizer,
+    select_max_length,
+)
+from ticket_classification.transformer_outputs import (
+    TransformerArtifacts,
+    write_transformer_artifacts,
+)
 from ticket_classification.splitting import (
     SplitConfig,
     split_classification_records,
@@ -101,3 +113,42 @@ def run_tfidf_feature_pipeline(
     splits = load_frozen_splits(split_dir)
     result = build_tfidf_features(splits, settings)
     return write_feature_artifacts(splits, result, settings, output_dir)
+
+
+def run_transformer_dataset_preparation(
+    split_dir: str | Path,
+    output_dir: str | Path,
+    *,
+    config: TransformerDatasetConfig | None = None,
+    tokenizer=None,
+) -> TransformerArtifacts:
+    """Prepare Phase 2.7 artifacts from the existing split without training."""
+
+    splits = load_frozen_splits(split_dir)
+    settings = config or TransformerDatasetConfig(
+        dataset_version=splits.manifest.dataset_version
+    )
+    if settings.dataset_version != splits.manifest.dataset_version:
+        raise ValueError("Transformer config dataset_version differs from frozen split")
+    frozen_order = tuple(sorted(splits.manifest.class_counts_full))
+    if settings.label_order != frozen_order:
+        raise ValueError("Transformer config label_order differs from frozen split")
+    active_tokenizer = tokenizer or load_tokenizer(settings)
+    all_records = splits.train + splits.validation + splits.test
+    analysis, _ = analyze_token_lengths(all_records, active_tokenizer)
+    decision = select_max_length(analysis)
+    final_config = settings.model_copy(update={"max_length": decision.selected_max_length})
+    labels = build_label_mapping(final_config.label_order)
+    datasets = build_transformer_datasets(
+        splits, active_tokenizer, final_config, labels
+    )
+    return write_transformer_artifacts(
+        splits,
+        datasets,
+        final_config,
+        labels,
+        active_tokenizer,
+        analysis,
+        decision,
+        output_dir,
+    )

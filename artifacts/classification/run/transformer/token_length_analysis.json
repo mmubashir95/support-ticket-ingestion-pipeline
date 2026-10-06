@@ -1,0 +1,44 @@
+{
+  "coverage": {
+    "128": {
+      "covered_count": 22535,
+      "covered_percentage": 0.7882953790184349,
+      "max_length": 128,
+      "truncated_count": 6052,
+      "truncated_percentage": 0.21170462098156503
+    },
+    "256": {
+      "covered_count": 27499,
+      "covered_percentage": 0.961940742295449,
+      "max_length": 256,
+      "truncated_count": 1088,
+      "truncated_percentage": 0.03805925770455102
+    },
+    "512": {
+      "covered_count": 28585,
+      "covered_percentage": 0.9999300381292195,
+      "max_length": 512,
+      "truncated_count": 2,
+      "truncated_percentage": 6.996187078042467e-05
+    },
+    "64": {
+      "covered_count": 9559,
+      "covered_percentage": 0.3343827613950397,
+      "max_length": 64,
+      "truncated_count": 19028,
+      "truncated_percentage": 0.6656172386049602
+    }
+  },
+  "includes_special_tokens": true,
+  "maximum": 523,
+  "mean": 100.97761220135027,
+  "minimum": 5,
+  "p50": 90.0,
+  "p75": 119.0,
+  "p90": 219.0,
+  "p95": 249.0,
+  "p99": 286.0,
+  "padding_applied": false,
+  "record_count": 28587,
+  "truncation_applied": false
+}

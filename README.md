@@ -783,3 +783,51 @@ Run `.venv/bin/python -m pytest tests/classification/test_comparison.py` for
 focused tests or `.venv/bin/python -m pytest` for all regressions. The next
 planned phase is **Phase 2.7 — Transformer Dataset and Tokenization**; no
 Transformer implementation is included in Phase 2.6.
+
+## Phase 2.7 — Transformer dataset and tokenization
+
+Phase 2.7 prepares the frozen classification task for DistilBERT without
+loading or training a classifier. It uses the matching Hugging Face tokenizer
+for `distilbert/distilbert-base-uncased`, the existing `subject + message`
+text, the exact Phase 2.2 row order and membership, and the established class
+order `Change`, `Incident`, `Problem`, `Request`.
+
+Run the preparation workflow after installing project dependencies:
+
+```bash
+PYTHONPATH=src .venv/bin/python - <<'PY'
+from ticket_classification.workflow import run_transformer_dataset_preparation
+
+run_transformer_dataset_preparation(
+    "artifacts/classification/run/splits",
+    "artifacts/classification/run/transformer",
+)
+PY
+```
+
+The workflow first tokenizes all 28,587 records with special tokens but without
+padding or truncation. It records minimum, mean, P50, P75, P90, P95, P99,
+maximum, and coverage at 64/128/256/512. It then selects the smallest standard
+candidate among 128/256/512 covering at least 95% of records. For the current
+dataset, P95 is 249 and 256 tokens retain 96.1941%, so `max_length=256` is
+frozen. The final records use truncation and remain variable length; Phase 2.8
+should dynamically pad each batch.
+
+Generated files under `artifacts/classification/run/transformer/`:
+
+| File | Contents |
+|---|---|
+| `transformer_dataset_config.json` | Model/tokenizer identity and frozen text, label, length, truncation, and padding policies |
+| `tokenizer_policy.json` | Resolved tokenizer metadata, padding token, special tokens, and supported length |
+| `label_mapping.json` | Reversible frozen label-to-ID and ID-to-label mappings |
+| `token_length_analysis.json` / `.md` | Machine-readable and human-readable real-corpus length evidence |
+| `transformer_dataset_manifest.json` | Dataset/split identities, counts, mappings, decisions, and content fingerprints |
+| `train_tokenized.jsonl` | 20,010 variable-length Transformer records in frozen train order |
+| `validation_tokenized.jsonl` | 4,288 records in frozen validation order |
+| `test_tokenized.jsonl` | 4,289 records in frozen test order |
+
+Each tokenized row contains only `record_id`, `input_ids`, `attention_mask`, and
+integer `label`. Persistence reloads and validates every artifact, exact split
+membership and order, labels, dataset version, and tokenized content. No random
+split, shuffle, model weights, optimizer, training loop, metric, or checkpoint
+is part of this phase.

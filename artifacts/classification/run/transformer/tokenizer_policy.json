@@ -1,0 +1,19 @@
+{
+  "add_special_tokens": true,
+  "model_max_length": 512,
+  "pad_token": "[PAD]",
+  "pad_token_id": 0,
+  "padding": "dynamic_at_batch_time",
+  "persisted_examples_are_variable_length": true,
+  "resolved_name_or_path": "distilbert/distilbert-base-uncased",
+  "revision": "12040accade4e8a0f71eabdb258fecc2e7e948be",
+  "special_tokens_map": {
+    "cls_token": "[CLS]",
+    "mask_token": "[MASK]",
+    "pad_token": "[PAD]",
+    "sep_token": "[SEP]",
+    "unk_token": "[UNK]"
+  },
+  "tokenizer_name": "distilbert/distilbert-base-uncased",
+  "truncation": true
+}

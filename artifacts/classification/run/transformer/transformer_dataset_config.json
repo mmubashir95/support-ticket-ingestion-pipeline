@@ -1,0 +1,21 @@
+{
+  "add_special_tokens": true,
+  "dataset_version": "ds_6fa2f19cf683",
+  "input_fields": [
+    "subject",
+    "message"
+  ],
+  "input_policy": "subject + message",
+  "label_order": [
+    "Change",
+    "Incident",
+    "Problem",
+    "Request"
+  ],
+  "max_length": 256,
+  "padding": "dynamic",
+  "pretrained_model_name": "distilbert/distilbert-base-uncased",
+  "text_separator": "\n\n",
+  "tokenizer_name": "distilbert/distilbert-base-uncased",
+  "truncation": true
+}

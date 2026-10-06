@@ -1,0 +1,103 @@
+{
+  "class_counts": {
+    "Change": 2922,
+    "Incident": 11466,
+    "Problem": 6012,
+    "Request": 8187
+  },
+  "dataset_version": "ds_6fa2f19cf683",
+  "input_fields": [
+    "subject",
+    "message"
+  ],
+  "input_policy": "subject + message",
+  "label_order": [
+    "Change",
+    "Incident",
+    "Problem",
+    "Request"
+  ],
+  "label_to_id": {
+    "Change": 0,
+    "Incident": 1,
+    "Problem": 2,
+    "Request": 3
+  },
+  "max_length": 256,
+  "max_length_decision": {
+    "rationale": "Selected the smallest candidate among 128/256/512 that retains at least 95% of records. Observed P90=219, P95=249, P99=286; 96.1941% fit without truncation. This limits attention cost while remaining within DistilBERT's 512-token positional limit.",
+    "retained_count": 27499,
+    "retained_percentage": 0.961940742295449,
+    "selected_max_length": 256,
+    "truncated_count": 1088,
+    "truncated_percentage": 0.03805925770455102
+  },
+  "padding": "dynamic_at_batch_time",
+  "phase": "2.7",
+  "phase_2_8_training_performed": false,
+  "pretrained_model_name": "distilbert/distilbert-base-uncased",
+  "record_id_fingerprints": {
+    "test": "7d851ba86275db4bec5bc56e76fe116b6076c1c63a51d0b886af483d98e98597",
+    "train": "b734c1fa7aa48006ae66930ef77b95746e97f2dea7c6a8aa312c34546e589668",
+    "validation": "c46f77b0953da14e5f860861aa3f02e463e4b0e8a63eaed029110ed2599187fe"
+  },
+  "split_membership_verified": true,
+  "split_version": "split_d1f67d41500f",
+  "test_count": 4289,
+  "token_length_analysis": {
+    "coverage": {
+      "128": {
+        "covered_count": 22535,
+        "covered_percentage": 0.7882953790184349,
+        "max_length": 128,
+        "truncated_count": 6052,
+        "truncated_percentage": 0.21170462098156503
+      },
+      "256": {
+        "covered_count": 27499,
+        "covered_percentage": 0.961940742295449,
+        "max_length": 256,
+        "truncated_count": 1088,
+        "truncated_percentage": 0.03805925770455102
+      },
+      "512": {
+        "covered_count": 28585,
+        "covered_percentage": 0.9999300381292195,
+        "max_length": 512,
+        "truncated_count": 2,
+        "truncated_percentage": 6.996187078042467e-05
+      },
+      "64": {
+        "covered_count": 9559,
+        "covered_percentage": 0.3343827613950397,
+        "max_length": 64,
+        "truncated_count": 19028,
+        "truncated_percentage": 0.6656172386049602
+      }
+    },
+    "includes_special_tokens": true,
+    "maximum": 523,
+    "mean": 100.97761220135027,
+    "minimum": 5,
+    "p50": 90.0,
+    "p75": 119.0,
+    "p90": 219.0,
+    "p95": 249.0,
+    "p99": 286.0,
+    "padding_applied": false,
+    "record_count": 28587,
+    "truncation_applied": false
+  },
+  "tokenized_record_fingerprints": {
+    "test": "550748c22fca8680d869e1d069e69e02088a30d637485ab1fb8a8786cb08ef57",
+    "train": "d5ad94ff5c6f2487a7c7c6598255f83ab5a0041827e59c716d526afee8df1d91",
+    "validation": "4a2dbad96acf4de726f185bb460f742931c1f7dbc4515abf1f925e016a050623"
+  },
+  "tokenizer_name": "distilbert/distilbert-base-uncased",
+  "tokenizer_revision": "12040accade4e8a0f71eabdb258fecc2e7e948be",
+  "total_count": 28587,
+  "train_count": 20010,
+  "transformer_dataset_version": "transformer_ds_340aff24d262",
+  "truncation": true,
+  "validation_count": 4288
+}
