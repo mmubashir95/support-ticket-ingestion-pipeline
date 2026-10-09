@@ -121,6 +121,75 @@ def _validation_metrics(path: Path, *, nested: bool) -> dict[str, Any]:
     return metrics
 
 
+def _validate_transformer_experiments(
+    baseline_root: Path, weighting_root: Path
+) -> dict[str, Any]:
+    """Verify the two completed Transformer runs are a controlled comparison."""
+
+    unweighted_root = baseline_root / "transformer_training"
+    weighted_root = weighting_root / "transformer"
+    unweighted_manifest = _read_json(unweighted_root / "training_manifest.json")
+    weighted_manifest = _read_json(weighted_root / "training_manifest.json")
+    unweighted_config = _read_json(unweighted_root / "training_config.json")
+    weighted_config = _read_json(weighted_root / "training_config.json")
+    unweighted_checkpoint = _read_json(unweighted_root / "best_checkpoint.json")
+    weighted_checkpoint = _read_json(weighted_root / "best_checkpoint.json")
+    identity_fields = ("dataset_version", "split_version", "transformer_dataset_version")
+    for field in identity_fields:
+        if unweighted_manifest.get(field) != weighted_manifest.get(field):
+            raise ValueError(f"Transformer experiment {field} differs")
+    if unweighted_manifest.get("smoke_test") is not False or weighted_manifest.get("smoke_test") is not False:
+        raise ValueError("smoke-test results cannot finalize the Transformer policy")
+    if unweighted_manifest.get("test_set_loaded") is not False or weighted_manifest.get("test_set_loaded") is not False:
+        raise ValueError("Transformer training manifests do not prove test isolation")
+    if unweighted_manifest.get("class_weighting") not in ("disabled", "none"):
+        raise ValueError("baseline Transformer manifest is not unweighted")
+    if weighted_manifest.get("class_weighting") != "balanced":
+        raise ValueError("weighted Transformer manifest is not balanced")
+    comparable_unweighted = {"class_weighting": "none", **unweighted_config}
+    comparable_weighted = dict(weighted_config)
+    comparable_unweighted.pop("class_weight", None)
+    comparable_weighted.pop("class_weight", None)
+    weighting_difference = (
+        comparable_unweighted.pop("class_weighting"),
+        comparable_weighted.pop("class_weighting"),
+    )
+    if weighting_difference != ("none", "balanced"):
+        raise ValueError("Transformer weighting policies are not none versus balanced")
+    if comparable_unweighted != comparable_weighted:
+        changed = sorted(
+            key for key in set(comparable_unweighted) | set(comparable_weighted)
+            if comparable_unweighted.get(key) != comparable_weighted.get(key)
+        )
+        raise ValueError(f"Transformer configurations differ beyond weighting: {changed}")
+    for checkpoint, manifest, name in (
+        (unweighted_checkpoint, unweighted_manifest, "unweighted"),
+        (weighted_checkpoint, weighted_manifest, "weighted"),
+    ):
+        if checkpoint != manifest.get("best_checkpoint"):
+            raise ValueError(f"{name} best-checkpoint artifact differs from its manifest")
+        if checkpoint.get("step") != 3753 or checkpoint.get("epoch") != 3.0:
+            raise ValueError(f"{name} best checkpoint is not the expected epoch-three checkpoint")
+        if not Path(checkpoint["path"]).is_dir():
+            raise FileNotFoundError(f"{name} best checkpoint is missing: {checkpoint['path']}")
+    return {
+        "dataset_version": unweighted_manifest["dataset_version"],
+        "split_version": unweighted_manifest["split_version"],
+        "transformer_dataset_version": unweighted_manifest["transformer_dataset_version"],
+        "model_name": unweighted_config["model_name"],
+        "model_revision": unweighted_config["model_revision"],
+        "tokenizer_name": unweighted_config["tokenizer_name"],
+        "tokenizer_revision": unweighted_config["tokenizer_revision"],
+        "label_order": unweighted_config["label_order"],
+        "unweighted_checkpoint": unweighted_checkpoint,
+        "weighted_checkpoint": weighted_checkpoint,
+        "unweighted_configuration_reference": str(unweighted_root / "training_config.json"),
+        "weighted_configuration_reference": str(weighted_root / "training_config.json"),
+        "unweighted_manifest_reference": str(unweighted_root / "training_manifest.json"),
+        "weighted_manifest_reference": str(weighted_root / "training_manifest.json"),
+    }
+
+
 def _load_phase29_inputs(split_dir: str | Path, feature_dir: str | Path) -> ClassicalInputs:
     """Load and verify train/validation only; never open frozen test artifacts."""
 
@@ -443,6 +512,7 @@ def run_weighting_comparison(
     }
     comparisons: dict[str, Any] = {}
     decisions: dict[str, Any] = {}
+    transformer_evidence = None
     for name, source in sources.items():
         unweighted_path = source["unweighted_metrics"]
         weighted_path = source["weighted_metrics"]
@@ -464,6 +534,8 @@ def run_weighting_comparison(
                 elif manifest.get("test_set_loaded") is not False:
                     transformer_ready = False
                     transformer_reason = "Training manifest does not preserve test isolation."
+                else:
+                    transformer_evidence = _validate_transformer_experiments(baseline, output)
         if not unweighted_path.is_file() or not weighted_path.is_file() or not transformer_ready:
             comparisons[name] = {
                 "status": "PENDING", "unweighted_source": str(unweighted_path),
@@ -498,6 +570,42 @@ def run_weighting_comparison(
             ),
             "known_limitations": ["Validation evidence only", "Loss values across weighting policies are not directly comparable"],
         }
+        if name == "distilbert":
+            decisions[name] = {
+                **decisions[name],
+                "model_family": "transformer",
+                "model_name": transformer_evidence["model_name"],
+                "selected_experiment": "unweighted" if selected == "none" else "weighted",
+                "selection_metric": "validation_macro_f1",
+                "selected_validation_macro_f1": (
+                    unweighted["macro_f1"] if selected == "none" else weighted["macro_f1"]
+                ),
+                "unweighted_validation_macro_f1": unweighted["macro_f1"],
+                "weighted_validation_macro_f1": weighted["macro_f1"],
+                "dataset_version": transformer_evidence["dataset_version"],
+                "split_version": transformer_evidence["split_version"],
+                "transformer_dataset_version": transformer_evidence["transformer_dataset_version"],
+                "selected_checkpoint_reference": (
+                    transformer_evidence["unweighted_checkpoint"]["path"]
+                    if selected == "none" else transformer_evidence["weighted_checkpoint"]["path"]
+                ),
+                "experiment_configuration_references": {
+                    "unweighted": transformer_evidence["unweighted_configuration_reference"],
+                    "weighted": transformer_evidence["weighted_configuration_reference"],
+                },
+                "experiment_manifest_references": {
+                    "unweighted": transformer_evidence["unweighted_manifest_reference"],
+                    "weighted": transformer_evidence["weighted_manifest_reference"],
+                },
+                "label_order": transformer_evidence["label_order"],
+                "decision_rationale": (
+                    "The unweighted model achieved higher validation Macro F1, accuracy, and weighted F1. "
+                    "Balanced weighting improved macro recall slightly, but not the primary selection metric. "
+                    "This decision is specific to the current data, configuration, and validation objective; "
+                    "it does not establish that class weighting is universally ineffective."
+                ),
+                "final_test_evaluation_status": "PENDING",
+            }
     report = {
         "selection_split": "validation", "test_set_used": False,
         "models": comparisons, "final_weighting_policy": decisions,
@@ -543,4 +651,16 @@ def render_weighting_comparison(report: dict[str, Any]) -> str:
         lines.append("")
     lines.extend(["## Current policy", "", "```json",
                   json.dumps(report["final_weighting_policy"], sort_keys=True, indent=2), "```", ""])
+    transformer = report["final_weighting_policy"].get("distilbert", {})
+    if transformer.get("status") == "SELECTED":
+        lines.extend([
+            "## Transformer decision", "",
+            f"Selected weighting policy: **{transformer['selected_weighting_policy']}**.", "",
+            f"Selected experiment: **{transformer['selected_experiment']}**.", "",
+            f"Selected checkpoint: `{transformer['selected_checkpoint_reference']}`.", "",
+            transformer["decision_rationale"], "",
+            "The decision uses validation metrics only. Weighted and unweighted losses optimize "
+            "different objectives and are not compared as evidence of model improvement.", "",
+            "Final test evaluation remains pending and is not part of weighting-policy selection.", "",
+        ])
     return "\n".join(lines)

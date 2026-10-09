@@ -983,16 +983,60 @@ After weighted training, generate the validation-only comparison and policy:
 .venv/bin/python -m ticket_classification.run_class_weighting compare
 ```
 
-Missing results remain `PENDING`; in particular, the DistilBERT policy cannot
-be finalized before the real weighted run exists. After reviewing and freezing
-the selected Transformer policy, run final test inference exactly once with the
-matching option. For a selected weighted Transformer:
+Missing results remain `PENDING`; a policy is never inferred from unavailable
+metrics or smoke-test output.
+
+### Frozen Phase 2.9 weighting decisions
+
+The completed validation experiments selected weighting independently for each
+model family:
+
+| Model | Unweighted Macro F1 | Weighted Macro F1 | Selected policy |
+|---|---:|---:|---|
+| Logistic Regression | 0.837739 | 0.852986 | `balanced` |
+| Linear SVM | 0.875505 | 0.882558 | `balanced` |
+| DistilBERT | 0.841500 | 0.838771 | `none` |
+
+For DistilBERT, balanced weighting changed accuracy from 0.836054 to 0.822062,
+Macro precision from 0.846318 to 0.834573, Macro recall from 0.838911 to
+0.845833, Macro F1 from 0.841500 to 0.838771, and weighted F1 from 0.832984 to
+0.824635. Weighted minus unweighted Macro F1 is -0.002730. Weighting improved
+Problem recall and F1 substantially and slightly improved Change recall and
+Request F1. It reduced Incident recall by 0.100000 and Incident F1 by 0.034240,
+while Change F1 also decreased slightly. The recall trade-off did not improve
+the primary selection metric.
+
+The preferred Transformer is therefore the Phase 2.8 unweighted
+`distilbert/distilbert-base-uncased` run at
+`artifacts/classification/run/transformer_training/checkpoints/checkpoint-3753`.
+This conclusion is specific to the frozen data, configuration, and validation
+objective; it does not mean class weighting is universally ineffective.
+Weighted and unweighted losses optimize different objectives and are not
+compared directly as evidence of improvement. Both model runs and their
+artifacts remain independently inspectable.
+
+Load the selected checkpoint locally:
+
+```python
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
+checkpoint = "artifacts/classification/run/transformer_training/checkpoints/checkpoint-3753"
+model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
+tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+```
+
+The weighting decision used validation only. Final test evaluation is still
+pending and must not change the selected weighting policy. Run it once against
+the selected unweighted model:
 
 ```bash
 .venv-transformer/bin/python -m ticket_classification.evaluate_transformer \
-  --class-weighting balanced \
-  --training-dir artifacts/classification/run/class_weighting/transformer
+  --class-weighting none \
+  --training-dir artifacts/classification/run/transformer_training
 ```
 
 Phase 2.9 does not implement threshold tuning, calibration, oversampling,
-focal loss, hyperparameter search, or any Phase 2.10 functionality.
+focal loss, hyperparameter search, or any Phase 2.10 functionality. Before
+starting Phase 2.10, complete the selected model's isolated final test
+evaluation and preserve its test artifacts without revisiting this
+validation-based weighting decision.

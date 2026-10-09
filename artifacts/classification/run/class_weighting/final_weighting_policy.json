@@ -1,0 +1,272 @@
+{
+  "distilbert": {
+    "dataset_version": "ds_6fa2f19cf683",
+    "decision_rationale": "The unweighted model achieved higher validation Macro F1, accuracy, and weighted F1. Balanced weighting improved macro recall slightly, but not the primary selection metric. This decision is specific to the current data, configuration, and validation objective; it does not establish that class weighting is universally ineffective.",
+    "experiment_configuration_references": {
+      "unweighted": "artifacts/classification/run/transformer_training/training_config.json",
+      "weighted": "artifacts/classification/run/class_weighting/transformer/training_config.json"
+    },
+    "experiment_manifest_references": {
+      "unweighted": "artifacts/classification/run/transformer_training/training_manifest.json",
+      "weighted": "artifacts/classification/run/class_weighting/transformer/training_manifest.json"
+    },
+    "final_test_evaluation_status": "PENDING",
+    "known_limitations": [
+      "Validation evidence only",
+      "Loss values across weighting policies are not directly comparable"
+    ],
+    "label_order": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "model_family": "transformer",
+    "model_name": "distilbert/distilbert-base-uncased",
+    "per_class_changes": {
+      "Change": {
+        "f1": {
+          "difference": -0.004153917620365655,
+          "unweighted": 0.9692832764505119,
+          "weighted": 0.9651293588301463
+        },
+        "precision": {
+          "difference": -0.014766882362701184,
+          "unweighted": 0.9659863945578231,
+          "weighted": 0.9512195121951219
+        },
+        "recall": {
+          "difference": 0.006849315068493178,
+          "unweighted": 0.9726027397260274,
+          "weighted": 0.9794520547945206
+        }
+      },
+      "Incident": {
+        "f1": {
+          "difference": -0.03424042634705893,
+          "unweighted": 0.8097506304286916,
+          "weighted": 0.7755102040816326
+        },
+        "precision": {
+          "difference": 0.03295585758690256,
+          "unweighted": 0.7815035154137372,
+          "weighted": 0.8144593730006398
+        },
+        "recall": {
+          "difference": -0.10000000000000009,
+          "unweighted": 0.8401162790697675,
+          "weighted": 0.7401162790697674
+        }
+      },
+      "Problem": {
+        "f1": {
+          "difference": 0.027070346198281414,
+          "unweighted": 0.5959475566150179,
+          "weighted": 0.6230179028132993
+        },
+        "precision": {
+          "difference": -0.06598231855963821,
+          "unweighted": 0.6443298969072165,
+          "weighted": 0.5783475783475783
+        },
+        "recall": {
+          "difference": 0.12084257206208426,
+          "unweighted": 0.5543237250554324,
+          "weighted": 0.6751662971175166
+        }
+      },
+      "Request": {
+        "f1": {
+          "difference": 0.00040466329447252924,
+          "unweighted": 0.9910204081632653,
+          "weighted": 0.9914250714577378
+        },
+        "precision": {
+          "difference": 0.0008136391115114439,
+          "unweighted": 0.9934533551554828,
+          "weighted": 0.9942669942669943
+        },
+        "recall": {
+          "difference": 0.0,
+          "unweighted": 0.988599348534202,
+          "weighted": 0.988599348534202
+        }
+      }
+    },
+    "reasoning": "Balanced weighting did not improve validation Macro F1; retain the simpler unweighted policy.",
+    "selected_checkpoint_reference": "artifacts/classification/run/transformer_training/checkpoints/checkpoint-3753",
+    "selected_experiment": "unweighted",
+    "selected_validation_macro_f1": 0.8415004679143716,
+    "selected_weighting_policy": "none",
+    "selection_metric": "validation_macro_f1",
+    "split_version": "split_d1f67d41500f",
+    "status": "SELECTED",
+    "transformer_dataset_version": "transformer_ds_340aff24d262",
+    "unweighted_validation_macro_f1": 0.8415004679143716,
+    "validation_macro_f1": 0.8415004679143716,
+    "validation_macro_f1_difference": -0.002729833618667632,
+    "weighted_validation_macro_f1": 0.838770634295704
+  },
+  "linear_svm": {
+    "known_limitations": [
+      "Validation evidence only",
+      "Loss values across weighting policies are not directly comparable"
+    ],
+    "per_class_changes": {
+      "Change": {
+        "f1": {
+          "difference": 0.005899618977417087,
+          "unweighted": 0.9722863741339491,
+          "weighted": 0.9781859931113662
+        },
+        "precision": {
+          "difference": 0.00018885843171956296,
+          "unweighted": 0.9836448598130841,
+          "weighted": 0.9838337182448037
+        },
+        "recall": {
+          "difference": 0.011415525114155223,
+          "unweighted": 0.9611872146118722,
+          "weighted": 0.9726027397260274
+        }
+      },
+      "Incident": {
+        "f1": {
+          "difference": -0.0017754381992792778,
+          "unweighted": 0.8576158940397351,
+          "weighted": 0.8558404558404559
+        },
+        "precision": {
+          "difference": 0.022929674663161315,
+          "unweighted": 0.8161764705882353,
+          "weighted": 0.8391061452513966
+        },
+        "recall": {
+          "difference": -0.03023255813953485,
+          "unweighted": 0.9034883720930232,
+          "weighted": 0.8732558139534884
+        }
+      },
+      "Problem": {
+        "f1": {
+          "difference": 0.024088627822624775,
+          "unweighted": 0.6814540973505854,
+          "weighted": 0.7055427251732102
+        },
+        "precision": {
+          "difference": -0.030845712948882942,
+          "unweighted": 0.7669902912621359,
+          "weighted": 0.736144578313253
+        },
+        "recall": {
+          "difference": 0.06430155210643018,
+          "unweighted": 0.6130820399113082,
+          "weighted": 0.6773835920177383
+        }
+      },
+      "Request": {
+        "f1": {
+          "difference": 0.0,
+          "unweighted": 0.9906617945594803,
+          "weighted": 0.9906617945594803
+        },
+        "precision": {
+          "difference": 0.0,
+          "unweighted": 0.9878542510121457,
+          "weighted": 0.9878542510121457
+        },
+        "recall": {
+          "difference": 0.0,
+          "unweighted": 0.993485342019544,
+          "weighted": 0.993485342019544
+        }
+      }
+    },
+    "reasoning": "Balanced weighting improved validation Macro F1; inspect per-class deltas before final use.",
+    "selected_weighting_policy": "balanced",
+    "status": "SELECTED",
+    "validation_macro_f1": 0.8825577421711281,
+    "validation_macro_f1_difference": 0.007053202150190674
+  },
+  "logistic_regression": {
+    "known_limitations": [
+      "Validation evidence only",
+      "Loss values across weighting policies are not directly comparable"
+    ],
+    "per_class_changes": {
+      "Change": {
+        "f1": {
+          "difference": 0.0004960304302732421,
+          "unweighted": 0.9588719153936546,
+          "weighted": 0.9593679458239278
+        },
+        "precision": {
+          "difference": -0.03923274818401934,
+          "unweighted": 0.9878934624697336,
+          "weighted": 0.9486607142857143
+        },
+        "recall": {
+          "difference": 0.038812785388127935,
+          "unweighted": 0.9315068493150684,
+          "weighted": 0.9703196347031964
+        }
+      },
+      "Incident": {
+        "f1": {
+          "difference": -0.030725665362370203,
+          "unweighted": 0.8333770663867751,
+          "weighted": 0.8026514010244049
+        },
+        "precision": {
+          "difference": 0.07357539638744803,
+          "unweighted": 0.7594452415112386,
+          "weighted": 0.8330206378986866
+        },
+        "recall": {
+          "difference": -0.14883720930232558,
+          "unweighted": 0.9232558139534883,
+          "weighted": 0.7744186046511627
+        }
+      },
+      "Problem": {
+        "f1": {
+          "difference": 0.09130765883376857,
+          "unweighted": 0.5708333333333333,
+          "weighted": 0.6621409921671019
+        },
+        "precision": {
+          "difference": -0.13807674946880144,
+          "unweighted": 0.7639405204460966,
+          "weighted": 0.6258637709772952
+        },
+        "recall": {
+          "difference": 0.24722838137472286,
+          "unweighted": 0.4556541019955654,
+          "weighted": 0.7028824833702882
+        }
+      },
+      "Request": {
+        "f1": {
+          "difference": -8.887215312869401e-05,
+          "unweighted": 0.9878738884397736,
+          "weighted": 0.987785016286645
+        },
+        "precision": {
+          "difference": 0.0070466535258102425,
+          "unweighted": 0.9807383627608347,
+          "weighted": 0.987785016286645
+        },
+        "recall": {
+          "difference": -0.007328990228013033,
+          "unweighted": 0.995114006514658,
+          "weighted": 0.987785016286645
+        }
+      }
+    },
+    "reasoning": "Balanced weighting improved validation Macro F1; inspect per-class deltas before final use.",
+    "selected_weighting_policy": "balanced",
+    "status": "SELECTED",
+    "validation_macro_f1": 0.8529863388255199,
+    "validation_macro_f1_difference": 0.0152472879371357
+  }
+}

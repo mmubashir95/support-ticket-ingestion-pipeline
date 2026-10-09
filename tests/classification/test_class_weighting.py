@@ -1,11 +1,14 @@
 """Phase 2.9 deterministic weighting and pending-comparison tests."""
 
 import json
+from pathlib import Path
 
 import pytest
 
 from ticket_classification.class_weighting import (
     _metric_comparison,
+    _validate_transformer_experiments,
+    _validation_metrics,
     calculate_balanced_class_weights,
     run_weighting_comparison,
 )
@@ -13,6 +16,7 @@ from ticket_classification.classical import LinearSVMConfig, LogisticRegressionC
 
 
 LABELS = ("Change", "Incident", "Problem", "Request")
+RUN_ROOT = Path("artifacts/classification/run")
 
 
 def test_balanced_weights_use_frozen_order_and_formula() -> None:
@@ -90,3 +94,53 @@ def test_comparison_keeps_missing_weighted_experiments_pending(tmp_path) -> None
     assert all(value["status"] == "PENDING" for value in result["final_weighting_policy"].values())
     persisted = json.loads((weighting / "final_weighting_policy.json").read_text())
     assert persisted["distilbert"]["selected_weighting_policy"] is None
+
+
+def test_validation_selection_does_not_read_test_metrics(tmp_path) -> None:
+    path = tmp_path / "metrics.json"
+    path.write_text(
+        json.dumps({"validation": _metrics(0.4), "test": _metrics(1.0)}),
+        encoding="utf-8",
+    )
+    assert _validation_metrics(path, nested=True)["macro_f1"] == 0.4
+
+
+def test_persisted_transformer_experiments_are_controlled_and_match_expected_deltas() -> None:
+    evidence = _validate_transformer_experiments(RUN_ROOT, RUN_ROOT / "class_weighting")
+    assert evidence["dataset_version"] == "ds_6fa2f19cf683"
+    assert evidence["split_version"] == "split_d1f67d41500f"
+    assert evidence["transformer_dataset_version"] == "transformer_ds_340aff24d262"
+    assert evidence["label_order"] == list(LABELS)
+    unweighted = json.loads((RUN_ROOT / "transformer_training/validation_metrics.json").read_text())
+    weighted = json.loads((RUN_ROOT / "class_weighting/transformer/validation_metrics.json").read_text())
+    comparison = _metric_comparison(unweighted, weighted)
+    assert comparison["summary"]["accuracy"]["difference"] == pytest.approx(-0.013992537313432863)
+    assert comparison["summary"]["macro_precision"]["difference"] == pytest.approx(-0.0117449260559813)
+    assert comparison["summary"]["macro_recall"]["difference"] == pytest.approx(0.0069229717826442)
+    assert comparison["summary"]["macro_f1"]["difference"] == pytest.approx(-0.002729833618667632)
+    assert comparison["summary"]["weighted_f1"]["difference"] == pytest.approx(-0.00834854721040101)
+
+
+def test_final_policy_selects_unweighted_transformer_and_balanced_classical_models() -> None:
+    policy = json.loads(
+        (RUN_ROOT / "class_weighting/final_weighting_policy.json").read_text(encoding="utf-8")
+    )
+    assert policy["distilbert"]["selected_weighting_policy"] == "none"
+    assert policy["distilbert"]["selected_experiment"] == "unweighted"
+    assert policy["distilbert"]["selected_checkpoint_reference"].endswith(
+        "transformer_training/checkpoints/checkpoint-3753"
+    )
+    assert policy["distilbert"]["final_test_evaluation_status"] == "PENDING"
+    assert policy["logistic_regression"]["selected_weighting_policy"] == "balanced"
+    assert policy["linear_svm"]["selected_weighting_policy"] == "balanced"
+
+
+def test_selected_unweighted_checkpoint_loads_with_frozen_labels() -> None:
+    transformers = pytest.importorskip("transformers")
+    checkpoint = RUN_ROOT / "transformer_training/checkpoints/checkpoint-3753"
+    model = transformers.AutoModelForSequenceClassification.from_pretrained(checkpoint)
+    tokenizer = transformers.AutoTokenizer.from_pretrained(checkpoint)
+    assert model.config.num_labels == 4
+    assert model.config.label2id == {label: index for index, label in enumerate(LABELS)}
+    assert model.config.id2label == {index: label for index, label in enumerate(LABELS)}
+    assert tokenizer.name_or_path == str(checkpoint)
