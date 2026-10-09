@@ -1,0 +1,11 @@
+{
+  "argmax_preserved": true,
+  "base_model_modified": false,
+  "calibration_split_id": "calibration_split_dfdf2077621b",
+  "fitted_on": "calibration_fitting",
+  "input_score_type": "log_base_predict_proba",
+  "method": "temperature_scaling",
+  "model": "logistic_regression",
+  "record_count": 2144,
+  "temperature": 0.4903952190704912
+}

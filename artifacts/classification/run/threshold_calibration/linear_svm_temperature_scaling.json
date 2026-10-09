@@ -1,0 +1,11 @@
+{
+  "argmax_preserved": true,
+  "base_model_modified": false,
+  "calibration_split_id": "calibration_split_dfdf2077621b",
+  "fitted_on": "calibration_fitting",
+  "input_score_type": "raw_linear_svm_decision_function",
+  "method": "temperature_scaling",
+  "model": "linear_svm",
+  "record_count": 2144,
+  "temperature": 0.3919232873145596
+}

@@ -10,15 +10,15 @@ Dataset `ds_6fa2f19cf683`, split `split_d1f67d41500f`.
 
 ## Calibration policy
 
-- linear_svm: `sigmoid_calibration`
-- logistic_regression: `sigmoid_calibration`
+- linear_svm: `temperature_scaling`
+- logistic_regression: `temperature_scaling`
 - transformer: `temperature_scaling`
 
 ## Threshold policy
 
-- linear_svm: selected; threshold=0.8
-- logistic_regression: selected; threshold=0.8
-- transformer: selected; threshold=0.85
+- linear_svm: pending; threshold=None
+- logistic_regression: pending; threshold=None
+- transformer: pending; threshold=None
 
 ## Methodological limitation
 

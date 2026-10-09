@@ -1,5 +1,5 @@
 {
-  "audit_id": "prediction_audit_5f57058948eb",
+  "audit_id": "prediction_audit_ef4f575cad81",
   "audit_passed": true,
   "dataset_version": "ds_6fa2f19cf683",
   "expected_record_count": 4288,
@@ -104,7 +104,7 @@
     "policy_artifact": "artifacts/classification/run/class_weighting/final_weighting_policy.json",
     "split_version": "split_d1f67d41500f",
     "status_discrepancies": [
-      "Phase 2.9 policy marks DistilBERT final test evaluation PENDING, but the complete test artifact set exists. Phase 2.10 does not read or use those artifacts for calibration or threshold selection."
+      "Phase 2.9 policy (written before the test run) marks DistilBERT final test evaluation PENDING, but test artifacts exist: test_predictions.jsonl. Phase 2.10 does not read or use those artifacts for calibration or threshold selection."
     ],
     "test_artifacts_detected_but_not_loaded": true,
     "transformer_dataset_version": "transformer_ds_340aff24d262"

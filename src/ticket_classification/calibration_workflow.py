@@ -14,10 +14,8 @@ import sklearn
 from sklearn.model_selection import train_test_split
 
 from ticket_classification.calibration import (
-    SigmoidScoreCalibrator,
     TemperatureScaler,
     evaluate_calibration,
-    fit_sigmoid_score_calibration,
     fit_temperature_scaling,
     validate_probabilities,
 )
@@ -45,6 +43,39 @@ MODEL_NAMES: tuple[ModelName, ...] = (
     "linear_svm",
 )
 LABEL_ORDER = ("Change", "Incident", "Problem", "Request")
+# Every model is calibrated with one temperature over its own class scores.
+CALIBRATION_INPUTS = {
+    "transformer": "distilbert_logits",
+    "logistic_regression": "log_base_predict_proba",
+    "linear_svm": "raw_linear_svm_decision_function",
+}
+TEMPERATURE_FILENAMES = {
+    "transformer": "temperature_scaling.json",
+    "logistic_regression": "logistic_regression_temperature_scaling.json",
+    "linear_svm": "linear_svm_temperature_scaling.json",
+}
+COMPARISON_FILENAMES = {
+    "transformer": "distilbert_calibration_comparison.json",
+    "logistic_regression": "logistic_regression_calibration_comparison.json",
+    "linear_svm": "linear_svm_calibration_comparison.json",
+}
+
+
+def _calibration_scores(model: ModelName, subset: dict[str, Any]) -> np.ndarray:
+    """Return the per-class scores that temperature scaling divides by T."""
+
+    if model == "logistic_regression":
+        # log p differs from the LR logits by a per-row constant, so
+        # softmax(log p / T) equals softmax(logits / T).
+        return np.log(np.clip(subset["probabilities"], np.finfo(float).tiny, 1.0))
+    return subset["logits_or_scores"]
+
+
+def _require_argmax_preserved(scores: np.ndarray, probabilities: np.ndarray) -> None:
+    if not np.array_equal(
+        np.asarray(scores).argmax(axis=1), np.asarray(probabilities).argmax(axis=1)
+    ):
+        raise RuntimeError("calibration changed a predicted class")
 
 
 def _read_json(path: str | Path) -> Any:
@@ -167,15 +198,19 @@ def verify_phase29_policy(run_root: str | Path) -> dict[str, Any]:
             "test_predictions.jsonl",
         )
     ]
-    test_artifacts_present = all(path.is_file() for path in test_artifact_paths)
+    # Any surviving test artifact means the test set has been evaluated; a
+    # partially deleted set must not be reported as "not evaluated".
+    present_test_artifacts = [path.name for path in test_artifact_paths if path.is_file()]
+    test_artifacts_present = bool(present_test_artifacts)
     status_discrepancies = []
     if (
         policy["distilbert"].get("final_test_evaluation_status") == "PENDING"
         and test_artifacts_present
     ):
         status_discrepancies.append(
-            "Phase 2.9 policy marks DistilBERT final test evaluation PENDING, "
-            "but the complete test artifact set exists. Phase 2.10 does not read "
+            "Phase 2.9 policy (written before the test run) marks DistilBERT final "
+            "test evaluation PENDING, but test artifacts exist: "
+            f"{', '.join(present_test_artifacts)}. Phase 2.10 does not read "
             "or use those artifacts for calibration or threshold selection."
         )
     return {
@@ -753,69 +788,27 @@ def fit_model_calibration(
     evaluation = _subset(normalized, threshold_ids)
     fitting_labels = _label_ids(fitting["actual_labels"])
     evaluation_labels = _label_ids(evaluation["actual_labels"])
-    if model == "transformer":
-        scaler = fit_temperature_scaling(
-            fitting["logits_or_scores"], fitting_labels
-        )
-        original_probabilities = evaluation["probabilities"]
-        calibrated_probabilities = scaler.transform(evaluation["logits_or_scores"])
-        parameter_artifact = {
-            **scaler.to_dict(),
-            "model": model,
-            "fitted_on": "calibration_fitting",
-            "record_count": len(calibration_ids),
-            "calibration_split_id": split_manifest["calibration_split_id"],
-            "base_model_modified": False,
-            "source_logits_preserved": True,
-        }
-        parameter_name = "temperature_scaling.json"
-        comparison_name = "distilbert_calibration_comparison.json"
-    elif model == "logistic_regression":
-        original_probabilities = fitting["probabilities"]
-        fitting_scores = np.log(
-            np.clip(original_probabilities, np.finfo(float).tiny, 1.0)
-        )
-        calibrator = fit_sigmoid_score_calibration(
-            fitting_scores, fitting_labels, LABEL_ORDER, random_seed=seed
-        )
-        original_probabilities = evaluation["probabilities"]
-        evaluation_scores = np.log(
-            np.clip(original_probabilities, np.finfo(float).tiny, 1.0)
-        )
-        calibrated_probabilities = calibrator.transform(evaluation_scores)
-        parameter_artifact = {
-            **calibrator.to_dict(),
-            "model": model,
-            "input_score_type": "log_base_predict_proba",
-            "fitted_on": "calibration_fitting",
-            "record_count": len(calibration_ids),
-            "calibration_split_id": split_manifest["calibration_split_id"],
-            "base_model_modified": False,
-        }
-        parameter_name = "logistic_regression_sigmoid_scaling.json"
-        comparison_name = "logistic_regression_calibration_comparison.json"
-    else:
-        calibrator = fit_sigmoid_score_calibration(
-            fitting["logits_or_scores"],
-            fitting_labels,
-            LABEL_ORDER,
-            random_seed=seed,
-        )
-        original_probabilities = None
-        calibrated_probabilities = calibrator.transform(
-            evaluation["logits_or_scores"]
-        )
-        parameter_artifact = {
-            **calibrator.to_dict(),
-            "model": model,
-            "input_score_type": "raw_linear_svm_decision_function",
-            "fitted_on": "calibration_fitting",
-            "record_count": len(calibration_ids),
-            "calibration_split_id": split_manifest["calibration_split_id"],
-            "base_model_modified": False,
-        }
-        parameter_name = "linear_svm_sigmoid_calibration.json"
-        comparison_name = "linear_svm_calibration_comparison.json"
+    # One positive temperature per model: dividing every class score by the
+    # same T cannot reorder classes, so calibration changes confidence only.
+    scaler = fit_temperature_scaling(
+        _calibration_scores(model, fitting), fitting_labels
+    )
+    evaluation_scores = _calibration_scores(model, evaluation)
+    calibrated_probabilities = scaler.transform(evaluation_scores)
+    _require_argmax_preserved(evaluation_scores, calibrated_probabilities)
+    original_probabilities = evaluation["probabilities"]
+    parameter_artifact = {
+        **scaler.to_dict(),
+        "model": model,
+        "input_score_type": CALIBRATION_INPUTS[model],
+        "fitted_on": "calibration_fitting",
+        "record_count": len(calibration_ids),
+        "calibration_split_id": split_manifest["calibration_split_id"],
+        "base_model_modified": False,
+        "argmax_preserved": True,
+    }
+    parameter_name = TEMPERATURE_FILENAMES[model]
+    comparison_name = COMPARISON_FILENAMES[model]
     calibrated_metrics = evaluate_calibration(
         calibrated_probabilities, evaluation_labels, bins=bins
     )
@@ -834,7 +827,12 @@ def fit_model_calibration(
             evaluation["predicted_labels"], evaluation["actual_labels"]
         )
     )
-    decision = _calibration_decision(original_metrics, calibrated_metrics)
+    decision = _calibration_decision(
+        original_metrics,
+        calibrated_metrics,
+        original_classification,
+        calibrated_classification,
+    )
     comparison = {
         "phase": "2.10",
         "model": model,
@@ -890,12 +888,22 @@ def _metric_differences(
 
 
 def _calibration_decision(
-    original: dict[str, Any] | None, calibrated: dict[str, Any]
+    original: dict[str, Any] | None,
+    calibrated: dict[str, Any],
+    original_classification: dict[str, Any],
+    calibrated_classification: dict[str, Any],
 ) -> dict[str, Any]:
+    # Calibration must never change class decisions; this is a defensive
+    # check on top of the per-record argmax guard.
+    for key in ("accuracy", "macro_f1"):
+        if calibrated_classification[key] != original_classification[key]:
+            raise RuntimeError(f"calibration changed classification {key}")
     if original is None:
         return {
-            "selected": "sigmoid_calibration",
-            "reason": "Linear SVM raw scores are not probabilities; calibrated probabilities are required.",
+            "selected": "calibrated",
+            "argmax_preserved": True,
+            "reason": "Linear SVM raw scores are not probabilities; temperature-scaled "
+            "probabilities are required for confidence-based review.",
         }
     keys = ("ece", "multiclass_brier_score", "negative_log_likelihood")
     improvements = sum(calibrated[key] < original[key] for key in keys)
@@ -905,6 +913,7 @@ def _calibration_decision(
     ) else "none"
     return {
         "selected": selected,
+        "argmax_preserved": True,
         "metrics_improved_count": improvements,
         "rule": "Select calibration when held-out NLL and at least one other probability metric improve.",
         "reason": (
@@ -918,27 +927,10 @@ def _calibration_decision(
 def _load_calibrated_probabilities(
     output_dir: str | Path, model: ModelName, subset: dict[str, Any]
 ) -> np.ndarray:
-    output = Path(output_dir)
-    if model == "transformer":
-        scaler = TemperatureScaler.from_dict(
-            _read_json(output / "temperature_scaling.json")
-        )
-        return scaler.transform(subset["logits_or_scores"])
-    artifact = _read_json(
-        output
-        / (
-            "logistic_regression_sigmoid_scaling.json"
-            if model == "logistic_regression"
-            else "linear_svm_sigmoid_calibration.json"
-        )
+    scaler = TemperatureScaler.from_dict(
+        _read_json(Path(output_dir) / TEMPERATURE_FILENAMES[model])
     )
-    calibrator = SigmoidScoreCalibrator.from_dict(artifact)
-    scores = subset["logits_or_scores"]
-    if model == "logistic_regression":
-        scores = np.log(
-            np.clip(subset["probabilities"], np.finfo(float).tiny, 1.0)
-        )
-    return calibrator.transform(scores)
+    return scaler.transform(_calibration_scores(model, subset))
 
 
 def evaluate_model_thresholds(
@@ -1014,21 +1006,19 @@ def generate_final_policies(
 
     root, output = Path(run_root), Path(output_dir)
     selected = verify_phase29_policy(root)
-    files = {
-        "transformer": output / "distilbert_calibration_comparison.json",
-        "logistic_regression": output / "logistic_regression_calibration_comparison.json",
-        "linear_svm": output / "linear_svm_calibration_comparison.json",
-    }
+    files = {model: output / name for model, name in COMPARISON_FILENAMES.items()}
     calibration_models: dict[str, Any] = {}
     for model, path in files.items():
         comparison = _read_json(path)
         choice = comparison["selection"]["selected"]
-        if model == "transformer":
-            method = "temperature_scaling" if choice == "calibrated" else "none"
-        elif model == "linear_svm":
-            method = "sigmoid_calibration"
-        else:
-            method = "sigmoid_calibration" if choice == "calibrated" else "none"
+        if comparison["selection"].get("argmax_preserved") is not True:
+            raise ValueError(f"{model} calibration evidence does not prove argmax preservation")
+        # Raw SVM margins are not probabilities, so SVM always needs scaling.
+        method = (
+            "temperature_scaling"
+            if choice == "calibrated" or model == "linear_svm"
+            else "none"
+        )
         calibration_models[model] = {
             "model_identity": selected["models"][model],
             "calibration_method": method,
@@ -1119,16 +1109,12 @@ def apply_prediction_decision(
         scaler = TemperatureScaler.from_dict(
             _read_json(calibration["parameter_reference"])
         )
-        probabilities = scaler.transform(values)[0]
-    elif method == "sigmoid_calibration":
-        calibrator = SigmoidScoreCalibrator.from_dict(
-            _read_json(calibration["parameter_reference"])
-        )
         scores = values
         if model == "logistic_regression":
             validate_probabilities(values, expected_classes=len(LABEL_ORDER))
             scores = np.log(np.clip(values, np.finfo(float).tiny, 1.0))
-        probabilities = calibrator.transform(scores)[0]
+        probabilities = scaler.transform(scores)[0]
+        _require_argmax_preserved(scores, probabilities.reshape(1, -1))
     elif method == "none":
         probabilities = validate_probabilities(
             values, expected_classes=len(LABEL_ORDER)

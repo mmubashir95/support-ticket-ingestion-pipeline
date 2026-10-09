@@ -2,8 +2,8 @@
   "dataset_version": "ds_6fa2f19cf683",
   "models": {
     "linear_svm": {
-      "calibration_method": "sigmoid_calibration",
-      "decision_rationale": "Linear SVM raw scores are not probabilities; calibrated probabilities are required.",
+      "calibration_method": "temperature_scaling",
+      "decision_rationale": "Linear SVM raw scores are not probabilities; temperature-scaled probabilities are required for confidence-based review.",
       "known_limitations": [
         "The original validation split influenced checkpoint/model selection. These internal subsets reduce direct fitting/selection leakage but are not a fully independent evaluation set."
       ],
@@ -14,11 +14,11 @@
         "prediction_artifact": "artifacts/classification/run/class_weighting/linear_svm/validation_predictions.jsonl",
         "weighting": "balanced"
       },
-      "parameter_reference": "artifacts/classification/run/threshold_calibration/linear_svm_sigmoid_calibration.json",
+      "parameter_reference": "artifacts/classification/run/threshold_calibration/linear_svm_temperature_scaling.json",
       "validation_evidence": "artifacts/classification/run/threshold_calibration/linear_svm_calibration_comparison.json"
     },
     "logistic_regression": {
-      "calibration_method": "sigmoid_calibration",
+      "calibration_method": "temperature_scaling",
       "decision_rationale": "Held-out probability evidence supports calibration.",
       "known_limitations": [
         "The original validation split influenced checkpoint/model selection. These internal subsets reduce direct fitting/selection leakage but are not a fully independent evaluation set."
@@ -30,7 +30,7 @@
         "prediction_artifact": "artifacts/classification/run/class_weighting/logistic_regression/validation_predictions.jsonl",
         "weighting": "balanced"
       },
-      "parameter_reference": "artifacts/classification/run/threshold_calibration/logistic_regression_sigmoid_scaling.json",
+      "parameter_reference": "artifacts/classification/run/threshold_calibration/logistic_regression_temperature_scaling.json",
       "validation_evidence": "artifacts/classification/run/threshold_calibration/logistic_regression_calibration_comparison.json"
     },
     "transformer": {

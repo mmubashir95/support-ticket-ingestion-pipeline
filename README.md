@@ -1026,10 +1026,15 @@ tokenizer = AutoTokenizer.from_pretrained(checkpoint)
 ```
 
 The weighting decision used validation only. The selected unweighted model's
-isolated final test evaluation has since been run once and its artifacts are
-preserved under `transformer_training/`; do not rerun it for Phase 2.10 or use
-its results to revise calibration or threshold policies. The exact command
-that produced those historical artifacts was:
+isolated final test evaluation was then run once, at 2026-10-09 21:09 (after
+the weighting policy was written, before Phase 2.10). Its summary files
+(`test_metrics.json`, `test_confusion_matrix.json`,
+`test_evaluation_manifest.json`) were never committed and were later removed
+from the working tree; only the gitignored `test_predictions.jsonl` remains
+locally. Removing them does not make the test set unseen: treat it as
+evaluated once. Do not rerun it for Phase 2.10 or use its results to revise
+calibration or threshold policies. The exact command that produced those
+historical artifacts was:
 
 ```bash
 .venv-transformer/bin/python -m ticket_classification.evaluate_transformer \
@@ -1037,9 +1042,10 @@ that produced those historical artifacts was:
   --training-dir artifacts/classification/run/transformer_training
 ```
 
-`class_weighting/final_weighting_policy.json` still labels final test
-evaluation as `PENDING`. Phase 2.10 records this metadata discrepancy while
-deliberately not loading the test metrics or predictions.
+`class_weighting/final_weighting_policy.json` labels final test evaluation as
+`PENDING` because it was written before that run. Phase 2.10 records the
+discrepancy (any surviving test artifact counts) while deliberately not
+loading the test metrics or predictions.
 
 ## Phase 2.10 — Threshold tuning and calibration
 
@@ -1072,14 +1078,20 @@ The workflow reports:
 Reliability-bin data persists mean confidence and observed accuracy, so the
 ideal line is reproducible without making chart generation mandatory.
 
-DistilBERT temperature scaling learns one positive scalar `T` on the
-calibration-fitting subset and applies `softmax(logits / T)`. Positive scalar
-division preserves logit ordering, so it normally preserves the predicted
-class while changing confidence. Linear SVM instead uses one-vs-rest sigmoid
-calibration followed by normalization; this can change multiclass `argmax`.
-Logistic Regression's original probabilities are compared with post-hoc
-sigmoid calibration and retained when held-out probability evidence does not
-justify calibration.
+All three models use temperature scaling: one positive scalar `T` is learned
+on the calibration-fitting subset and applied as `softmax(scores / T)`.
+Dividing every class score by the same positive number cannot reorder the
+classes, so calibration changes confidence but never the predicted class. The
+workflow enforces this per record and refuses any calibration that changes a
+prediction, accuracy, or Macro F1. The scores are DistilBERT logits, Logistic
+Regression log-probabilities (equivalent to scaling its logits), and raw Linear
+SVM decision scores. Calibration is kept only when held-out NLL and at least
+one other probability metric improve; Linear SVM always needs it because its
+margins are not probabilities.
+
+Per-class one-vs-rest sigmoid calibration was rejected: it fits a separate
+curve per class, which reordered classes and changed 160/2,144 Logistic
+Regression and 33/2,144 Linear SVM predictions, lowering held-out Macro F1.
 
 The frozen 4,288-record validation split is deterministically and
 stratifiably partitioned into disjoint calibration-fitting and

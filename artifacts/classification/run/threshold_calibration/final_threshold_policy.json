@@ -2,7 +2,7 @@
   "dataset_version": "ds_6fa2f19cf683",
   "models": {
     "linear_svm": {
-      "calibration_method": "sigmoid_calibration",
+      "calibration_method": "temperature_scaling",
       "confidence_definition": "maximum_class_probability",
       "model_identity": {
         "feature_version": "tfidf_3275ba614aa6",
@@ -11,17 +11,17 @@
         "prediction_artifact": "artifacts/classification/run/class_weighting/linear_svm/validation_predictions.jsonl",
         "weighting": "balanced"
       },
-      "observed_coverage": 0.7229477611940298,
-      "observed_selective_accuracy": 0.9509677419354838,
-      "selected_threshold": 0.8,
+      "observed_coverage": null,
+      "observed_selective_accuracy": null,
+      "selected_threshold": null,
       "selection_dataset": "threshold_selection subset of frozen validation",
-      "selection_objective": "maximize coverage subject to minimum selective accuracy",
-      "status": "selected",
+      "selection_objective": "pending business acceptance criterion",
+      "status": "pending",
       "supporting_artifact": "artifacts/classification/run/threshold_calibration/threshold_analysis.json",
-      "target_selective_accuracy": 0.95
+      "target_selective_accuracy": null
     },
     "logistic_regression": {
-      "calibration_method": "sigmoid_calibration",
+      "calibration_method": "temperature_scaling",
       "confidence_definition": "maximum_class_probability",
       "model_identity": {
         "feature_version": "tfidf_3275ba614aa6",
@@ -30,14 +30,14 @@
         "prediction_artifact": "artifacts/classification/run/class_weighting/logistic_regression/validation_predictions.jsonl",
         "weighting": "balanced"
       },
-      "observed_coverage": 0.6459888059701493,
-      "observed_selective_accuracy": 0.9545126353790614,
-      "selected_threshold": 0.8,
+      "observed_coverage": null,
+      "observed_selective_accuracy": null,
+      "selected_threshold": null,
       "selection_dataset": "threshold_selection subset of frozen validation",
-      "selection_objective": "maximize coverage subject to minimum selective accuracy",
-      "status": "selected",
+      "selection_objective": "pending business acceptance criterion",
+      "status": "pending",
       "supporting_artifact": "artifacts/classification/run/threshold_calibration/threshold_analysis.json",
-      "target_selective_accuracy": 0.95
+      "target_selective_accuracy": null
     },
     "transformer": {
       "calibration_method": "temperature_scaling",
@@ -49,17 +49,17 @@
         "prediction_artifact": "artifacts/classification/run/transformer_training/validation_predictions.jsonl",
         "weighting": "none"
       },
-      "observed_coverage": 0.6044776119402985,
-      "observed_selective_accuracy": 0.9544753086419753,
-      "selected_threshold": 0.85,
+      "observed_coverage": null,
+      "observed_selective_accuracy": null,
+      "selected_threshold": null,
       "selection_dataset": "threshold_selection subset of frozen validation",
-      "selection_objective": "maximize coverage subject to minimum selective accuracy",
-      "status": "selected",
+      "selection_objective": "pending business acceptance criterion",
+      "status": "pending",
       "supporting_artifact": "artifacts/classification/run/threshold_calibration/threshold_analysis.json",
-      "target_selective_accuracy": 0.95
+      "target_selective_accuracy": null
     }
   },
-  "operational_threshold_status": "selected_with_caller_supplied_criterion",
+  "operational_threshold_status": "pending_business_acceptance_criterion",
   "phase": "2.10",
   "split_version": "split_d1f67d41500f",
   "test_set_used": false

@@ -864,9 +864,12 @@ src/ticket_classification/run_calibration.py
 
 It audits the Phase 2.9-selected validation predictions, splits only the frozen
 validation population into disjoint stratified calibration-fitting and
-threshold-selection subsets, evaluates ECE/Brier/NLL, fits DistilBERT
-temperature scaling and classical sigmoid calibration, and evaluates
-top-probability rejection. The base models and frozen split remain unchanged.
+threshold-selection subsets, evaluates ECE/Brier/NLL, fits argmax-preserving
+temperature scaling for all three models (DistilBERT logits, Logistic
+Regression log-probabilities, Linear SVM decision scores), and evaluates
+top-probability rejection. Calibration changes confidence only, never the
+predicted class; the workflow fails if it would. The base models and frozen
+split remain unchanged.
 
 The existing validation split influenced earlier model/checkpoint selection.
 The internal subsets therefore provide leakage-conscious development evidence,

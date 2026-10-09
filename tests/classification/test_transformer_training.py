@@ -207,7 +207,11 @@ def test_validate_only_does_not_update_parameters(tmp_path, monkeypatch) -> None
     result = validate_only(DATASET_DIR, tmp_path)
     assert result["optimizer_steps"] == 0
     assert result["logits_shape"] == [2, 4]
-    assert all(torch.equal(before[name], value) for name, value in model.state_dict().items())
+    # validate_only may move the model to CUDA/MPS; compare on the CPU.
+    assert all(
+        torch.equal(before[name], value.detach().cpu())
+        for name, value in model.state_dict().items()
+    )
 
 
 def test_smoke_training_is_limited_saves_and_reloads(tmp_path, monkeypatch) -> None:
