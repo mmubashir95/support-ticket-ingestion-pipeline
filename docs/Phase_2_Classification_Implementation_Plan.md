@@ -851,6 +851,40 @@ Threshold/calibration evaluation report.
 - Calibration need documented.
 - Test set remains untouched until final evaluation.
 
+## Implemented workflow
+
+Phase 2.10 is implemented as an explicit post-training workflow in:
+
+```text
+src/ticket_classification/calibration.py
+src/ticket_classification/thresholds.py
+src/ticket_classification/calibration_workflow.py
+src/ticket_classification/run_calibration.py
+```
+
+It audits the Phase 2.9-selected validation predictions, splits only the frozen
+validation population into disjoint stratified calibration-fitting and
+threshold-selection subsets, evaluates ECE/Brier/NLL, fits DistilBERT
+temperature scaling and classical sigmoid calibration, and evaluates
+top-probability rejection. The base models and frozen split remain unchanged.
+
+The existing validation split influenced earlier model/checkpoint selection.
+The internal subsets therefore provide leakage-conscious development evidence,
+not a fully independent final assessment. No operational threshold is invented:
+without a caller-supplied minimum selective-accuracy criterion, policy status is
+`pending_business_acceptance_criterion`.
+
+Run the workflow manually:
+
+```bash
+.venv/bin/python -m ticket_classification.run_calibration audit
+.venv/bin/python -m ticket_classification.run_calibration analyze
+.venv/bin/python -m ticket_classification.run_calibration fit --model all
+.venv/bin/python -m ticket_classification.run_calibration thresholds --model all
+.venv/bin/python -m ticket_classification.run_calibration compare
+.venv/bin/python -m ticket_classification.run_calibration report
+```
+
 ---
 
 # Phase 2.11 — Batch Inference and Performance Benchmarking

@@ -1,0 +1,29 @@
+{
+  "argmax_may_change": true,
+  "base_model_modified": false,
+  "calibration_split_id": "calibration_split_dfdf2077621b",
+  "class_order": [
+    "Change",
+    "Incident",
+    "Problem",
+    "Request"
+  ],
+  "coefficients": [
+    4.9997245835400745,
+    3.2417834557284886,
+    3.356879684754317,
+    5.663735762805767
+  ],
+  "fitted_on": "calibration_fitting",
+  "input_score_type": "log_base_predict_proba",
+  "intercepts": [
+    4.626473809566053,
+    3.1139012288996093,
+    2.2112848762319017,
+    5.621995094018345
+  ],
+  "method": "sigmoid_calibration",
+  "model": "logistic_regression",
+  "multiclass_strategy": "one_vs_rest_sigmoid_then_normalize",
+  "record_count": 2144
+}

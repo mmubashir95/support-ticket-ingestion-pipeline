@@ -1,0 +1,116 @@
+{
+  "audit_id": "prediction_audit_5f57058948eb",
+  "audit_passed": true,
+  "dataset_version": "ds_6fa2f19cf683",
+  "expected_record_count": 4288,
+  "label_mapping": {
+    "Change": 0,
+    "Incident": 1,
+    "Problem": 2,
+    "Request": 3
+  },
+  "models": {
+    "linear_svm": {
+      "argmax_consistent": true,
+      "compatible": true,
+      "frozen_validation_membership": true,
+      "label_order": [
+        "Change",
+        "Incident",
+        "Problem",
+        "Request"
+      ],
+      "logits_or_scores": "valid",
+      "prediction_artifact_fingerprint": "7ff8d372502b5a63e2e4babd54258da5e659f8e0ba378d347afcb90c4a703b94",
+      "probabilities": "not_applicable",
+      "record_count": 4288,
+      "source": "artifacts/classification/run/class_weighting/linear_svm/validation_predictions.jsonl",
+      "status": "available",
+      "test_overlap_count": 0,
+      "unique_record_ids": true
+    },
+    "logistic_regression": {
+      "argmax_consistent": true,
+      "compatible": true,
+      "frozen_validation_membership": true,
+      "label_order": [
+        "Change",
+        "Incident",
+        "Problem",
+        "Request"
+      ],
+      "logits_or_scores": "unavailable",
+      "prediction_artifact_fingerprint": "4b024ae58fba8615551705e99ffba1a664dfda25ce9f0d2d4d8b55f81ec555ab",
+      "probabilities": "valid",
+      "record_count": 4288,
+      "source": "artifacts/classification/run/class_weighting/logistic_regression/validation_predictions.jsonl",
+      "status": "available",
+      "test_overlap_count": 0,
+      "unique_record_ids": true
+    },
+    "transformer": {
+      "argmax_consistent": true,
+      "compatible": true,
+      "frozen_validation_membership": true,
+      "label_order": [
+        "Change",
+        "Incident",
+        "Problem",
+        "Request"
+      ],
+      "logits_or_scores": "valid",
+      "prediction_artifact_fingerprint": "2b2f4c8b6f9aea489b473656355a930a1fd7fe7dc8799ade116f9a8ac2d4b09d",
+      "probabilities": "valid",
+      "record_count": 4288,
+      "source": "artifacts/classification/run/transformer_training/validation_predictions.jsonl",
+      "status": "available",
+      "test_overlap_count": 0,
+      "unique_record_ids": true
+    }
+  },
+  "phase": "2.10",
+  "phase_2_9_policy": {
+    "dataset_version": "ds_6fa2f19cf683",
+    "feature_version": "tfidf_3275ba614aa6",
+    "label_order": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "models": {
+      "linear_svm": {
+        "feature_version": "tfidf_3275ba614aa6",
+        "manifest": "artifacts/classification/run/class_weighting/linear_svm/experiment_manifest.json",
+        "model_artifact": "artifacts/classification/run/class_weighting/linear_svm/weighted_model.joblib",
+        "prediction_artifact": "artifacts/classification/run/class_weighting/linear_svm/validation_predictions.jsonl",
+        "weighting": "balanced"
+      },
+      "logistic_regression": {
+        "feature_version": "tfidf_3275ba614aa6",
+        "manifest": "artifacts/classification/run/class_weighting/logistic_regression/experiment_manifest.json",
+        "model_artifact": "artifacts/classification/run/class_weighting/logistic_regression/weighted_model.joblib",
+        "prediction_artifact": "artifacts/classification/run/class_weighting/logistic_regression/validation_predictions.jsonl",
+        "weighting": "balanced"
+      },
+      "transformer": {
+        "checkpoint": "artifacts/classification/run/transformer_training/checkpoints/checkpoint-3753",
+        "manifest": "artifacts/classification/run/transformer_training/training_manifest.json",
+        "model_name": "distilbert/distilbert-base-uncased",
+        "prediction_artifact": "artifacts/classification/run/transformer_training/validation_predictions.jsonl",
+        "weighting": "none"
+      }
+    },
+    "policy_artifact": "artifacts/classification/run/class_weighting/final_weighting_policy.json",
+    "split_version": "split_d1f67d41500f",
+    "status_discrepancies": [
+      "Phase 2.9 policy marks DistilBERT final test evaluation PENDING, but the complete test artifact set exists. Phase 2.10 does not read or use those artifacts for calibration or threshold selection."
+    ],
+    "test_artifacts_detected_but_not_loaded": true,
+    "transformer_dataset_version": "transformer_ds_340aff24d262"
+  },
+  "source_split": "validation",
+  "split_version": "split_d1f67d41500f",
+  "test_set_used": false,
+  "transformer_dataset_version": "transformer_ds_340aff24d262"
+}

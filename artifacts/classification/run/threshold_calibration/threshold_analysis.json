@@ -1,0 +1,2532 @@
+{
+  "confidence_definition": "maximum_class_probability",
+  "decision_rule": "accepted when confidence >= threshold; otherwise needs_review",
+  "models": {
+    "linear_svm": {
+      "calibration_split_id": "calibration_split_dfdf2077621b",
+      "dataset_version": "ds_6fa2f19cf683",
+      "model": "linear_svm",
+      "model_identity": {
+        "feature_version": "tfidf_3275ba614aa6",
+        "manifest": "artifacts/classification/run/class_weighting/linear_svm/experiment_manifest.json",
+        "model_artifact": "artifacts/classification/run/class_weighting/linear_svm/weighted_model.joblib",
+        "prediction_artifact": "artifacts/classification/run/class_weighting/linear_svm/validation_predictions.jsonl",
+        "weighting": "balanced"
+      },
+      "selection_subset": "threshold_selection",
+      "split_version": "split_d1f67d41500f",
+      "test_set_used": false,
+      "thresholds": [
+        0.0,
+        0.5,
+        0.55,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.8,
+        0.85,
+        0.9,
+        0.95
+      ],
+      "variants": {
+        "calibrated": [
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 2144,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1875,
+            "coverage": 1.0,
+            "incorrect_accepted_count": 269,
+            "per_class": {
+              "Change": {
+                "accepted_count": 219,
+                "accepted_error_count": 2,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 860,
+                "accepted_error_count": 92,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 451,
+                "accepted_error_count": 168,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 614,
+                "accepted_error_count": 7,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 0,
+            "rejection_rate": 0.0,
+            "selective_accuracy": 0.8745335820895522,
+            "selective_error_rate": 0.12546641791044777,
+            "threshold": 0.0,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 2133,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1870,
+            "coverage": 0.9948694029850746,
+            "incorrect_accepted_count": 263,
+            "per_class": {
+              "Change": {
+                "accepted_count": 218,
+                "accepted_error_count": 2,
+                "coverage": 0.9954337899543378,
+                "rejected_count": 1,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 859,
+                "accepted_error_count": 91,
+                "coverage": 0.9988372093023256,
+                "rejected_count": 1,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 442,
+                "accepted_error_count": 163,
+                "coverage": 0.9800443458980045,
+                "rejected_count": 9,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 614,
+                "accepted_error_count": 7,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 11,
+            "rejection_rate": 0.005130597014925373,
+            "selective_accuracy": 0.876699484294421,
+            "selective_error_rate": 0.123300515705579,
+            "threshold": 0.5,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 2047,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1824,
+            "coverage": 0.9547574626865671,
+            "incorrect_accepted_count": 223,
+            "per_class": {
+              "Change": {
+                "accepted_count": 216,
+                "accepted_error_count": 2,
+                "coverage": 0.9863013698630136,
+                "rejected_count": 3,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 820,
+                "accepted_error_count": 73,
+                "coverage": 0.9534883720930233,
+                "rejected_count": 40,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 401,
+                "accepted_error_count": 144,
+                "coverage": 0.8891352549889135,
+                "rejected_count": 50,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 610,
+                "accepted_error_count": 4,
+                "coverage": 0.993485342019544,
+                "rejected_count": 4,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 97,
+            "rejection_rate": 0.045242537313432835,
+            "selective_accuracy": 0.8910600879335613,
+            "selective_error_rate": 0.10893991206643869,
+            "threshold": 0.55,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1974,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1777,
+            "coverage": 0.9207089552238806,
+            "incorrect_accepted_count": 197,
+            "per_class": {
+              "Change": {
+                "accepted_count": 214,
+                "accepted_error_count": 2,
+                "coverage": 0.9771689497716894,
+                "rejected_count": 5,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 782,
+                "accepted_error_count": 61,
+                "coverage": 0.9093023255813953,
+                "rejected_count": 78,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 368,
+                "accepted_error_count": 130,
+                "coverage": 0.8159645232815964,
+                "rejected_count": 83,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 610,
+                "accepted_error_count": 4,
+                "coverage": 0.993485342019544,
+                "rejected_count": 4,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 170,
+            "rejection_rate": 0.07929104477611941,
+            "selective_accuracy": 0.9002026342451874,
+            "selective_error_rate": 0.09979736575481256,
+            "threshold": 0.6,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1883,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1715,
+            "coverage": 0.8782649253731343,
+            "incorrect_accepted_count": 168,
+            "per_class": {
+              "Change": {
+                "accepted_count": 213,
+                "accepted_error_count": 2,
+                "coverage": 0.9726027397260274,
+                "rejected_count": 6,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 732,
+                "accepted_error_count": 44,
+                "coverage": 0.8511627906976744,
+                "rejected_count": 128,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 333,
+                "accepted_error_count": 119,
+                "coverage": 0.738359201773836,
+                "rejected_count": 118,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 605,
+                "accepted_error_count": 3,
+                "coverage": 0.9853420195439739,
+                "rejected_count": 9,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 261,
+            "rejection_rate": 0.12173507462686567,
+            "selective_accuracy": 0.9107806691449815,
+            "selective_error_rate": 0.08921933085501858,
+            "threshold": 0.65,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1786,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1649,
+            "coverage": 0.8330223880597015,
+            "incorrect_accepted_count": 137,
+            "per_class": {
+              "Change": {
+                "accepted_count": 209,
+                "accepted_error_count": 2,
+                "coverage": 0.954337899543379,
+                "rejected_count": 10,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 688,
+                "accepted_error_count": 37,
+                "coverage": 0.8,
+                "rejected_count": 172,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 287,
+                "accepted_error_count": 96,
+                "coverage": 0.6363636363636364,
+                "rejected_count": 164,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 602,
+                "accepted_error_count": 2,
+                "coverage": 0.9804560260586319,
+                "rejected_count": 12,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 358,
+            "rejection_rate": 0.1669776119402985,
+            "selective_accuracy": 0.9232922732362822,
+            "selective_error_rate": 0.0767077267637178,
+            "threshold": 0.7,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1680,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1578,
+            "coverage": 0.7835820895522388,
+            "incorrect_accepted_count": 102,
+            "per_class": {
+              "Change": {
+                "accepted_count": 206,
+                "accepted_error_count": 1,
+                "coverage": 0.9406392694063926,
+                "rejected_count": 13,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 634,
+                "accepted_error_count": 22,
+                "coverage": 0.7372093023255814,
+                "rejected_count": 226,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 239,
+                "accepted_error_count": 77,
+                "coverage": 0.5299334811529933,
+                "rejected_count": 212,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 601,
+                "accepted_error_count": 2,
+                "coverage": 0.9788273615635179,
+                "rejected_count": 13,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 464,
+            "rejection_rate": 0.21641791044776118,
+            "selective_accuracy": 0.9392857142857143,
+            "selective_error_rate": 0.060714285714285714,
+            "threshold": 0.75,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1550,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1474,
+            "coverage": 0.7229477611940298,
+            "incorrect_accepted_count": 76,
+            "per_class": {
+              "Change": {
+                "accepted_count": 199,
+                "accepted_error_count": 0,
+                "coverage": 0.908675799086758,
+                "rejected_count": 20,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 569,
+                "accepted_error_count": 17,
+                "coverage": 0.6616279069767442,
+                "rejected_count": 291,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 184,
+                "accepted_error_count": 58,
+                "coverage": 0.4079822616407982,
+                "rejected_count": 267,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 598,
+                "accepted_error_count": 1,
+                "coverage": 0.9739413680781759,
+                "rejected_count": 16,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 594,
+            "rejection_rate": 0.27705223880597013,
+            "selective_accuracy": 0.9509677419354838,
+            "selective_error_rate": 0.04903225806451613,
+            "threshold": 0.8,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1406,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1350,
+            "coverage": 0.6557835820895522,
+            "incorrect_accepted_count": 56,
+            "per_class": {
+              "Change": {
+                "accepted_count": 190,
+                "accepted_error_count": 0,
+                "coverage": 0.867579908675799,
+                "rejected_count": 29,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 484,
+                "accepted_error_count": 11,
+                "coverage": 0.5627906976744186,
+                "rejected_count": 376,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 143,
+                "accepted_error_count": 44,
+                "coverage": 0.3170731707317073,
+                "rejected_count": 308,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 589,
+                "accepted_error_count": 1,
+                "coverage": 0.9592833876221498,
+                "rejected_count": 25,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 738,
+            "rejection_rate": 0.34421641791044777,
+            "selective_accuracy": 0.9601706970128022,
+            "selective_error_rate": 0.03982930298719772,
+            "threshold": 0.85,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1224,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1190,
+            "coverage": 0.5708955223880597,
+            "incorrect_accepted_count": 34,
+            "per_class": {
+              "Change": {
+                "accepted_count": 168,
+                "accepted_error_count": 0,
+                "coverage": 0.7671232876712328,
+                "rejected_count": 51,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 390,
+                "accepted_error_count": 5,
+                "coverage": 0.45348837209302323,
+                "rejected_count": 470,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 95,
+                "accepted_error_count": 29,
+                "coverage": 0.2106430155210643,
+                "rejected_count": 356,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 571,
+                "accepted_error_count": 0,
+                "coverage": 0.9299674267100977,
+                "rejected_count": 43,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 920,
+            "rejection_rate": 0.4291044776119403,
+            "selective_accuracy": 0.9722222222222222,
+            "selective_error_rate": 0.027777777777777776,
+            "threshold": 0.9,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 876,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 861,
+            "coverage": 0.4085820895522388,
+            "incorrect_accepted_count": 15,
+            "per_class": {
+              "Change": {
+                "accepted_count": 108,
+                "accepted_error_count": 0,
+                "coverage": 0.4931506849315068,
+                "rejected_count": 111,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 241,
+                "accepted_error_count": 0,
+                "coverage": 0.2802325581395349,
+                "rejected_count": 619,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 47,
+                "accepted_error_count": 15,
+                "coverage": 0.10421286031042129,
+                "rejected_count": 404,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 480,
+                "accepted_error_count": 0,
+                "coverage": 0.7817589576547231,
+                "rejected_count": 134,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 1268,
+            "rejection_rate": 0.5914179104477612,
+            "selective_accuracy": 0.9828767123287672,
+            "selective_error_rate": 0.017123287671232876,
+            "threshold": 0.95,
+            "total_count": 2144
+          }
+        ],
+        "uncalibrated": {
+          "reason": "raw Linear SVM decision scores are not probabilities",
+          "status": "not_applicable"
+        }
+      }
+    },
+    "logistic_regression": {
+      "calibration_split_id": "calibration_split_dfdf2077621b",
+      "dataset_version": "ds_6fa2f19cf683",
+      "model": "logistic_regression",
+      "model_identity": {
+        "feature_version": "tfidf_3275ba614aa6",
+        "manifest": "artifacts/classification/run/class_weighting/logistic_regression/experiment_manifest.json",
+        "model_artifact": "artifacts/classification/run/class_weighting/logistic_regression/weighted_model.joblib",
+        "prediction_artifact": "artifacts/classification/run/class_weighting/logistic_regression/validation_predictions.jsonl",
+        "weighting": "balanced"
+      },
+      "selection_subset": "threshold_selection",
+      "split_version": "split_d1f67d41500f",
+      "test_set_used": false,
+      "thresholds": [
+        0.0,
+        0.5,
+        0.55,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.8,
+        0.85,
+        0.9,
+        0.95
+      ],
+      "variants": {
+        "calibrated": [
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 2144,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1820,
+            "coverage": 1.0,
+            "incorrect_accepted_count": 324,
+            "per_class": {
+              "Change": {
+                "accepted_count": 219,
+                "accepted_error_count": 4,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 860,
+                "accepted_error_count": 103,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 451,
+                "accepted_error_count": 211,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 614,
+                "accepted_error_count": 6,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 0,
+            "rejection_rate": 0.0,
+            "selective_accuracy": 0.8488805970149254,
+            "selective_error_rate": 0.15111940298507462,
+            "threshold": 0.0,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 2135,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1817,
+            "coverage": 0.9958022388059702,
+            "incorrect_accepted_count": 318,
+            "per_class": {
+              "Change": {
+                "accepted_count": 219,
+                "accepted_error_count": 4,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 857,
+                "accepted_error_count": 102,
+                "coverage": 0.9965116279069768,
+                "rejected_count": 3,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 446,
+                "accepted_error_count": 206,
+                "coverage": 0.9889135254988913,
+                "rejected_count": 5,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 613,
+                "accepted_error_count": 6,
+                "coverage": 0.998371335504886,
+                "rejected_count": 1,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 9,
+            "rejection_rate": 0.004197761194029851,
+            "selective_accuracy": 0.8510538641686183,
+            "selective_error_rate": 0.14894613583138172,
+            "threshold": 0.5,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 2010,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1743,
+            "coverage": 0.9375,
+            "incorrect_accepted_count": 267,
+            "per_class": {
+              "Change": {
+                "accepted_count": 217,
+                "accepted_error_count": 4,
+                "coverage": 0.9908675799086758,
+                "rejected_count": 2,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 796,
+                "accepted_error_count": 83,
+                "coverage": 0.9255813953488372,
+                "rejected_count": 64,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 388,
+                "accepted_error_count": 175,
+                "coverage": 0.8603104212860311,
+                "rejected_count": 63,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 609,
+                "accepted_error_count": 5,
+                "coverage": 0.99185667752443,
+                "rejected_count": 5,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 134,
+            "rejection_rate": 0.0625,
+            "selective_accuracy": 0.8671641791044776,
+            "selective_error_rate": 0.1328358208955224,
+            "threshold": 0.55,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1885,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1679,
+            "coverage": 0.8791977611940298,
+            "incorrect_accepted_count": 206,
+            "per_class": {
+              "Change": {
+                "accepted_count": 216,
+                "accepted_error_count": 4,
+                "coverage": 0.9863013698630136,
+                "rejected_count": 3,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 740,
+                "accepted_error_count": 61,
+                "coverage": 0.8604651162790697,
+                "rejected_count": 120,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 321,
+                "accepted_error_count": 136,
+                "coverage": 0.7117516629711752,
+                "rejected_count": 130,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 608,
+                "accepted_error_count": 5,
+                "coverage": 0.990228013029316,
+                "rejected_count": 6,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 259,
+            "rejection_rate": 0.12080223880597014,
+            "selective_accuracy": 0.8907161803713528,
+            "selective_error_rate": 0.10928381962864721,
+            "threshold": 0.6,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1753,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1587,
+            "coverage": 0.8176305970149254,
+            "incorrect_accepted_count": 166,
+            "per_class": {
+              "Change": {
+                "accepted_count": 213,
+                "accepted_error_count": 2,
+                "coverage": 0.9726027397260274,
+                "rejected_count": 6,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 663,
+                "accepted_error_count": 47,
+                "coverage": 0.7709302325581395,
+                "rejected_count": 197,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 271,
+                "accepted_error_count": 114,
+                "coverage": 0.6008869179600886,
+                "rejected_count": 180,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 606,
+                "accepted_error_count": 3,
+                "coverage": 0.9869706840390879,
+                "rejected_count": 8,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 391,
+            "rejection_rate": 0.18236940298507462,
+            "selective_accuracy": 0.9053051911009697,
+            "selective_error_rate": 0.09469480889903023,
+            "threshold": 0.65,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1622,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1504,
+            "coverage": 0.7565298507462687,
+            "incorrect_accepted_count": 118,
+            "per_class": {
+              "Change": {
+                "accepted_count": 212,
+                "accepted_error_count": 2,
+                "coverage": 0.9680365296803652,
+                "rejected_count": 7,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 598,
+                "accepted_error_count": 26,
+                "coverage": 0.6953488372093023,
+                "rejected_count": 262,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 211,
+                "accepted_error_count": 88,
+                "coverage": 0.4678492239467849,
+                "rejected_count": 240,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 601,
+                "accepted_error_count": 2,
+                "coverage": 0.9788273615635179,
+                "rejected_count": 13,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 522,
+            "rejection_rate": 0.24347014925373134,
+            "selective_accuracy": 0.9272503082614056,
+            "selective_error_rate": 0.07274969173859433,
+            "threshold": 0.7,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1496,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1405,
+            "coverage": 0.6977611940298507,
+            "incorrect_accepted_count": 91,
+            "per_class": {
+              "Change": {
+                "accepted_count": 210,
+                "accepted_error_count": 2,
+                "coverage": 0.958904109589041,
+                "rejected_count": 9,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 519,
+                "accepted_error_count": 18,
+                "coverage": 0.6034883720930233,
+                "rejected_count": 341,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 169,
+                "accepted_error_count": 69,
+                "coverage": 0.37472283813747226,
+                "rejected_count": 282,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 598,
+                "accepted_error_count": 2,
+                "coverage": 0.9739413680781759,
+                "rejected_count": 16,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 648,
+            "rejection_rate": 0.30223880597014924,
+            "selective_accuracy": 0.9391711229946524,
+            "selective_error_rate": 0.060828877005347594,
+            "threshold": 0.75,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1385,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1322,
+            "coverage": 0.6459888059701493,
+            "incorrect_accepted_count": 63,
+            "per_class": {
+              "Change": {
+                "accepted_count": 206,
+                "accepted_error_count": 1,
+                "coverage": 0.9406392694063926,
+                "rejected_count": 13,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 459,
+                "accepted_error_count": 11,
+                "coverage": 0.5337209302325582,
+                "rejected_count": 401,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 125,
+                "accepted_error_count": 49,
+                "coverage": 0.2771618625277162,
+                "rejected_count": 326,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 595,
+                "accepted_error_count": 2,
+                "coverage": 0.9690553745928339,
+                "rejected_count": 19,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 759,
+            "rejection_rate": 0.35401119402985076,
+            "selective_accuracy": 0.9545126353790614,
+            "selective_error_rate": 0.04548736462093863,
+            "threshold": 0.8,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1273,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1236,
+            "coverage": 0.59375,
+            "incorrect_accepted_count": 37,
+            "per_class": {
+              "Change": {
+                "accepted_count": 206,
+                "accepted_error_count": 1,
+                "coverage": 0.9406392694063926,
+                "rejected_count": 13,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 393,
+                "accepted_error_count": 5,
+                "coverage": 0.4569767441860465,
+                "rejected_count": 467,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 83,
+                "accepted_error_count": 30,
+                "coverage": 0.18403547671840353,
+                "rejected_count": 368,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 591,
+                "accepted_error_count": 1,
+                "coverage": 0.9625407166123778,
+                "rejected_count": 23,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 871,
+            "rejection_rate": 0.40625,
+            "selective_accuracy": 0.9709347996857817,
+            "selective_error_rate": 0.029065200314218383,
+            "threshold": 0.85,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1147,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1119,
+            "coverage": 0.534981343283582,
+            "incorrect_accepted_count": 28,
+            "per_class": {
+              "Change": {
+                "accepted_count": 202,
+                "accepted_error_count": 0,
+                "coverage": 0.9223744292237442,
+                "rejected_count": 17,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 299,
+                "accepted_error_count": 4,
+                "coverage": 0.34767441860465115,
+                "rejected_count": 561,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 60,
+                "accepted_error_count": 23,
+                "coverage": 0.13303769401330376,
+                "rejected_count": 391,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 586,
+                "accepted_error_count": 1,
+                "coverage": 0.9543973941368078,
+                "rejected_count": 28,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 997,
+            "rejection_rate": 0.4650186567164179,
+            "selective_accuracy": 0.9755884917175239,
+            "selective_error_rate": 0.024411508282476024,
+            "threshold": 0.9,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1003,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 991,
+            "coverage": 0.46781716417910446,
+            "incorrect_accepted_count": 12,
+            "per_class": {
+              "Change": {
+                "accepted_count": 198,
+                "accepted_error_count": 0,
+                "coverage": 0.9041095890410958,
+                "rejected_count": 21,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 196,
+                "accepted_error_count": 1,
+                "coverage": 0.22790697674418606,
+                "rejected_count": 664,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 28,
+                "accepted_error_count": 10,
+                "coverage": 0.06208425720620843,
+                "rejected_count": 423,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 581,
+                "accepted_error_count": 1,
+                "coverage": 0.9462540716612378,
+                "rejected_count": 33,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 1141,
+            "rejection_rate": 0.5321828358208955,
+            "selective_accuracy": 0.9880358923230309,
+            "selective_error_rate": 0.011964107676969093,
+            "threshold": 0.95,
+            "total_count": 2144
+          }
+        ],
+        "uncalibrated": [
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 2144,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1802,
+            "coverage": 1.0,
+            "incorrect_accepted_count": 342,
+            "per_class": {
+              "Change": {
+                "accepted_count": 219,
+                "accepted_error_count": 4,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 860,
+                "accepted_error_count": 189,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 451,
+                "accepted_error_count": 140,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 614,
+                "accepted_error_count": 9,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 0,
+            "rejection_rate": 0.0,
+            "selective_accuracy": 0.8404850746268657,
+            "selective_error_rate": 0.15951492537313433,
+            "threshold": 0.0,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1969,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1706,
+            "coverage": 0.9183768656716418,
+            "incorrect_accepted_count": 263,
+            "per_class": {
+              "Change": {
+                "accepted_count": 212,
+                "accepted_error_count": 2,
+                "coverage": 0.9680365296803652,
+                "rejected_count": 7,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 771,
+                "accepted_error_count": 150,
+                "coverage": 0.8965116279069767,
+                "rejected_count": 89,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 385,
+                "accepted_error_count": 109,
+                "coverage": 0.8536585365853658,
+                "rejected_count": 66,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 601,
+                "accepted_error_count": 2,
+                "coverage": 0.9788273615635179,
+                "rejected_count": 13,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 175,
+            "rejection_rate": 0.08162313432835822,
+            "selective_accuracy": 0.8664296597257491,
+            "selective_error_rate": 0.13357034027425088,
+            "threshold": 0.5,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1742,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1560,
+            "coverage": 0.8125,
+            "incorrect_accepted_count": 182,
+            "per_class": {
+              "Change": {
+                "accepted_count": 210,
+                "accepted_error_count": 2,
+                "coverage": 0.958904109589041,
+                "rejected_count": 9,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 635,
+                "accepted_error_count": 98,
+                "coverage": 0.7383720930232558,
+                "rejected_count": 225,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 303,
+                "accepted_error_count": 80,
+                "coverage": 0.6718403547671841,
+                "rejected_count": 148,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 594,
+                "accepted_error_count": 2,
+                "coverage": 0.9674267100977199,
+                "rejected_count": 20,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 402,
+            "rejection_rate": 0.1875,
+            "selective_accuracy": 0.8955223880597015,
+            "selective_error_rate": 0.1044776119402985,
+            "threshold": 0.55,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1555,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1431,
+            "coverage": 0.7252798507462687,
+            "incorrect_accepted_count": 124,
+            "per_class": {
+              "Change": {
+                "accepted_count": 206,
+                "accepted_error_count": 0,
+                "coverage": 0.9406392694063926,
+                "rejected_count": 13,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 520,
+                "accepted_error_count": 63,
+                "coverage": 0.6046511627906976,
+                "rejected_count": 340,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 239,
+                "accepted_error_count": 59,
+                "coverage": 0.5299334811529933,
+                "rejected_count": 212,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 590,
+                "accepted_error_count": 2,
+                "coverage": 0.9609120521172638,
+                "rejected_count": 24,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 589,
+            "rejection_rate": 0.27472014925373134,
+            "selective_accuracy": 0.9202572347266881,
+            "selective_error_rate": 0.0797427652733119,
+            "threshold": 0.6,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1360,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1299,
+            "coverage": 0.6343283582089553,
+            "incorrect_accepted_count": 61,
+            "per_class": {
+              "Change": {
+                "accepted_count": 203,
+                "accepted_error_count": 0,
+                "coverage": 0.9269406392694064,
+                "rejected_count": 16,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 415,
+                "accepted_error_count": 29,
+                "coverage": 0.48255813953488375,
+                "rejected_count": 445,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 163,
+                "accepted_error_count": 32,
+                "coverage": 0.3614190687361419,
+                "rejected_count": 288,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 579,
+                "accepted_error_count": 0,
+                "coverage": 0.9429967426710097,
+                "rejected_count": 35,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 784,
+            "rejection_rate": 0.3656716417910448,
+            "selective_accuracy": 0.9551470588235295,
+            "selective_error_rate": 0.04485294117647059,
+            "threshold": 0.65,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1167,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1133,
+            "coverage": 0.5443097014925373,
+            "incorrect_accepted_count": 34,
+            "per_class": {
+              "Change": {
+                "accepted_count": 193,
+                "accepted_error_count": 0,
+                "coverage": 0.8812785388127854,
+                "rejected_count": 26,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 297,
+                "accepted_error_count": 12,
+                "coverage": 0.3453488372093023,
+                "rejected_count": 563,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 108,
+                "accepted_error_count": 22,
+                "coverage": 0.2394678492239468,
+                "rejected_count": 343,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 569,
+                "accepted_error_count": 0,
+                "coverage": 0.9267100977198697,
+                "rejected_count": 45,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 977,
+            "rejection_rate": 0.4556902985074627,
+            "selective_accuracy": 0.9708654670094259,
+            "selective_error_rate": 0.02913453299057412,
+            "threshold": 0.7,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1004,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 989,
+            "coverage": 0.46828358208955223,
+            "incorrect_accepted_count": 15,
+            "per_class": {
+              "Change": {
+                "accepted_count": 184,
+                "accepted_error_count": 0,
+                "coverage": 0.8401826484018264,
+                "rejected_count": 35,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 205,
+                "accepted_error_count": 3,
+                "coverage": 0.23837209302325582,
+                "rejected_count": 655,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 57,
+                "accepted_error_count": 12,
+                "coverage": 0.12638580931263857,
+                "rejected_count": 394,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 558,
+                "accepted_error_count": 0,
+                "coverage": 0.9087947882736156,
+                "rejected_count": 56,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 1140,
+            "rejection_rate": 0.5317164179104478,
+            "selective_accuracy": 0.9850597609561753,
+            "selective_error_rate": 0.014940239043824702,
+            "threshold": 0.75,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 862,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 852,
+            "coverage": 0.40205223880597013,
+            "incorrect_accepted_count": 10,
+            "per_class": {
+              "Change": {
+                "accepted_count": 169,
+                "accepted_error_count": 0,
+                "coverage": 0.771689497716895,
+                "rejected_count": 50,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 127,
+                "accepted_error_count": 1,
+                "coverage": 0.14767441860465116,
+                "rejected_count": 733,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 33,
+                "accepted_error_count": 9,
+                "coverage": 0.07317073170731707,
+                "rejected_count": 418,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 533,
+                "accepted_error_count": 0,
+                "coverage": 0.8680781758957655,
+                "rejected_count": 81,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 1282,
+            "rejection_rate": 0.5979477611940298,
+            "selective_accuracy": 0.988399071925754,
+            "selective_error_rate": 0.01160092807424594,
+            "threshold": 0.8,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 719,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 716,
+            "coverage": 0.3353544776119403,
+            "incorrect_accepted_count": 3,
+            "per_class": {
+              "Change": {
+                "accepted_count": 152,
+                "accepted_error_count": 0,
+                "coverage": 0.6940639269406392,
+                "rejected_count": 67,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 69,
+                "accepted_error_count": 1,
+                "coverage": 0.08023255813953488,
+                "rejected_count": 791,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 9,
+                "accepted_error_count": 2,
+                "coverage": 0.019955654101995565,
+                "rejected_count": 442,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 489,
+                "accepted_error_count": 0,
+                "coverage": 0.7964169381107492,
+                "rejected_count": 125,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 1425,
+            "rejection_rate": 0.6646455223880597,
+            "selective_accuracy": 0.9958275382475661,
+            "selective_error_rate": 0.004172461752433936,
+            "threshold": 0.85,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 584,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 584,
+            "coverage": 0.27238805970149255,
+            "incorrect_accepted_count": 0,
+            "per_class": {
+              "Change": {
+                "accepted_count": 119,
+                "accepted_error_count": 0,
+                "coverage": 0.54337899543379,
+                "rejected_count": 100,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 27,
+                "accepted_error_count": 0,
+                "coverage": 0.031395348837209305,
+                "rejected_count": 833,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 1,
+                "accepted_error_count": 0,
+                "coverage": 0.0022172949002217295,
+                "rejected_count": 450,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 437,
+                "accepted_error_count": 0,
+                "coverage": 0.7117263843648208,
+                "rejected_count": 177,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 1560,
+            "rejection_rate": 0.7276119402985075,
+            "selective_accuracy": 1.0,
+            "selective_error_rate": 0.0,
+            "threshold": 0.9,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 387,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 387,
+            "coverage": 0.18050373134328357,
+            "incorrect_accepted_count": 0,
+            "per_class": {
+              "Change": {
+                "accepted_count": 73,
+                "accepted_error_count": 0,
+                "coverage": 0.3333333333333333,
+                "rejected_count": 146,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 5,
+                "accepted_error_count": 0,
+                "coverage": 0.005813953488372093,
+                "rejected_count": 855,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 0,
+                "accepted_error_count": 0,
+                "coverage": 0.0,
+                "rejected_count": 451,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 309,
+                "accepted_error_count": 0,
+                "coverage": 0.503257328990228,
+                "rejected_count": 305,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 1757,
+            "rejection_rate": 0.8194962686567164,
+            "selective_accuracy": 1.0,
+            "selective_error_rate": 0.0,
+            "threshold": 0.95,
+            "total_count": 2144
+          }
+        ]
+      }
+    },
+    "transformer": {
+      "calibration_split_id": "calibration_split_dfdf2077621b",
+      "dataset_version": "ds_6fa2f19cf683",
+      "model": "transformer",
+      "model_identity": {
+        "checkpoint": "artifacts/classification/run/transformer_training/checkpoints/checkpoint-3753",
+        "manifest": "artifacts/classification/run/transformer_training/training_manifest.json",
+        "model_name": "distilbert/distilbert-base-uncased",
+        "prediction_artifact": "artifacts/classification/run/transformer_training/validation_predictions.jsonl",
+        "weighting": "none"
+      },
+      "selection_subset": "threshold_selection",
+      "split_version": "split_d1f67d41500f",
+      "test_set_used": false,
+      "thresholds": [
+        0.0,
+        0.5,
+        0.55,
+        0.6,
+        0.65,
+        0.7,
+        0.75,
+        0.8,
+        0.85,
+        0.9,
+        0.95
+      ],
+      "variants": {
+        "calibrated": [
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 2144,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1811,
+            "coverage": 1.0,
+            "incorrect_accepted_count": 333,
+            "per_class": {
+              "Change": {
+                "accepted_count": 219,
+                "accepted_error_count": 5,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 860,
+                "accepted_error_count": 123,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 451,
+                "accepted_error_count": 197,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 614,
+                "accepted_error_count": 8,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 0,
+            "rejection_rate": 0.0,
+            "selective_accuracy": 0.8446828358208955,
+            "selective_error_rate": 0.1553171641791045,
+            "threshold": 0.0,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 2137,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1806,
+            "coverage": 0.9967350746268657,
+            "incorrect_accepted_count": 331,
+            "per_class": {
+              "Change": {
+                "accepted_count": 219,
+                "accepted_error_count": 5,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 857,
+                "accepted_error_count": 122,
+                "coverage": 0.9965116279069768,
+                "rejected_count": 3,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 448,
+                "accepted_error_count": 196,
+                "coverage": 0.9933481152993349,
+                "rejected_count": 3,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 613,
+                "accepted_error_count": 8,
+                "coverage": 0.998371335504886,
+                "rejected_count": 1,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 7,
+            "rejection_rate": 0.0032649253731343282,
+            "selective_accuracy": 0.8451099672437997,
+            "selective_error_rate": 0.15489003275620028,
+            "threshold": 0.5,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 2056,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1756,
+            "coverage": 0.9589552238805971,
+            "incorrect_accepted_count": 300,
+            "per_class": {
+              "Change": {
+                "accepted_count": 219,
+                "accepted_error_count": 5,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 825,
+                "accepted_error_count": 114,
+                "coverage": 0.9593023255813954,
+                "rejected_count": 35,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 399,
+                "accepted_error_count": 173,
+                "coverage": 0.88470066518847,
+                "rejected_count": 52,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 613,
+                "accepted_error_count": 8,
+                "coverage": 0.998371335504886,
+                "rejected_count": 1,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 88,
+            "rejection_rate": 0.041044776119402986,
+            "selective_accuracy": 0.8540856031128404,
+            "selective_error_rate": 0.14591439688715954,
+            "threshold": 0.55,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1980,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1714,
+            "coverage": 0.9235074626865671,
+            "incorrect_accepted_count": 266,
+            "per_class": {
+              "Change": {
+                "accepted_count": 219,
+                "accepted_error_count": 5,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 784,
+                "accepted_error_count": 94,
+                "coverage": 0.9116279069767442,
+                "rejected_count": 76,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 365,
+                "accepted_error_count": 160,
+                "coverage": 0.8093126385809313,
+                "rejected_count": 86,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 612,
+                "accepted_error_count": 7,
+                "coverage": 0.996742671009772,
+                "rejected_count": 2,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 164,
+            "rejection_rate": 0.07649253731343283,
+            "selective_accuracy": 0.8656565656565657,
+            "selective_error_rate": 0.13434343434343435,
+            "threshold": 0.6,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1874,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1642,
+            "coverage": 0.8740671641791045,
+            "incorrect_accepted_count": 232,
+            "per_class": {
+              "Change": {
+                "accepted_count": 218,
+                "accepted_error_count": 5,
+                "coverage": 0.9954337899543378,
+                "rejected_count": 1,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 726,
+                "accepted_error_count": 79,
+                "coverage": 0.8441860465116279,
+                "rejected_count": 134,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 318,
+                "accepted_error_count": 141,
+                "coverage": 0.70509977827051,
+                "rejected_count": 133,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 612,
+                "accepted_error_count": 7,
+                "coverage": 0.996742671009772,
+                "rejected_count": 2,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 270,
+            "rejection_rate": 0.1259328358208955,
+            "selective_accuracy": 0.8762006403415155,
+            "selective_error_rate": 0.12379935965848453,
+            "threshold": 0.65,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1765,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1576,
+            "coverage": 0.8232276119402985,
+            "incorrect_accepted_count": 189,
+            "per_class": {
+              "Change": {
+                "accepted_count": 217,
+                "accepted_error_count": 4,
+                "coverage": 0.9908675799086758,
+                "rejected_count": 2,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 663,
+                "accepted_error_count": 58,
+                "coverage": 0.7709302325581395,
+                "rejected_count": 197,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 273,
+                "accepted_error_count": 120,
+                "coverage": 0.6053215077605322,
+                "rejected_count": 178,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 612,
+                "accepted_error_count": 7,
+                "coverage": 0.996742671009772,
+                "rejected_count": 2,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 379,
+            "rejection_rate": 0.1767723880597015,
+            "selective_accuracy": 0.8929178470254957,
+            "selective_error_rate": 0.10708215297450425,
+            "threshold": 0.7,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1640,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1484,
+            "coverage": 0.7649253731343284,
+            "incorrect_accepted_count": 156,
+            "per_class": {
+              "Change": {
+                "accepted_count": 215,
+                "accepted_error_count": 4,
+                "coverage": 0.9817351598173516,
+                "rejected_count": 4,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 602,
+                "accepted_error_count": 44,
+                "coverage": 0.7,
+                "rejected_count": 258,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 214,
+                "accepted_error_count": 102,
+                "coverage": 0.4745011086474501,
+                "rejected_count": 237,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 609,
+                "accepted_error_count": 6,
+                "coverage": 0.99185667752443,
+                "rejected_count": 5,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 504,
+            "rejection_rate": 0.23507462686567165,
+            "selective_accuracy": 0.9048780487804878,
+            "selective_error_rate": 0.0951219512195122,
+            "threshold": 0.75,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1491,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1386,
+            "coverage": 0.695429104477612,
+            "incorrect_accepted_count": 105,
+            "per_class": {
+              "Change": {
+                "accepted_count": 215,
+                "accepted_error_count": 4,
+                "coverage": 0.9817351598173516,
+                "rejected_count": 4,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 518,
+                "accepted_error_count": 26,
+                "coverage": 0.6023255813953489,
+                "rejected_count": 342,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 151,
+                "accepted_error_count": 70,
+                "coverage": 0.3348115299334812,
+                "rejected_count": 300,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 607,
+                "accepted_error_count": 5,
+                "coverage": 0.988599348534202,
+                "rejected_count": 7,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 653,
+            "rejection_rate": 0.3045708955223881,
+            "selective_accuracy": 0.9295774647887324,
+            "selective_error_rate": 0.07042253521126761,
+            "threshold": 0.8,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1296,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1237,
+            "coverage": 0.6044776119402985,
+            "incorrect_accepted_count": 59,
+            "per_class": {
+              "Change": {
+                "accepted_count": 214,
+                "accepted_error_count": 3,
+                "coverage": 0.9771689497716894,
+                "rejected_count": 5,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 396,
+                "accepted_error_count": 11,
+                "coverage": 0.4604651162790698,
+                "rejected_count": 464,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 81,
+                "accepted_error_count": 41,
+                "coverage": 0.17960088691796008,
+                "rejected_count": 370,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 605,
+                "accepted_error_count": 4,
+                "coverage": 0.9853420195439739,
+                "rejected_count": 9,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 848,
+            "rejection_rate": 0.39552238805970147,
+            "selective_accuracy": 0.9544753086419753,
+            "selective_error_rate": 0.04552469135802469,
+            "threshold": 0.85,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1039,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1022,
+            "coverage": 0.4846082089552239,
+            "incorrect_accepted_count": 17,
+            "per_class": {
+              "Change": {
+                "accepted_count": 213,
+                "accepted_error_count": 3,
+                "coverage": 0.9726027397260274,
+                "rejected_count": 6,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 213,
+                "accepted_error_count": 0,
+                "coverage": 0.24767441860465117,
+                "rejected_count": 647,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 10,
+                "accepted_error_count": 10,
+                "coverage": 0.022172949002217297,
+                "rejected_count": 441,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 603,
+                "accepted_error_count": 4,
+                "coverage": 0.9820846905537459,
+                "rejected_count": 11,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 1105,
+            "rejection_rate": 0.5153917910447762,
+            "selective_accuracy": 0.983638113570741,
+            "selective_error_rate": 0.016361886429258902,
+            "threshold": 0.9,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 806,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 804,
+            "coverage": 0.37593283582089554,
+            "incorrect_accepted_count": 2,
+            "per_class": {
+              "Change": {
+                "accepted_count": 209,
+                "accepted_error_count": 1,
+                "coverage": 0.954337899543379,
+                "rejected_count": 10,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 0,
+                "accepted_error_count": 0,
+                "coverage": 0.0,
+                "rejected_count": 860,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 0,
+                "accepted_error_count": 0,
+                "coverage": 0.0,
+                "rejected_count": 451,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 597,
+                "accepted_error_count": 1,
+                "coverage": 0.9723127035830619,
+                "rejected_count": 17,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 1338,
+            "rejection_rate": 0.6240671641791045,
+            "selective_accuracy": 0.9975186104218362,
+            "selective_error_rate": 0.0024813895781637717,
+            "threshold": 0.95,
+            "total_count": 2144
+          }
+        ],
+        "uncalibrated": [
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 2144,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1811,
+            "coverage": 1.0,
+            "incorrect_accepted_count": 333,
+            "per_class": {
+              "Change": {
+                "accepted_count": 219,
+                "accepted_error_count": 5,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 860,
+                "accepted_error_count": 123,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 451,
+                "accepted_error_count": 197,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 614,
+                "accepted_error_count": 8,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 0,
+            "rejection_rate": 0.0,
+            "selective_accuracy": 0.8446828358208955,
+            "selective_error_rate": 0.1553171641791045,
+            "threshold": 0.0,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 2142,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1810,
+            "coverage": 0.9990671641791045,
+            "incorrect_accepted_count": 332,
+            "per_class": {
+              "Change": {
+                "accepted_count": 219,
+                "accepted_error_count": 5,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 859,
+                "accepted_error_count": 122,
+                "coverage": 0.9988372093023256,
+                "rejected_count": 1,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 451,
+                "accepted_error_count": 197,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 613,
+                "accepted_error_count": 8,
+                "coverage": 0.998371335504886,
+                "rejected_count": 1,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 2,
+            "rejection_rate": 0.0009328358208955224,
+            "selective_accuracy": 0.8450046685340803,
+            "selective_error_rate": 0.1549953314659197,
+            "threshold": 0.5,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 2080,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1770,
+            "coverage": 0.9701492537313433,
+            "incorrect_accepted_count": 310,
+            "per_class": {
+              "Change": {
+                "accepted_count": 219,
+                "accepted_error_count": 5,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 834,
+                "accepted_error_count": 118,
+                "coverage": 0.9697674418604652,
+                "rejected_count": 26,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 414,
+                "accepted_error_count": 179,
+                "coverage": 0.917960088691796,
+                "rejected_count": 37,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 613,
+                "accepted_error_count": 8,
+                "coverage": 0.998371335504886,
+                "rejected_count": 1,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 64,
+            "rejection_rate": 0.029850746268656716,
+            "selective_accuracy": 0.8509615384615384,
+            "selective_error_rate": 0.14903846153846154,
+            "threshold": 0.55,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 2026,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1739,
+            "coverage": 0.9449626865671642,
+            "incorrect_accepted_count": 287,
+            "per_class": {
+              "Change": {
+                "accepted_count": 219,
+                "accepted_error_count": 5,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 807,
+                "accepted_error_count": 105,
+                "coverage": 0.9383720930232559,
+                "rejected_count": 53,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 387,
+                "accepted_error_count": 169,
+                "coverage": 0.8580931263858093,
+                "rejected_count": 64,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 613,
+                "accepted_error_count": 8,
+                "coverage": 0.998371335504886,
+                "rejected_count": 1,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 118,
+            "rejection_rate": 0.05503731343283582,
+            "selective_accuracy": 0.8583415597235933,
+            "selective_error_rate": 0.1416584402764067,
+            "threshold": 0.6,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1954,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1695,
+            "coverage": 0.9113805970149254,
+            "incorrect_accepted_count": 259,
+            "per_class": {
+              "Change": {
+                "accepted_count": 219,
+                "accepted_error_count": 5,
+                "coverage": 1.0,
+                "rejected_count": 0,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 767,
+                "accepted_error_count": 90,
+                "coverage": 0.891860465116279,
+                "rejected_count": 93,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 355,
+                "accepted_error_count": 156,
+                "coverage": 0.7871396895787139,
+                "rejected_count": 96,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 613,
+                "accepted_error_count": 8,
+                "coverage": 0.998371335504886,
+                "rejected_count": 1,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 190,
+            "rejection_rate": 0.08861940298507463,
+            "selective_accuracy": 0.8674513817809621,
+            "selective_error_rate": 0.13254861821903788,
+            "threshold": 0.65,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1867,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1637,
+            "coverage": 0.8708022388059702,
+            "incorrect_accepted_count": 230,
+            "per_class": {
+              "Change": {
+                "accepted_count": 218,
+                "accepted_error_count": 5,
+                "coverage": 0.9954337899543378,
+                "rejected_count": 1,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 723,
+                "accepted_error_count": 78,
+                "coverage": 0.8406976744186047,
+                "rejected_count": 137,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 314,
+                "accepted_error_count": 140,
+                "coverage": 0.6962305986696231,
+                "rejected_count": 137,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 612,
+                "accepted_error_count": 7,
+                "coverage": 0.996742671009772,
+                "rejected_count": 2,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 277,
+            "rejection_rate": 0.12919776119402984,
+            "selective_accuracy": 0.8768077129084092,
+            "selective_error_rate": 0.12319228709159079,
+            "threshold": 0.7,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1772,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1581,
+            "coverage": 0.8264925373134329,
+            "incorrect_accepted_count": 191,
+            "per_class": {
+              "Change": {
+                "accepted_count": 217,
+                "accepted_error_count": 4,
+                "coverage": 0.9908675799086758,
+                "rejected_count": 2,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 667,
+                "accepted_error_count": 58,
+                "coverage": 0.7755813953488372,
+                "rejected_count": 193,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 276,
+                "accepted_error_count": 122,
+                "coverage": 0.6119733924611973,
+                "rejected_count": 175,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 612,
+                "accepted_error_count": 7,
+                "coverage": 0.996742671009772,
+                "rejected_count": 2,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 372,
+            "rejection_rate": 0.17350746268656717,
+            "selective_accuracy": 0.8922121896162528,
+            "selective_error_rate": 0.10778781038374718,
+            "threshold": 0.75,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1672,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1507,
+            "coverage": 0.7798507462686567,
+            "incorrect_accepted_count": 165,
+            "per_class": {
+              "Change": {
+                "accepted_count": 217,
+                "accepted_error_count": 4,
+                "coverage": 0.9908675799086758,
+                "rejected_count": 2,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 615,
+                "accepted_error_count": 48,
+                "coverage": 0.7151162790697675,
+                "rejected_count": 245,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 229,
+                "accepted_error_count": 106,
+                "coverage": 0.5077605321507761,
+                "rejected_count": 222,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 611,
+                "accepted_error_count": 7,
+                "coverage": 0.995114006514658,
+                "rejected_count": 3,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 472,
+            "rejection_rate": 0.22014925373134328,
+            "selective_accuracy": 0.9013157894736842,
+            "selective_error_rate": 0.09868421052631579,
+            "threshold": 0.8,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1539,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1417,
+            "coverage": 0.7178171641791045,
+            "incorrect_accepted_count": 122,
+            "per_class": {
+              "Change": {
+                "accepted_count": 215,
+                "accepted_error_count": 4,
+                "coverage": 0.9817351598173516,
+                "rejected_count": 4,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 541,
+                "accepted_error_count": 32,
+                "coverage": 0.6290697674418605,
+                "rejected_count": 319,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 175,
+                "accepted_error_count": 80,
+                "coverage": 0.38802660753880264,
+                "rejected_count": 276,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 608,
+                "accepted_error_count": 6,
+                "coverage": 0.990228013029316,
+                "rejected_count": 6,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 605,
+            "rejection_rate": 0.28218283582089554,
+            "selective_accuracy": 0.9207277452891488,
+            "selective_error_rate": 0.0792722547108512,
+            "threshold": 0.85,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1347,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1279,
+            "coverage": 0.6282649253731343,
+            "incorrect_accepted_count": 68,
+            "per_class": {
+              "Change": {
+                "accepted_count": 214,
+                "accepted_error_count": 3,
+                "coverage": 0.9771689497716894,
+                "rejected_count": 5,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 431,
+                "accepted_error_count": 16,
+                "coverage": 0.5011627906976744,
+                "rejected_count": 429,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 97,
+                "accepted_error_count": 45,
+                "coverage": 0.21507760532150777,
+                "rejected_count": 354,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 605,
+                "accepted_error_count": 4,
+                "coverage": 0.9853420195439739,
+                "rejected_count": 9,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 797,
+            "rejection_rate": 0.37173507462686567,
+            "selective_accuracy": 0.949517446176689,
+            "selective_error_rate": 0.050482553823311065,
+            "threshold": 0.9,
+            "total_count": 2144
+          },
+          {
+            "acceptance_rule": "confidence >= threshold",
+            "accepted_count": 1041,
+            "confidence_definition": "maximum_class_probability",
+            "correct_accepted_count": 1024,
+            "coverage": 0.4855410447761194,
+            "incorrect_accepted_count": 17,
+            "per_class": {
+              "Change": {
+                "accepted_count": 213,
+                "accepted_error_count": 3,
+                "coverage": 0.9726027397260274,
+                "rejected_count": 6,
+                "total_count": 219
+              },
+              "Incident": {
+                "accepted_count": 212,
+                "accepted_error_count": 0,
+                "coverage": 0.24651162790697675,
+                "rejected_count": 648,
+                "total_count": 860
+              },
+              "Problem": {
+                "accepted_count": 13,
+                "accepted_error_count": 10,
+                "coverage": 0.028824833702882482,
+                "rejected_count": 438,
+                "total_count": 451
+              },
+              "Request": {
+                "accepted_count": 603,
+                "accepted_error_count": 4,
+                "coverage": 0.9820846905537459,
+                "rejected_count": 11,
+                "total_count": 614
+              }
+            },
+            "rejected_count": 1103,
+            "rejection_rate": 0.5144589552238806,
+            "selective_accuracy": 0.983669548511047,
+            "selective_error_rate": 0.01633045148895293,
+            "threshold": 0.95,
+            "total_count": 2144
+          }
+        ]
+      }
+    }
+  },
+  "phase": "2.10",
+  "rejected_predictions_are_not_a_fifth_class": true
+}

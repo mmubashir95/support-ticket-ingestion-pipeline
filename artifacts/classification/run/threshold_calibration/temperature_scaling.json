@@ -1,0 +1,10 @@
+{
+  "base_model_modified": false,
+  "calibration_split_id": "calibration_split_dfdf2077621b",
+  "fitted_on": "calibration_fitting",
+  "method": "temperature_scaling",
+  "model": "transformer",
+  "record_count": 2144,
+  "source_logits_preserved": true,
+  "temperature": 1.3084856362068322
+}

@@ -1,0 +1,57 @@
+{
+  "dataset_version": "ds_6fa2f19cf683",
+  "models": {
+    "linear_svm": {
+      "calibration_method": "sigmoid_calibration",
+      "decision_rationale": "Linear SVM raw scores are not probabilities; calibrated probabilities are required.",
+      "known_limitations": [
+        "The original validation split influenced checkpoint/model selection. These internal subsets reduce direct fitting/selection leakage but are not a fully independent evaluation set."
+      ],
+      "model_identity": {
+        "feature_version": "tfidf_3275ba614aa6",
+        "manifest": "artifacts/classification/run/class_weighting/linear_svm/experiment_manifest.json",
+        "model_artifact": "artifacts/classification/run/class_weighting/linear_svm/weighted_model.joblib",
+        "prediction_artifact": "artifacts/classification/run/class_weighting/linear_svm/validation_predictions.jsonl",
+        "weighting": "balanced"
+      },
+      "parameter_reference": "artifacts/classification/run/threshold_calibration/linear_svm_sigmoid_calibration.json",
+      "validation_evidence": "artifacts/classification/run/threshold_calibration/linear_svm_calibration_comparison.json"
+    },
+    "logistic_regression": {
+      "calibration_method": "sigmoid_calibration",
+      "decision_rationale": "Held-out probability evidence supports calibration.",
+      "known_limitations": [
+        "The original validation split influenced checkpoint/model selection. These internal subsets reduce direct fitting/selection leakage but are not a fully independent evaluation set."
+      ],
+      "model_identity": {
+        "feature_version": "tfidf_3275ba614aa6",
+        "manifest": "artifacts/classification/run/class_weighting/logistic_regression/experiment_manifest.json",
+        "model_artifact": "artifacts/classification/run/class_weighting/logistic_regression/weighted_model.joblib",
+        "prediction_artifact": "artifacts/classification/run/class_weighting/logistic_regression/validation_predictions.jsonl",
+        "weighting": "balanced"
+      },
+      "parameter_reference": "artifacts/classification/run/threshold_calibration/logistic_regression_sigmoid_scaling.json",
+      "validation_evidence": "artifacts/classification/run/threshold_calibration/logistic_regression_calibration_comparison.json"
+    },
+    "transformer": {
+      "calibration_method": "temperature_scaling",
+      "decision_rationale": "Held-out probability evidence supports calibration.",
+      "known_limitations": [
+        "The original validation split influenced checkpoint/model selection. These internal subsets reduce direct fitting/selection leakage but are not a fully independent evaluation set."
+      ],
+      "model_identity": {
+        "checkpoint": "artifacts/classification/run/transformer_training/checkpoints/checkpoint-3753",
+        "manifest": "artifacts/classification/run/transformer_training/training_manifest.json",
+        "model_name": "distilbert/distilbert-base-uncased",
+        "prediction_artifact": "artifacts/classification/run/transformer_training/validation_predictions.jsonl",
+        "weighting": "none"
+      },
+      "parameter_reference": "artifacts/classification/run/threshold_calibration/temperature_scaling.json",
+      "validation_evidence": "artifacts/classification/run/threshold_calibration/distilbert_calibration_comparison.json"
+    }
+  },
+  "phase": "2.10",
+  "selection_data": "threshold_selection subset of frozen validation",
+  "split_version": "split_d1f67d41500f",
+  "test_set_used": false
+}

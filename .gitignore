@@ -16,6 +16,8 @@ artifacts/classification/run/class_weighting/*/weighted_model.joblib
 artifacts/classification/run/class_weighting/*/validation_predictions.jsonl
 artifacts/classification/run/class_weighting/transformer/*.safetensors
 artifacts/classification/run/class_weighting/transformer/*.pt
+artifacts/classification/run/threshold_calibration/generated_predictions/
+artifacts/classification/run/transformer_training/test_predictions.jsonl
 
 # C extensions
 *.so

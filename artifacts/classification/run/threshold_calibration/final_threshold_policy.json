@@ -1,0 +1,66 @@
+{
+  "dataset_version": "ds_6fa2f19cf683",
+  "models": {
+    "linear_svm": {
+      "calibration_method": "sigmoid_calibration",
+      "confidence_definition": "maximum_class_probability",
+      "model_identity": {
+        "feature_version": "tfidf_3275ba614aa6",
+        "manifest": "artifacts/classification/run/class_weighting/linear_svm/experiment_manifest.json",
+        "model_artifact": "artifacts/classification/run/class_weighting/linear_svm/weighted_model.joblib",
+        "prediction_artifact": "artifacts/classification/run/class_weighting/linear_svm/validation_predictions.jsonl",
+        "weighting": "balanced"
+      },
+      "observed_coverage": 0.7229477611940298,
+      "observed_selective_accuracy": 0.9509677419354838,
+      "selected_threshold": 0.8,
+      "selection_dataset": "threshold_selection subset of frozen validation",
+      "selection_objective": "maximize coverage subject to minimum selective accuracy",
+      "status": "selected",
+      "supporting_artifact": "artifacts/classification/run/threshold_calibration/threshold_analysis.json",
+      "target_selective_accuracy": 0.95
+    },
+    "logistic_regression": {
+      "calibration_method": "sigmoid_calibration",
+      "confidence_definition": "maximum_class_probability",
+      "model_identity": {
+        "feature_version": "tfidf_3275ba614aa6",
+        "manifest": "artifacts/classification/run/class_weighting/logistic_regression/experiment_manifest.json",
+        "model_artifact": "artifacts/classification/run/class_weighting/logistic_regression/weighted_model.joblib",
+        "prediction_artifact": "artifacts/classification/run/class_weighting/logistic_regression/validation_predictions.jsonl",
+        "weighting": "balanced"
+      },
+      "observed_coverage": 0.6459888059701493,
+      "observed_selective_accuracy": 0.9545126353790614,
+      "selected_threshold": 0.8,
+      "selection_dataset": "threshold_selection subset of frozen validation",
+      "selection_objective": "maximize coverage subject to minimum selective accuracy",
+      "status": "selected",
+      "supporting_artifact": "artifacts/classification/run/threshold_calibration/threshold_analysis.json",
+      "target_selective_accuracy": 0.95
+    },
+    "transformer": {
+      "calibration_method": "temperature_scaling",
+      "confidence_definition": "maximum_class_probability",
+      "model_identity": {
+        "checkpoint": "artifacts/classification/run/transformer_training/checkpoints/checkpoint-3753",
+        "manifest": "artifacts/classification/run/transformer_training/training_manifest.json",
+        "model_name": "distilbert/distilbert-base-uncased",
+        "prediction_artifact": "artifacts/classification/run/transformer_training/validation_predictions.jsonl",
+        "weighting": "none"
+      },
+      "observed_coverage": 0.6044776119402985,
+      "observed_selective_accuracy": 0.9544753086419753,
+      "selected_threshold": 0.85,
+      "selection_dataset": "threshold_selection subset of frozen validation",
+      "selection_objective": "maximize coverage subject to minimum selective accuracy",
+      "status": "selected",
+      "supporting_artifact": "artifacts/classification/run/threshold_calibration/threshold_analysis.json",
+      "target_selective_accuracy": 0.95
+    }
+  },
+  "operational_threshold_status": "selected_with_caller_supplied_criterion",
+  "phase": "2.10",
+  "split_version": "split_d1f67d41500f",
+  "test_set_used": false
+}

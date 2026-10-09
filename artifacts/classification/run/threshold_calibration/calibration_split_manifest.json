@@ -1,0 +1,28 @@
+{
+  "base_split_modified": false,
+  "calibration_class_counts": {
+    "Change": 219,
+    "Incident": 860,
+    "Problem": 451,
+    "Request": 614
+  },
+  "calibration_fitting_count": 2144,
+  "calibration_split_id": "calibration_split_dfdf2077621b",
+  "dataset_version": "ds_6fa2f19cf683",
+  "known_limitation": "The original validation split influenced checkpoint/model selection. These internal subsets reduce direct fitting/selection leakage but are not a fully independent evaluation set.",
+  "phase": "2.10",
+  "seed": 42,
+  "source_split": "validation",
+  "split_version": "split_d1f67d41500f",
+  "stratified_by": "true_label",
+  "subsets_disjoint": true,
+  "test_overlap_count": 0,
+  "threshold_class_counts": {
+    "Change": 219,
+    "Incident": 860,
+    "Problem": 451,
+    "Request": 614
+  },
+  "threshold_selection_count": 2144,
+  "union_matches_validation": true
+}

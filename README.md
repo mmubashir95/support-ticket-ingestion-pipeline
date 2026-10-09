@@ -1025,9 +1025,11 @@ model = AutoModelForSequenceClassification.from_pretrained(checkpoint)
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)
 ```
 
-The weighting decision used validation only. Final test evaluation is still
-pending and must not change the selected weighting policy. Run it once against
-the selected unweighted model:
+The weighting decision used validation only. The selected unweighted model's
+isolated final test evaluation has since been run once and its artifacts are
+preserved under `transformer_training/`; do not rerun it for Phase 2.10 or use
+its results to revise calibration or threshold policies. The exact command
+that produced those historical artifacts was:
 
 ```bash
 .venv-transformer/bin/python -m ticket_classification.evaluate_transformer \
@@ -1035,8 +1037,111 @@ the selected unweighted model:
   --training-dir artifacts/classification/run/transformer_training
 ```
 
-Phase 2.9 does not implement threshold tuning, calibration, oversampling,
-focal loss, hyperparameter search, or any Phase 2.10 functionality. Before
-starting Phase 2.10, complete the selected model's isolated final test
-evaluation and preserve its test artifacts without revisiting this
-validation-based weighting decision.
+`class_weighting/final_weighting_policy.json` still labels final test
+evaluation as `PENDING`. Phase 2.10 records this metadata discrepancy while
+deliberately not loading the test metrics or predictions.
+
+## Phase 2.10 — Threshold tuning and calibration
+
+Phase 2.10 is a post-training, validation-only decision-policy workflow. It
+preserves the Phase 2.9 selections: balanced Logistic Regression, balanced
+Linear SVM, and unweighted DistilBERT checkpoint `checkpoint-3753`. It does not
+retrain a base classifier, modify a checkpoint, or use test predictions to fit
+calibration parameters or choose a confidence threshold.
+
+### Probability concepts and metrics
+
+Transformer **logits** and SVM **decision scores** are unrestricted real
+values; neither is a probability. Softmax converts Transformer logits into a
+probability vector, but softmax probabilities are not automatically reliable:
+among predictions made with confidence 0.8, the model may be correct much more
+or less than 80% of the time. Logistic Regression already exposes
+`predict_proba`, but its probabilities are still measured rather than assumed
+to be calibrated.
+
+The workflow reports:
+
+- top-label Expected Calibration Error (ECE), using equal-width confidence
+  bins and the weighted absolute gap between mean confidence and observed
+  accuracy;
+- multiclass Brier score, defined here as the mean per-example sum of squared
+  errors across all four classes; and
+- multiclass negative log-likelihood (NLL), the mean negative log probability
+  assigned to the true class.
+
+Reliability-bin data persists mean confidence and observed accuracy, so the
+ideal line is reproducible without making chart generation mandatory.
+
+DistilBERT temperature scaling learns one positive scalar `T` on the
+calibration-fitting subset and applies `softmax(logits / T)`. Positive scalar
+division preserves logit ordering, so it normally preserves the predicted
+class while changing confidence. Linear SVM instead uses one-vs-rest sigmoid
+calibration followed by normalization; this can change multiclass `argmax`.
+Logistic Regression's original probabilities are compared with post-hoc
+sigmoid calibration and retained when held-out probability evidence does not
+justify calibration.
+
+The frozen 4,288-record validation split is deterministically and
+stratifiably partitioned into disjoint calibration-fitting and
+threshold-selection subsets. This does **not** create fully independent
+evaluation data: the original validation set previously influenced model and
+checkpoint selection. Final test records remain excluded from this workflow.
+
+### Confidence rejection
+
+For this single-label multiclass task, the predicted class is always
+`argmax(probabilities)` and confidence is its maximum probability. A prediction
+is accepted when `confidence >= threshold`; otherwise it is routed to
+`needs_review`. Rejection preserves the predicted class and is not a fifth
+class. The threshold sweep records coverage, rejection rate, selective
+accuracy/error, and per-class acceptance, rejection, and accepted-error counts.
+If no business minimum selective-accuracy requirement is supplied, the final
+operational threshold remains pending.
+
+### Manual execution
+
+Run each step explicitly. The commands do not run final test evaluation:
+
+```bash
+# Verify selected validation predictions and their identities.
+.venv/bin/python -m ticket_classification.run_calibration audit
+
+# Create internal validation subsets and baseline confidence/calibration reports.
+.venv/bin/python -m ticket_classification.run_calibration analyze
+
+# Fit post-hoc parameters and evaluate them on threshold-selection records.
+.venv/bin/python -m ticket_classification.run_calibration fit --model all
+
+# Evaluate calibrated and uncalibrated accuracy/coverage trade-offs.
+.venv/bin/python -m ticket_classification.run_calibration thresholds --model all
+
+# Select calibration; leave thresholds pending when no criterion is supplied.
+.venv/bin/python -m ticket_classification.run_calibration compare
+
+# Render the final Markdown report from persisted artifacts.
+.venv/bin/python -m ticket_classification.run_calibration report
+```
+
+If an existing selected validation-prediction artifact is missing, regenerate
+it from the frozen selected model without training or loading test records:
+
+```bash
+.venv/bin/python -m ticket_classification.run_calibration \
+  generate-predictions --model transformer
+```
+
+Only a caller with an actual business requirement should select a threshold.
+For example, the following maximizes observed coverage subject to that
+caller-supplied requirement; `0.95` is not a project default:
+
+```bash
+.venv/bin/python -m ticket_classification.run_calibration compare \
+  --min-selective-accuracy 0.95
+```
+
+Outputs are written under
+`artifacts/classification/run/threshold_calibration/`. They include the
+prediction audit, confidence analysis, split membership, uncalibrated metrics,
+calibration parameters and comparisons, threshold sweep, final policies, and
+report. `apply_prediction_decision` reloads those policies for future
+inference and does not require a true label.
