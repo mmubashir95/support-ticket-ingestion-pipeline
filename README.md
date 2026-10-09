@@ -831,3 +831,75 @@ integer `label`. Persistence reloads and validates every artifact, exact split
 membership and order, labels, dataset version, and tokenized content. No random
 split, shuffle, model weights, optimizer, training loop, metric, or checkpoint
 is part of this phase.
+
+## Phase 2.8 — Transformer fine-tuning workflow
+
+Phase 2.8 provides the first unweighted DistilBERT classification baseline. It
+consumes the Phase 2.7 tokenized JSONL files directly and validates dataset
+`ds_6fa2f19cf683`, split `split_d1f67d41500f`, Transformer dataset
+`transformer_ds_340aff24d262`, all counts, fingerprints, label mappings, and
+`max_length=256` before loading the model.
+
+The baseline uses three epochs, train/evaluation batches of 16/32, AdamW with
+learning rate `2e-5` and weight decay `0.01`, a linear scheduler with no warmup,
+seed 42, dynamic padding, and the model's ordinary unweighted multiclass
+cross-entropy. Validation runs after every epoch. Checkpoints are saved after
+every epoch, and validation Macro F1 selects `best_model/`. Early stopping is
+explicitly disabled for this three-epoch baseline. Phase 2.9 class weighting is
+not included.
+
+This macOS x86_64 checkout needs Python 3.12 because PyTorch does not publish a
+compatible wheel for its Python 3.13 environment. The prepared environment is
+`.venv-transformer`; on another supported machine, an equivalent project
+environment can be used.
+
+Validate model loading, artifacts, dynamic padding, one forward pass, logits,
+loss, device resolution, and output writability without optimizer updates:
+
+```bash
+.venv-transformer/bin/python -m ticket_classification.train_transformer --validate-only
+```
+
+Run the deliberately limited 32-train/16-validation, one-epoch integration
+check:
+
+```bash
+.venv-transformer/bin/python -m ticket_classification.train_transformer \
+  --smoke-test \
+  --output-dir /tmp/phase28-transformer-smoke
+```
+
+These checks are not the real baseline. The user starts the full 20,010-record
+run explicitly and watches loss, learning rate, speed, validation metrics, and
+best-checkpoint status in the terminal:
+
+```bash
+.venv-transformer/bin/python -m ticket_classification.train_transformer
+```
+
+The training command loads only train and validation records. It never opens
+`test_tokenized.jsonl`. After full training completes, run final test inference
+as a separate action:
+
+```bash
+.venv-transformer/bin/python -m ticket_classification.evaluate_transformer
+```
+
+Full training writes under `artifacts/classification/run/transformer_training/`:
+
+| Artifact | Contents |
+|---|---|
+| `training_config.json` | Frozen baseline configuration |
+| `training_manifest.json` | Identities, environment, device, duration, isolation and reproducibility policy |
+| `training_history.json` | Epoch, step, loss, learning rate and validation metrics |
+| `best_checkpoint.json` | Best validation Macro F1, epoch, step and checkpoint |
+| `checkpoints/checkpoint-*/` | Epoch model/tokenizer plus optimizer and scheduler state |
+| `best_model/` | Independently reloadable selected model and tokenizer |
+| `validation_metrics.json` | Accuracy, Macro/weighted metrics and per-class results |
+| `validation_confusion_matrix.json` | Explicit actual-row/predicted-column matrix |
+| `validation_predictions.jsonl` | IDs, labels, logits and probabilities from the selected model |
+
+The separate test command adds `test_metrics.json`,
+`test_confusion_matrix.json`, `test_predictions.jsonl`, and
+`test_evaluation_manifest.json`. It rejects smoke-test checkpoints, performs no
+training, and never changes checkpoint selection.
