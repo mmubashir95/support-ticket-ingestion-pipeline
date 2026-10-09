@@ -3,15 +3,23 @@
 import argparse
 from pathlib import Path
 
-from ticket_classification.transformer_training import run_final_test_evaluation
+from ticket_classification.transformer_training import (
+    TransformerTrainingConfig,
+    run_final_test_evaluation,
+)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate the selected Transformer on frozen test")
     parser.add_argument("--dataset-dir", type=Path, default=Path("artifacts/classification/run/transformer"))
     parser.add_argument("--training-dir", type=Path, default=Path("artifacts/classification/run/transformer_training"))
+    parser.add_argument("--class-weighting", choices=("none", "balanced"), default="none")
     args = parser.parse_args()
-    run_final_test_evaluation(args.dataset_dir, args.training_dir)
+    run_final_test_evaluation(
+        args.dataset_dir,
+        args.training_dir,
+        TransformerTrainingConfig(class_weighting=args.class_weighting),
+    )
 
 
 if __name__ == "__main__":

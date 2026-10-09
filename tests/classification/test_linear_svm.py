@@ -31,7 +31,7 @@ from ticket_classification.features import TfidfConfig, build_tfidf_features
         {"C": -1},
         {"C": float("inf")},
         {"C": float("nan")},
-        {"class_weight": "balanced"},
+        {"class_weight": "unsupported"},
         {"max_iterations": 0},
         {"max_iterations": True},
         {"tolerance": 0},

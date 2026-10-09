@@ -1,0 +1,40 @@
+{
+  "accuracy": 0.8404850746268657,
+  "class_order": [
+    "Change",
+    "Incident",
+    "Problem",
+    "Request"
+  ],
+  "macro_f1": 0.8529863388255199,
+  "macro_precision": 0.8488325348620853,
+  "macro_recall": 0.8588514347528231,
+  "per_class": {
+    "Change": {
+      "f1": 0.9593679458239278,
+      "precision": 0.9486607142857143,
+      "recall": 0.9703196347031964,
+      "support": 438
+    },
+    "Incident": {
+      "f1": 0.8026514010244049,
+      "precision": 0.8330206378986866,
+      "recall": 0.7744186046511627,
+      "support": 1720
+    },
+    "Problem": {
+      "f1": 0.6621409921671019,
+      "precision": 0.6258637709772952,
+      "recall": 0.7028824833702882,
+      "support": 902
+    },
+    "Request": {
+      "f1": 0.987785016286645,
+      "precision": 0.987785016286645,
+      "recall": 0.987785016286645,
+      "support": 1228
+    }
+  },
+  "weighted_f1": 0.8421209759719176,
+  "zero_division": 0
+}

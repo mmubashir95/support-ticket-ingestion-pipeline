@@ -846,7 +846,7 @@ seed 42, dynamic padding, and the model's ordinary unweighted multiclass
 cross-entropy. Validation runs after every epoch. Checkpoints are saved after
 every epoch, and validation Macro F1 selects `best_model/`. Early stopping is
 explicitly disabled for this three-epoch baseline. Phase 2.9 class weighting is
-not included.
+not enabled by default; its explicit opt-in workflow is documented below.
 
 This macOS x86_64 checkout needs Python 3.12 because PyTorch does not publish a
 compatible wheel for its Python 3.13 environment. The prepared environment is
@@ -903,3 +903,96 @@ The separate test command adds `test_metrics.json`,
 `test_confusion_matrix.json`, `test_predictions.jsonl`, and
 `test_evaluation_manifest.json`. It rejects smoke-test checkpoints, performs no
 training, and never changes checkpoint selection.
+
+## Phase 2.9 — Class imbalance and class weighting
+
+Phase 2.9 isolates one experimental change: balanced class weighting. The
+dataset, frozen split, TF-IDF features, model hyperparameters, Transformer
+checkpoint policy, and validation evaluator stay unchanged. Weights are always
+calculated from training labels only:
+
+```text
+w_c = N / (K * N_c)
+```
+
+Here `N` is the number of training records, `K` is the number of frozen
+classes, and `N_c` is the training count for class `c`. Weighting may improve a
+less frequent class's recall while reducing its precision or degrading another
+class, so validation Macro F1 and the full per-class/confusion-matrix deltas
+determine the policy. Frequency alone is not treated as proof that imbalance
+caused an error; label ambiguity and overlapping ticket semantics remain
+possible explanations.
+
+The Phase 2.9 classical loader opens only train and validation records/features.
+The test set remains isolated until a weighting policy has been selected.
+
+Run the imbalance analysis and persist the train-only policy:
+
+```bash
+.venv/bin/python -m ticket_classification.run_class_weighting analyze
+```
+
+Run the controlled weighted Logistic Regression and Linear SVM experiments:
+
+```bash
+.venv/bin/python -m ticket_classification.run_class_weighting classical --model all
+```
+
+Each weighted classical experiment reuses the fitted Phase 2.3 vectorizer and
+sparse features, changes only `class_weight` to `"balanced"`, evaluates only
+the validation split, reload-verifies its model, and writes under
+`artifacts/classification/run/class_weighting/<model>/`.
+
+Validate the weighted Transformer configuration without optimization:
+
+```bash
+.venv-transformer/bin/python -m ticket_classification.train_transformer \
+  --class-weighting balanced \
+  --validate-only
+```
+
+Run the isolated 32-train/16-validation, one-epoch weighted smoke test:
+
+```bash
+.venv-transformer/bin/python -m ticket_classification.train_transformer \
+  --class-weighting balanced \
+  --smoke-test
+```
+
+The smoke test is an integration check, not model-quality evidence. It writes
+to `class_weighting/transformer_smoke/`, separate from both the Phase 2.8
+baseline and the real weighted run.
+
+Start the full weighted DistilBERT experiment manually:
+
+```bash
+.venv-transformer/bin/python -m ticket_classification.train_transformer \
+  --class-weighting balanced
+```
+
+The terminal identifies balanced weighted cross-entropy, prints the exact
+label-aligned weights, weighted training loss, learning rate, speed, validation
+metrics, per-class metrics, and best-checkpoint status. Weighted and unweighted
+loss values optimize different objectives and should not be compared directly.
+The full run writes to `artifacts/classification/run/class_weighting/transformer/`
+and never overwrites Phase 2.8 artifacts.
+
+After weighted training, generate the validation-only comparison and policy:
+
+```bash
+.venv/bin/python -m ticket_classification.run_class_weighting compare
+```
+
+Missing results remain `PENDING`; in particular, the DistilBERT policy cannot
+be finalized before the real weighted run exists. After reviewing and freezing
+the selected Transformer policy, run final test inference exactly once with the
+matching option. For a selected weighted Transformer:
+
+```bash
+.venv-transformer/bin/python -m ticket_classification.evaluate_transformer \
+  --class-weighting balanced \
+  --training-dir artifacts/classification/run/class_weighting/transformer
+```
+
+Phase 2.9 does not implement threshold tuning, calibration, oversampling,
+focal loss, hyperparameter search, or any Phase 2.10 functionality.

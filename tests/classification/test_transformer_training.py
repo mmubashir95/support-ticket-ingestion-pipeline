@@ -16,8 +16,11 @@ from ticket_classification.transformer_training import (
     TrainingHistoryEntry,
     TransformerTrainingConfig,
     build_data_loader,
+    calculate_transformer_class_weights,
+    class_weight_tensor,
     compute_transformer_metrics,
     evaluate_model,
+    forward_with_configured_loss,
     load_test_data,
     load_training_data,
     run_final_test_evaluation,
@@ -76,11 +79,57 @@ def test_training_configuration_is_frozen_and_unweighted() -> None:
     assert config.weight_decay == 0.01
     assert config.best_model_metric == "macro_f1"
     assert config.class_weight is None
+    assert config.class_weighting == "none"
     assert config.early_stopping_enabled is False
     with pytest.raises(ValidationError):
         TransformerTrainingConfig(class_weight="balanced")
     with pytest.raises(ValidationError):
         TransformerTrainingConfig(label_order=("Incident", "Change", "Problem", "Request"))
+
+
+def test_weighted_configuration_preserves_baseline_hyperparameters() -> None:
+    baseline = TransformerTrainingConfig()
+    weighted = TransformerTrainingConfig(class_weighting="balanced")
+    changed = {
+        key for key, value in baseline.model_dump().items()
+        if weighted.model_dump()[key] != value
+    }
+    assert changed == {"class_weighting"}
+
+
+def test_transformer_weights_follow_label_ids_and_training_counts() -> None:
+    records = [
+        SimpleNamespace(label=0),
+        SimpleNamespace(label=1), SimpleNamespace(label=1),
+        SimpleNamespace(label=2),
+        SimpleNamespace(label=3), SimpleNamespace(label=3),
+        SimpleNamespace(label=3), SimpleNamespace(label=3),
+    ]
+    config = TransformerTrainingConfig(class_weighting="balanced")
+    weights = calculate_transformer_class_weights(records, config)
+    assert list(weights) == list(DEFAULT_LABEL_ORDER)
+    assert weights == {"Change": 2.0, "Incident": 1.0, "Problem": 2.0, "Request": 0.5}
+    tensor = class_weight_tensor(records, config, torch.device("cpu"))
+    assert tensor.tolist() == [2.0, 1.0, 2.0, 0.5]
+
+
+def test_weighted_loss_matches_pytorch_and_backpropagates() -> None:
+    model = TinyClassifier()
+    batch = {
+        "input_ids": torch.tensor([[101, 102], [101, 20]]),
+        "attention_mask": torch.ones((2, 2), dtype=torch.long),
+        "labels": torch.tensor([0, 3]),
+    }
+    weights = torch.tensor([2.0, 1.0, 1.0, 0.5])
+    output, loss = forward_with_configured_loss(model, batch, weights)
+    expected = torch.nn.functional.cross_entropy(output.logits, batch["labels"], weight=weights)
+    assert torch.equal(loss, expected)
+    loss.backward()
+    assert model.classifier.weight.grad is not None
+    before = model.classifier.weight.detach().clone()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    optimizer.step()
+    assert not torch.equal(before, model.classifier.weight.detach())
 
 
 def test_model_configuration_has_exact_labels() -> None:
@@ -186,6 +235,37 @@ def test_smoke_training_is_limited_saves_and_reloads(tmp_path, monkeypatch) -> N
     assert (tmp_path / "validation_predictions.jsonl").read_text().count("\n") == 16
     history = json.loads((tmp_path / "training_history.json").read_text())
     assert len(history) == 1 and history[0]["step"] == 4
+
+
+def test_weighted_smoke_training_uses_weighted_loss_and_isolated_output(tmp_path, monkeypatch) -> None:
+    baseline_dir = tmp_path / "unweighted-baseline"
+    baseline_dir.mkdir()
+    sentinel = baseline_dir / "keep.txt"
+    sentinel.write_text("unchanged", encoding="utf-8")
+    weighted_dir = tmp_path / "weighted-smoke"
+
+    def reload_model(directory):
+        model = TinyClassifier()
+        model.load_state_dict(torch.load(Path(directory) / "tiny_model.pt", map_location="cpu"))
+        return model
+
+    monkeypatch.setattr(
+        "transformers.AutoModelForSequenceClassification.from_pretrained", reload_model
+    )
+    manifest = run_training(
+        DATASET_DIR,
+        weighted_dir,
+        TransformerTrainingConfig(class_weighting="balanced"),
+        smoke_test=True,
+        model_and_tokenizer=(TinyClassifier(), TinyTokenizer()),
+    )
+    assert manifest["smoke_test"] is True
+    assert manifest["class_weighting"] == "balanced"
+    assert manifest["loss"] == "balanced weighted cross_entropy"
+    assert list(manifest["class_weights"]) == list(DEFAULT_LABEL_ORDER)
+    assert manifest["class_weight_source_split"] == "train"
+    assert (weighted_dir / "best_model" / "tiny_model.pt").exists()
+    assert sentinel.read_text(encoding="utf-8") == "unchanged"
 
 
 def test_final_test_evaluation_is_inference_only_and_persists_outputs(tmp_path, monkeypatch) -> None:

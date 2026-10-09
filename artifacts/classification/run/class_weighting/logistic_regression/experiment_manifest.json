@@ -1,0 +1,83 @@
+{
+  "configuration": {
+    "C": 1.0,
+    "class_weight": "balanced",
+    "max_iterations": 1000,
+    "penalty": "l2",
+    "random_seed": 42,
+    "solver": "lbfgs"
+  },
+  "created_at": "2026-10-09T15:38:49.280240+00:00",
+  "dataset_version": "ds_6fa2f19cf683",
+  "experiment_id": "weighted_logistic_regression_eb0464105f4e",
+  "model_type": "logistic_regression",
+  "reload_verified": true,
+  "split_version": "split_d1f67d41500f",
+  "test_set_used": false,
+  "training_time": 1.3789279170000555,
+  "validation_metrics": {
+    "accuracy": 0.8404850746268657,
+    "class_order": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "macro_f1": 0.8529863388255199,
+    "macro_precision": 0.8488325348620853,
+    "macro_recall": 0.8588514347528231,
+    "per_class": {
+      "Change": {
+        "f1": 0.9593679458239278,
+        "precision": 0.9486607142857143,
+        "recall": 0.9703196347031964,
+        "support": 438
+      },
+      "Incident": {
+        "f1": 0.8026514010244049,
+        "precision": 0.8330206378986866,
+        "recall": 0.7744186046511627,
+        "support": 1720
+      },
+      "Problem": {
+        "f1": 0.6621409921671019,
+        "precision": 0.6258637709772952,
+        "recall": 0.7028824833702882,
+        "support": 902
+      },
+      "Request": {
+        "f1": 0.987785016286645,
+        "precision": 0.987785016286645,
+        "recall": 0.987785016286645,
+        "support": 1228
+      }
+    },
+    "weighted_f1": 0.8421209759719176,
+    "zero_division": 0
+  },
+  "weighting_policy": {
+    "calculation_formula": "w_c = N / (K * N_c)",
+    "class_counts": {
+      "Change": 2045,
+      "Incident": 8026,
+      "Problem": 4208,
+      "Request": 5731
+    },
+    "class_order": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "class_weights": {
+      "Change": 2.446210268948655,
+      "Incident": 0.6232868178420135,
+      "Problem": 1.1888070342205324,
+      "Request": 0.8728843133833537
+    },
+    "dataset_version": "ds_6fa2f19cf683",
+    "source_split": "train",
+    "split_version": "split_d1f67d41500f",
+    "weighting_strategy": "balanced"
+  }
+}

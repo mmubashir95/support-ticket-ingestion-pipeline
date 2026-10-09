@@ -1,0 +1,25 @@
+{
+  "calculation_formula": "w_c = N / (K * N_c)",
+  "class_counts": {
+    "Change": 2045,
+    "Incident": 8026,
+    "Problem": 4208,
+    "Request": 5731
+  },
+  "class_order": [
+    "Change",
+    "Incident",
+    "Problem",
+    "Request"
+  ],
+  "class_weights": {
+    "Change": 2.446210268948655,
+    "Incident": 0.6232868178420135,
+    "Problem": 1.1888070342205324,
+    "Request": 0.8728843133833537
+  },
+  "dataset_version": "ds_6fa2f19cf683",
+  "source_split": "train",
+  "split_version": "split_d1f67d41500f",
+  "weighting_strategy": "balanced"
+}

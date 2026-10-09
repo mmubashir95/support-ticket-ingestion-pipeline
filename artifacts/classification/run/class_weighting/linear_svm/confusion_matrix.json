@@ -1,0 +1,42 @@
+{
+  "column_labels": [
+    "Change",
+    "Incident",
+    "Problem",
+    "Request"
+  ],
+  "columns": "predicted_label",
+  "row_labels": [
+    "Change",
+    "Incident",
+    "Problem",
+    "Request"
+  ],
+  "rows": "actual_label",
+  "values": [
+    [
+      426,
+      4,
+      0,
+      8
+    ],
+    [
+      0,
+      1502,
+      216,
+      2
+    ],
+    [
+      2,
+      284,
+      611,
+      5
+    ],
+    [
+      5,
+      0,
+      3,
+      1220
+    ]
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "epoch": 3.0,
+  "path": "artifacts/classification/run/class_weighting/transformer/checkpoints/checkpoint-3753",
+  "step": 3753,
+  "validation_macro_f1": 0.838770634295704
+}

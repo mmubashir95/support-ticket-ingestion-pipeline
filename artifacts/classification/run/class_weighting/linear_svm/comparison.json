@@ -1,0 +1,171 @@
+{
+  "confusion_matrix": {
+    "column_labels": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "largest_changed_misclassifications": [
+      {
+        "actual_label": "Problem",
+        "difference": -58,
+        "predicted_label": "Incident"
+      },
+      {
+        "actual_label": "Incident",
+        "difference": 51,
+        "predicted_label": "Problem"
+      },
+      {
+        "actual_label": "Change",
+        "difference": -4,
+        "predicted_label": "Incident"
+      },
+      {
+        "actual_label": "Change",
+        "difference": -1,
+        "predicted_label": "Request"
+      },
+      {
+        "actual_label": "Incident",
+        "difference": 1,
+        "predicted_label": "Request"
+      }
+    ],
+    "row_labels": [
+      "Change",
+      "Incident",
+      "Problem",
+      "Request"
+    ],
+    "values_difference_weighted_minus_unweighted": [
+      [
+        5,
+        -4,
+        0,
+        -1
+      ],
+      [
+        0,
+        -52,
+        51,
+        1
+      ],
+      [
+        0,
+        -58,
+        58,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0
+      ]
+    ]
+  },
+  "decision_rule": "Prefer weighted only when validation Macro F1 improves; inspect all per-class trade-offs.",
+  "minority_class": "Change",
+  "model_type": "linear_svm",
+  "per_class": {
+    "Change": {
+      "f1": {
+        "difference": 0.005899618977417087,
+        "unweighted": 0.9722863741339491,
+        "weighted": 0.9781859931113662
+      },
+      "precision": {
+        "difference": 0.00018885843171956296,
+        "unweighted": 0.9836448598130841,
+        "weighted": 0.9838337182448037
+      },
+      "recall": {
+        "difference": 0.011415525114155223,
+        "unweighted": 0.9611872146118722,
+        "weighted": 0.9726027397260274
+      }
+    },
+    "Incident": {
+      "f1": {
+        "difference": -0.0017754381992792778,
+        "unweighted": 0.8576158940397351,
+        "weighted": 0.8558404558404559
+      },
+      "precision": {
+        "difference": 0.022929674663161315,
+        "unweighted": 0.8161764705882353,
+        "weighted": 0.8391061452513966
+      },
+      "recall": {
+        "difference": -0.03023255813953485,
+        "unweighted": 0.9034883720930232,
+        "weighted": 0.8732558139534884
+      }
+    },
+    "Problem": {
+      "f1": {
+        "difference": 0.024088627822624775,
+        "unweighted": 0.6814540973505854,
+        "weighted": 0.7055427251732102
+      },
+      "precision": {
+        "difference": -0.030845712948882942,
+        "unweighted": 0.7669902912621359,
+        "weighted": 0.736144578313253
+      },
+      "recall": {
+        "difference": 0.06430155210643018,
+        "unweighted": 0.6130820399113082,
+        "weighted": 0.6773835920177383
+      }
+    },
+    "Request": {
+      "f1": {
+        "difference": 0.0,
+        "unweighted": 0.9906617945594803,
+        "weighted": 0.9906617945594803
+      },
+      "precision": {
+        "difference": 0.0,
+        "unweighted": 0.9878542510121457,
+        "weighted": 0.9878542510121457
+      },
+      "recall": {
+        "difference": 0.0,
+        "unweighted": 0.993485342019544,
+        "weighted": 0.993485342019544
+      }
+    }
+  },
+  "selection_split": "validation",
+  "summary": {
+    "accuracy": {
+      "difference": 0.0025652985074626766,
+      "unweighted": 0.8740671641791045,
+      "weighted": 0.8766324626865671
+    },
+    "macro_f1": {
+      "difference": 0.007053202150190674,
+      "unweighted": 0.8755045400209375,
+      "weighted": 0.8825577421711281
+    },
+    "macro_precision": {
+      "difference": -0.0019317949635004883,
+      "unweighted": 0.8886664681689003,
+      "weighted": 0.8867346732053998
+    },
+    "macro_recall": {
+      "difference": 0.011371129770262556,
+      "unweighted": 0.8678107421589369,
+      "weighted": 0.8791818719291995
+    },
+    "weighted_f1": {
+      "difference": 0.004957607673823583,
+      "unweighted": 0.8703743118349543,
+      "weighted": 0.8753319195087779
+    }
+  },
+  "test_set_used": false
+}

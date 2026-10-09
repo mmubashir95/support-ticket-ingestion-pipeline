@@ -9,6 +9,13 @@ __pycache__/
 # Large generated transformer training artifacts
 artifacts/classification/run/transformer_training/checkpoints/
 artifacts/classification/run/transformer_training/best_model/
+artifacts/classification/run/class_weighting/transformer/checkpoints/
+artifacts/classification/run/class_weighting/transformer/best_model/
+artifacts/classification/run/class_weighting/transformer_smoke/
+artifacts/classification/run/class_weighting/*/weighted_model.joblib
+artifacts/classification/run/class_weighting/*/validation_predictions.jsonl
+artifacts/classification/run/class_weighting/transformer/*.safetensors
+artifacts/classification/run/class_weighting/transformer/*.pt
 
 # C extensions
 *.so

@@ -22,7 +22,7 @@ from test_features import frozen_splits
 @pytest.mark.parametrize("values", [
     {"C": 0}, {"C": -1}, {"C": float("inf")}, {"C": float("nan")},
     {"max_iterations": 0}, {"max_iterations": -1}, {"max_iterations": True},
-    {"solver": "liblinear"}, {"penalty": "l1"}, {"class_weight": "balanced"},
+    {"solver": "liblinear"}, {"penalty": "l1"}, {"class_weight": "unsupported"},
     {"class_weight": {"Incident": 2}}, {"random_seed": -1}, {"unknown": 1},
 ])
 def test_invalid_configuration(values):

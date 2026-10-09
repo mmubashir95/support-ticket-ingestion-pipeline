@@ -1,4 +1,4 @@
-"""Simple unweighted classical baselines over existing sparse features."""
+"""Simple classical baselines and the explicit Phase 2.9 weighting switch."""
 
 from dataclasses import dataclass
 import statistics
@@ -15,24 +15,24 @@ from sklearn.svm import LinearSVC
 
 
 class LogisticRegressionConfig(BaseModel):
-    """Intentionally restrict Phase 2.4 to one reproducible baseline family."""
+    """Frozen baseline settings with the Phase 2.9 weighting switch."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
     solver: Literal["lbfgs"] = "lbfgs"
     penalty: Literal["l2"] = "l2"
     C: float = Field(default=1.0, gt=0, allow_inf_nan=False)
     max_iterations: StrictInt = Field(default=1000, gt=0)
-    class_weight: None = None
+    class_weight: Literal["balanced"] | None = None
     random_seed: StrictInt = Field(default=42, ge=0, le=4294967295)
 
 
 class LinearSVMConfig(BaseModel):
-    """Frozen Phase 2.5 Linear SVM baseline configuration."""
+    """Frozen baseline settings with the Phase 2.9 weighting switch."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
     model_type: Literal["linear_svm"] = "linear_svm"
     C: float = Field(default=1.0, gt=0, allow_inf_nan=False)
-    class_weight: None = None
+    class_weight: Literal["balanced"] | None = None
     max_iterations: StrictInt = Field(default=1000, gt=0)
     tolerance: float = Field(default=1e-4, gt=0, allow_inf_nan=False)
     dual: Literal["auto"] = "auto"

@@ -56,7 +56,7 @@ EXPECTED_TOKENIZED_FINGERPRINTS = {
 
 
 class TransformerTrainingConfig(BaseModel):
-    """Frozen unweighted baseline configuration for the user-run training job."""
+    """Frozen baseline configuration with an isolated Phase 2.9 loss switch."""
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -86,6 +86,9 @@ class TransformerTrainingConfig(BaseModel):
     greater_is_better: Literal[True] = True
     early_stopping_enabled: StrictBool = False
     early_stopping_patience: StrictInt = Field(default=2, gt=0)
+    class_weighting: Literal["none", "balanced"] = "none"
+    # Retained so old Phase 2.8 manifests remain readable. Phase 2.9 callers
+    # use class_weighting; arbitrary estimator-style values stay forbidden.
     class_weight: None = None
     device_preference: Literal["auto", "cuda", "mps", "cpu"] = "auto"
     gradient_clip_norm: float = Field(default=1.0, gt=0, allow_inf_nan=False)
@@ -347,7 +350,51 @@ def compute_transformer_metrics(actual_ids, predicted_ids, label_order):
     return evaluate_predictions(actual, predicted, list(label_order))
 
 
-def evaluate_model(model, loader, device, label_order) -> ValidationResult:
+def calculate_transformer_class_weights(records, config: TransformerTrainingConfig) -> dict[str, float]:
+    """Calculate balanced weights from training label IDs in frozen label order."""
+
+    from ticket_classification.class_weighting import calculate_balanced_class_weights
+
+    labels = []
+    for record in records:
+        if record.label not in range(config.num_labels):
+            raise ValueError(f"training record has unknown label ID: {record.label}")
+        labels.append(config.label_order[record.label])
+    return calculate_balanced_class_weights(labels, config.label_order)
+
+
+def class_weight_tensor(records, config: TransformerTrainingConfig, device):
+    """Create label-ID-aligned float weights on the active training device."""
+
+    import torch
+
+    if config.class_weighting == "none":
+        return None
+    weights = calculate_transformer_class_weights(records, config)
+    return torch.tensor(
+        [weights[label] for label in config.label_order],
+        dtype=torch.float32,
+        device=device,
+    )
+
+
+def forward_with_configured_loss(model, device_batch, weights=None):
+    """Return logits and the exact loss used for backward/evaluation."""
+
+    if weights is None:
+        output = model(**device_batch)
+        if output.loss is None:
+            raise RuntimeError("model did not return unweighted classification loss")
+        return output, output.loss
+    import torch.nn.functional as functional
+
+    labels = device_batch["labels"]
+    output = model(**{key: value for key, value in device_batch.items() if key != "labels"})
+    loss = functional.cross_entropy(output.logits, labels, weight=weights)
+    return output, loss
+
+
+def evaluate_model(model, loader, device, label_order, class_weights=None) -> ValidationResult:
     import torch
 
     model.eval()
@@ -358,11 +405,11 @@ def evaluate_model(model, loader, device, label_order) -> ValidationResult:
         for batch in loader:
             record_ids = batch.pop("record_ids")
             device_batch = {key: value.to(device) for key, value in batch.items()}
-            output = model(**device_batch)
+            output, loss = forward_with_configured_loss(model, device_batch, class_weights)
             probabilities = torch.softmax(output.logits, dim=-1)
             predictions = output.logits.argmax(dim=-1)
             count = len(record_ids)
-            total_loss += float(output.loss.detach().cpu()) * count
+            total_loss += float(loss.detach().cpu()) * count
             total_records += count
             labels = device_batch["labels"].detach().cpu().tolist()
             predicted = predictions.detach().cpu().tolist()
@@ -394,12 +441,29 @@ def select_best_checkpoint(current: BestCheckpoint | None, candidate: BestCheckp
     return current
 
 
-def print_training_summary(config, data, device, output_dir, *, smoke_test=False, train_count=None, validation_count=None):
+def portable_artifact_path(path: str | Path) -> str:
+    """Prefer repository-relative artifact references without requiring them."""
+
+    resolved = Path(path).resolve()
+    try:
+        return str(resolved.relative_to(Path.cwd().resolve()))
+    except ValueError:
+        return str(resolved)
+
+
+def print_training_summary(config, data, device, output_dir, *, smoke_test=False, train_count=None, validation_count=None, class_weights=None):
     train_count = train_count or len(data.train)
     validation_count = validation_count or len(data.validation)
     batches = math.ceil(train_count / config.train_batch_size)
     total_steps = batches * config.epochs
-    title = "SMOKE TEST MODE" if smoke_test else "Transformer Training Configuration"
+    title = (
+        "Phase 2.9 — Weighted DistilBERT Training (SMOKE TEST MODE)"
+        if smoke_test and config.class_weighting == "balanced"
+        else "SMOKE TEST MODE" if smoke_test
+        else "Phase 2.9 — Weighted DistilBERT Training"
+        if config.class_weighting == "balanced"
+        else "Transformer Training Configuration"
+    )
     print("=" * 72)
     print(title)
     print("=" * 72)
@@ -426,11 +490,16 @@ def print_training_summary(config, data, device, output_dir, *, smoke_test=False
         ("Primary metric", config.best_model_metric),
         ("Checkpoint policy", "every epoch; best by validation macro_f1"),
         ("Early stopping", "disabled" if not config.early_stopping_enabled else f"patience={config.early_stopping_patience}"),
-        ("Class weighting", "disabled"),
+        ("Weighting policy", config.class_weighting),
+        ("Loss", "balanced weighted cross-entropy" if class_weights is not None else "standard cross-entropy"),
         ("Output", Path(output_dir).resolve()),
     ]
     for name, value in values:
         print(f"{name}: {value}")
+    if class_weights is not None:
+        print("Class weights:")
+        for label, weight in zip(config.label_order, class_weights.detach().cpu().tolist()):
+            print(f"  {label:<8} {weight:.9f}")
     print("=" * 72, flush=True)
 
 
@@ -449,9 +518,14 @@ def validate_only(dataset_dir, output_dir, config=None) -> dict[str, Any]:
     batch = next(iter(loader))
     before = [parameter.detach().clone() for parameter in model.parameters()]
     model.to(device).eval()
+    weights = class_weight_tensor(data.train, settings, device)
     with torch.no_grad():
-        output = model(**{key: value.to(device) for key, value in batch.items() if key != "record_ids"})
-    if output.logits.shape != (2, settings.num_labels) or output.loss is None:
+        output, loss = forward_with_configured_loss(
+            model,
+            {key: value.to(device) for key, value in batch.items() if key != "record_ids"},
+            weights,
+        )
+    if output.logits.shape != (2, settings.num_labels) or loss is None:
         raise RuntimeError("validate-only forward pass returned invalid logits or loss")
     if any(not torch.equal(old, new.detach().cpu()) for old, new in zip(before, model.parameters())):
         raise RuntimeError("validate-only changed model parameters")
@@ -469,8 +543,12 @@ def validate_only(dataset_dir, output_dir, config=None) -> dict[str, Any]:
         "optimizer_steps": 0,
         "parameters_unchanged": True,
         "test_set_loaded": False,
+        "class_weighting": settings.class_weighting,
+        "class_weights": None if weights is None else {
+            label: float(value) for label, value in zip(settings.label_order, weights.detach().cpu())
+        },
     }
-    print_training_summary(settings, data, device, output_dir)
+    print_training_summary(settings, data, device, output_dir, class_weights=weights)
     print("VALIDATE-ONLY PASSED", json.dumps(result, sort_keys=True), flush=True)
     return result
 
@@ -501,6 +579,7 @@ def run_training(
     model, tokenizer = model_and_tokenizer or load_model_and_tokenizer(settings)
     validate_model_configuration(model, settings)
     model.to(device)
+    weights = class_weight_tensor(data.train, settings, device)
     collator = DynamicPaddingCollator(tokenizer.pad_token_id)
     train_loader = build_data_loader(
         train_records, settings.train_batch_size, collator, shuffle=True, seed=settings.random_seed
@@ -516,6 +595,7 @@ def run_training(
     print_training_summary(
         settings, data, device, output, smoke_test=smoke_test,
         train_count=len(train_records), validation_count=len(validation_records),
+        class_weights=weights,
     )
     optimizer = torch.optim.AdamW(model.parameters(), lr=settings.learning_rate, weight_decay=settings.weight_decay)
     total_steps = len(train_loader) * settings.epochs
@@ -536,25 +616,27 @@ def run_training(
             batch.pop("record_ids")
             device_batch = {key: value.to(device) for key, value in batch.items()}
             optimizer.zero_grad(set_to_none=True)
-            result = model(**device_batch)
-            result.loss.backward()
+            result, loss = forward_with_configured_loss(model, device_batch, weights)
+            loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), settings.gradient_clip_norm)
             optimizer.step()
             scheduler.step()
             global_step += 1
             count = len(device_batch["labels"])
-            running_loss += float(result.loss.detach().cpu()) * count
+            running_loss += float(loss.detach().cpu()) * count
             epoch_records += count
             if global_step % settings.logging_steps == 0 or batch_index == len(train_loader):
                 elapsed = max(perf_counter() - start, 1e-12)
                 print(
                     f"epoch={epoch_index + 1}/{settings.epochs} step={global_step}/{total_steps} "
-                    f"train_loss={running_loss / epoch_records:.6f} "
+                    f"{'weighted_' if weights is not None else ''}train_loss={running_loss / epoch_records:.6f} "
                     f"learning_rate={scheduler.get_last_lr()[0]:.8g} "
                     f"steps_per_second={global_step / elapsed:.3f}",
                     flush=True,
                 )
-        evaluation = evaluate_model(model, validation_loader, device, settings.label_order)
+        evaluation = evaluate_model(
+            model, validation_loader, device, settings.label_order, weights
+        )
         metrics = evaluation.metrics
         checkpoint_dir = checkpoints / f"checkpoint-{global_step}"
         model.save_pretrained(checkpoint_dir, safe_serialization=True)
@@ -564,7 +646,7 @@ def run_training(
             checkpoint_dir / "training_state.pt",
         )
         candidate = BestCheckpoint(
-            path=str(checkpoint_dir.resolve()),
+            path=portable_artifact_path(checkpoint_dir),
             epoch=float(epoch_index + 1),
             step=global_step,
             validation_macro_f1=metrics["macro_f1"],
@@ -600,6 +682,14 @@ def run_training(
             f"weighted_f1={metrics['weighted_f1']:.6f} best_macro_f1={best.validation_macro_f1:.6f} "
             f"best_checkpoint={best.path}", flush=True,
         )
+        for label in settings.label_order:
+            class_metrics = metrics["per_class"][label]
+            print(
+                f"validation class={label} precision={class_metrics['precision']:.6f} "
+                f"recall={class_metrics['recall']:.6f} f1={class_metrics['f1']:.6f} "
+                f"support={class_metrics['support']}",
+                flush=True,
+            )
         _write_json(output / "training_history.json", [item.model_dump(mode="json") for item in history])
         _write_json(output / "best_checkpoint.json", best.model_dump(mode="json"))
         if settings.early_stopping_enabled and no_improvement >= settings.early_stopping_patience:
@@ -611,7 +701,9 @@ def run_training(
 
     best_model = AutoModelForSequenceClassification.from_pretrained(best_model_dir).to(device)
     validate_model_configuration(best_model, settings)
-    final_validation = evaluate_model(best_model, validation_loader, device, settings.label_order)
+    final_validation = evaluate_model(
+        best_model, validation_loader, device, settings.label_order, weights
+    )
     _write_json(output / "training_config.json", settings.model_dump(mode="json"))
     _write_json(output / "validation_metrics.json", {"loss": final_validation.loss, **final_validation.metrics})
     _write_json(output / "validation_confusion_matrix.json", final_validation.confusion_matrix)
@@ -637,10 +729,15 @@ def run_training(
             "transformers": transformers.__version__, "platform": platform.platform(),
         },
         "reproducibility": "Python, NumPy and PyTorch seeds are set; exact GPU/MPS bitwise determinism is not claimed.",
-        "class_weighting": "disabled",
-        "loss": "unweighted cross_entropy",
+        "class_weighting": settings.class_weighting,
+        "class_weights": None if weights is None else {
+            label: float(value) for label, value in zip(settings.label_order, weights.detach().cpu())
+        },
+        "class_weight_source_split": "train" if weights is not None else None,
+        "class_weight_formula": "w_c = N / (K * N_c)" if weights is not None else None,
+        "loss": "balanced weighted cross_entropy" if weights is not None else "unweighted cross_entropy",
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "output_path": str(output.resolve()),
+        "output_path": portable_artifact_path(output),
     }
     _write_json(output / "training_manifest.json", manifest)
     return manifest
@@ -674,9 +771,14 @@ def run_final_test_evaluation(dataset_dir, training_dir, config=None) -> dict[st
                 f"training manifest {name} mismatch: "
                 f"expected={expected!r}, actual={training_manifest.get(name)!r}"
             )
-    if training_manifest.get("configuration") != settings.model_dump(mode="json"):
+    persisted_configuration = training_manifest.get("configuration")
+    expected_configuration = settings.model_dump(mode="json")
+    # Phase 2.8 manifests predate the explicit class_weighting field.
+    if isinstance(persisted_configuration, dict):
+        persisted_configuration = {"class_weighting": "none", **persisted_configuration}
+    if persisted_configuration != expected_configuration:
         raise ValueError("training manifest configuration differs from final evaluation")
-    test, _ = load_test_data(dataset_dir, settings)
+    test, training_data = load_test_data(dataset_dir, settings)
     device = resolve_device(settings.device_preference)
     model = AutoModelForSequenceClassification.from_pretrained(best_model_dir).to(device)
     tokenizer = AutoTokenizer.from_pretrained(best_model_dir)
@@ -685,7 +787,8 @@ def run_final_test_evaluation(dataset_dir, training_dir, config=None) -> dict[st
         test, settings.eval_batch_size, DynamicPaddingCollator(tokenizer.pad_token_id),
         shuffle=False, seed=settings.random_seed,
     )
-    result = evaluate_model(model, loader, device, settings.label_order)
+    weights = class_weight_tensor(training_data.train, settings, device)
+    result = evaluate_model(model, loader, device, settings.label_order, weights)
     _write_json(training_root / "test_metrics.json", {"loss": result.loss, **result.metrics})
     _write_json(training_root / "test_confusion_matrix.json", result.confusion_matrix)
     _write_jsonl(training_root / "test_predictions.jsonl", result.predictions)
@@ -699,6 +802,7 @@ def run_final_test_evaluation(dataset_dir, training_dir, config=None) -> dict[st
         "inference_only": True,
         "checkpoint_selection_changed": False,
         "device": str(device),
+        "class_weighting": settings.class_weighting,
     }
     _write_json(training_root / "test_evaluation_manifest.json", report)
     print("FINAL TEST EVALUATION", json.dumps(report["metrics"], sort_keys=True), flush=True)
