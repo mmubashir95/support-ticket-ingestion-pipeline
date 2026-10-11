@@ -1,0 +1,442 @@
+{
+  "benchmark_evidence_status": "partial",
+  "created_at": "2026-10-11T15:35:48.987350+00:00",
+  "dataset_version": "ds_6fa2f19cf683",
+  "evaluation_split": "test",
+  "label_order": [
+    "Change",
+    "Incident",
+    "Problem",
+    "Request"
+  ],
+  "limitations": [
+    "The test split is used here for the final comparison and must not be used for further tuning.",
+    "Calibration ECE is validation threshold-selection evidence, not a test-set estimate.",
+    "Exact McNemar tests compare accuracy/correctness; paired bootstrap intervals compare Macro F1.",
+    "No operational rejection threshold is selected because no business acceptance criterion was supplied.",
+    "Infrastructure cost is unavailable unless an hourly rate was supplied to Phase 2.11."
+  ],
+  "missing_benchmark_evidence": [
+    "logistic_regression CPU P50/P95",
+    "linear_svm CPU P50/P95",
+    "transformer CPU P50/P95"
+  ],
+  "models": {
+    "linear_svm": {
+      "calibration": {
+        "method": "temperature_scaling",
+        "validation_threshold_selection_ece": 0.022164376076336787
+      },
+      "confusion_matrix": {
+        "column_labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "columns": "predicted_label",
+        "row_labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "rows": "actual_label",
+        "values": [
+          [
+            428,
+            4,
+            2,
+            5
+          ],
+          [
+            3,
+            1489,
+            228,
+            0
+          ],
+          [
+            1,
+            319,
+            577,
+            5
+          ],
+          [
+            4,
+            1,
+            1,
+            1222
+          ]
+        ]
+      },
+      "cost": "Local model; infrastructure rate not supplied",
+      "display_name": "TF-IDF + Linear SVM",
+      "engineering": {
+        "cost_per_1000": null,
+        "cpu_p50_ms": null,
+        "cpu_p95_ms": null,
+        "gpu_p50_ms": null,
+        "model_size_bytes": 2680659
+      },
+      "explainability": "High",
+      "operational_complexity": "Low",
+      "probability_output": "Calibrated from margins",
+      "quality": {
+        "accuracy": 0.8664024248076475,
+        "class_order": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "macro_f1": 0.8723862897194293,
+        "macro_precision": 0.8772335205886327,
+        "macro_recall": 0.8688610780097579,
+        "per_class": {
+          "Change": {
+            "f1": 0.9782857142857143,
+            "precision": 0.981651376146789,
+            "recall": 0.9749430523917996,
+            "support": 439
+          },
+          "Incident": {
+            "f1": 0.8429097084630626,
+            "precision": 0.8212906784335355,
+            "recall": 0.8656976744186047,
+            "support": 1720
+          },
+          "Problem": {
+            "f1": 0.6748538011695906,
+            "precision": 0.7141089108910891,
+            "recall": 0.6396895787139689,
+            "support": 902
+          },
+          "Request": {
+            "f1": 0.9934959349593496,
+            "precision": 0.9918831168831169,
+            "recall": 0.995114006514658,
+            "support": 1228
+          }
+        },
+        "weighted_f1": 0.8645379491520048,
+        "zero_division": 0
+      },
+      "selected_artifact": "/Users/mohammadmubashir/VSCode/support-ticket-ingestion-pipeline/artifacts/classification/run/class_weighting/linear_svm/weighted_model.joblib",
+      "training_time_seconds": 0.2885751250000794
+    },
+    "logistic_regression": {
+      "calibration": {
+        "method": "temperature_scaling",
+        "validation_threshold_selection_ece": 0.013211572940422078
+      },
+      "confusion_matrix": {
+        "column_labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "columns": "predicted_label",
+        "row_labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "rows": "actual_label",
+        "values": [
+          [
+            424,
+            6,
+            2,
+            7
+          ],
+          [
+            7,
+            1363,
+            349,
+            1
+          ],
+          [
+            5,
+            286,
+            605,
+            6
+          ],
+          [
+            8,
+            1,
+            5,
+            1214
+          ]
+        ]
+      },
+      "cost": "Local model; infrastructure rate not supplied",
+      "display_name": "TF-IDF + Logistic Regression",
+      "engineering": {
+        "cost_per_1000": null,
+        "cpu_p50_ms": null,
+        "cpu_p95_ms": null,
+        "gpu_p50_ms": null,
+        "model_size_bytes": 2680791
+      },
+      "explainability": "High",
+      "operational_complexity": "Low",
+      "probability_output": "Native; temperature-scaled",
+      "quality": {
+        "accuracy": 0.8407554208440196,
+        "class_order": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "macro_f1": 0.851479068549108,
+        "macro_precision": 0.8490436214417696,
+        "macro_recall": 0.8544010878490296,
+        "per_class": {
+          "Change": {
+            "f1": 0.9603624009060022,
+            "precision": 0.954954954954955,
+            "recall": 0.9658314350797267,
+            "support": 439
+          },
+          "Incident": {
+            "f1": 0.8074644549763034,
+            "precision": 0.8230676328502415,
+            "recall": 0.7924418604651163,
+            "support": 1720
+          },
+          "Problem": {
+            "f1": 0.6494900697799249,
+            "precision": 0.6295525494276795,
+            "recall": 0.6707317073170732,
+            "support": 902
+          },
+          "Request": {
+            "f1": 0.988599348534202,
+            "precision": 0.988599348534202,
+            "recall": 0.988599348534202,
+            "support": 1228
+          }
+        },
+        "weighted_f1": 0.8417528560266889,
+        "zero_division": 0
+      },
+      "selected_artifact": "/Users/mohammadmubashir/VSCode/support-ticket-ingestion-pipeline/artifacts/classification/run/class_weighting/logistic_regression/weighted_model.joblib",
+      "training_time_seconds": 1.3789279170000555
+    },
+    "transformer": {
+      "calibration": {
+        "method": "temperature_scaling",
+        "validation_threshold_selection_ece": 0.02586500884069442
+      },
+      "confusion_matrix": {
+        "column_labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "columns": "predicted_label",
+        "row_labels": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "rows": "actual_label",
+        "values": [
+          [
+            422,
+            7,
+            5,
+            5
+          ],
+          [
+            3,
+            1470,
+            246,
+            1
+          ],
+          [
+            4,
+            415,
+            481,
+            2
+          ],
+          [
+            7,
+            1,
+            3,
+            1217
+          ]
+        ]
+      },
+      "cost": "Local model; infrastructure rate not supplied",
+      "display_name": "Transformer classifier",
+      "engineering": {
+        "cost_per_1000": null,
+        "cpu_p50_ms": null,
+        "cpu_p95_ms": null,
+        "gpu_p50_ms": 3.6126874997535197,
+        "model_size_bytes": 268783731
+      },
+      "explainability": "Medium/Low",
+      "operational_complexity": "Higher",
+      "probability_output": "Native softmax; temperature-scaled",
+      "quality": {
+        "accuracy": 0.8370249475402192,
+        "class_order": [
+          "Change",
+          "Incident",
+          "Problem",
+          "Request"
+        ],
+        "macro_f1": 0.839553592243957,
+        "macro_precision": 0.8480815577805003,
+        "macro_recall": 0.8350571394986467,
+        "per_class": {
+          "Change": {
+            "f1": 0.9645714285714285,
+            "precision": 0.9678899082568807,
+            "recall": 0.9612756264236902,
+            "support": 439
+          },
+          "Incident": {
+            "f1": 0.8137282037088293,
+            "precision": 0.7765451664025357,
+            "recall": 0.8546511627906976,
+            "support": 1720
+          },
+          "Problem": {
+            "f1": 0.5876603543066585,
+            "precision": 0.654421768707483,
+            "recall": 0.5332594235033259,
+            "support": 902
+          },
+          "Request": {
+            "f1": 0.9922543823889115,
+            "precision": 0.9934693877551021,
+            "recall": 0.991042345276873,
+            "support": 1228
+          }
+        },
+        "weighted_f1": 0.832738957491311,
+        "zero_division": 0
+      },
+      "selected_artifact": "/Users/mohammadmubashir/VSCode/support-ticket-ingestion-pipeline/artifacts/classification/run/transformer_training/checkpoints/checkpoint-3753",
+      "training_time_seconds": 1207.8538198330002
+    }
+  },
+  "pairwise_evidence": {
+    "linear_svm_vs_transformer": {
+      "left": "linear_svm",
+      "macro_f1_bootstrap": {
+        "ci95_lower": 0.021955833087774185,
+        "ci95_upper": 0.04427915712099982,
+        "left_minus_right_mean": 0.03305169398528703,
+        "repetitions": 2000,
+        "seed": 42
+      },
+      "mcnemar": {
+        "discordant_count": 574,
+        "left_only_correct": 350,
+        "right_only_correct": 224,
+        "statistically_significant_at_0_05": true,
+        "test": "two-sided exact McNemar (binomial form)",
+        "two_sided_exact_p_value": 1.6266983807895436e-07
+      },
+      "per_class_f1_difference": {
+        "Change": 0.01371428571428579,
+        "Incident": 0.02918150475423331,
+        "Problem": 0.08719344686293207,
+        "Request": 0.0012415525704381203
+      },
+      "right": "transformer"
+    },
+    "logistic_regression_vs_linear_svm": {
+      "left": "logistic_regression",
+      "macro_f1_bootstrap": {
+        "ci95_lower": -0.028219430270502447,
+        "ci95_upper": -0.01338064639404387,
+        "left_minus_right_mean": -0.021025604062270043,
+        "repetitions": 2000,
+        "seed": 42
+      },
+      "mcnemar": {
+        "discordant_count": 278,
+        "left_only_correct": 84,
+        "right_only_correct": 194,
+        "statistically_significant_at_0_05": true,
+        "test": "two-sided exact McNemar (binomial form)",
+        "two_sided_exact_p_value": 3.493579348798093e-11
+      },
+      "per_class_f1_difference": {
+        "Change": -0.01792331337971209,
+        "Incident": -0.0354452534867592,
+        "Problem": -0.025363731389665745,
+        "Request": -0.004896586425147675
+      },
+      "right": "linear_svm"
+    },
+    "logistic_regression_vs_transformer": {
+      "left": "logistic_regression",
+      "macro_f1_bootstrap": {
+        "ci95_lower": 0.0011172346829177978,
+        "ci95_upper": 0.023178753111782628,
+        "left_minus_right_mean": 0.012026089923016986,
+        "repetitions": 2000,
+        "seed": 42
+      },
+      "mcnemar": {
+        "discordant_count": 574,
+        "left_only_correct": 295,
+        "right_only_correct": 279,
+        "statistically_significant_at_0_05": false,
+        "test": "two-sided exact McNemar (binomial form)",
+        "two_sided_exact_p_value": 0.5312936859176335
+      },
+      "per_class_f1_difference": {
+        "Change": -0.0042090276654263015,
+        "Incident": -0.006263748732525887,
+        "Problem": 0.06182971547326632,
+        "Request": -0.003655033854709555
+      },
+      "right": "transformer"
+    }
+  },
+  "recommendation": {
+    "decision_rule": "highest frozen-test Macro F1; prefer the simpler model when quality is effectively tied",
+    "display_name": "TF-IDF + Linear SVM",
+    "rationale": "TF-IDF + Linear SVM has the highest final-test Macro F1. Its per-class results, calibration evidence, and measured operational profile are reported together; missing benchmark cells are not estimated.",
+    "selected_model": "linear_svm"
+  },
+  "schema_version": "phase_2_12_v1",
+  "selected_model_policy": {
+    "linear_svm": {
+      "feature_version": "tfidf_3275ba614aa6",
+      "manifest": "/Users/mohammadmubashir/VSCode/support-ticket-ingestion-pipeline/artifacts/classification/run/class_weighting/linear_svm/experiment_manifest.json",
+      "model_artifact": "/Users/mohammadmubashir/VSCode/support-ticket-ingestion-pipeline/artifacts/classification/run/class_weighting/linear_svm/weighted_model.joblib",
+      "prediction_artifact": "/Users/mohammadmubashir/VSCode/support-ticket-ingestion-pipeline/artifacts/classification/run/class_weighting/linear_svm/validation_predictions.jsonl",
+      "weighting": "balanced"
+    },
+    "logistic_regression": {
+      "feature_version": "tfidf_3275ba614aa6",
+      "manifest": "/Users/mohammadmubashir/VSCode/support-ticket-ingestion-pipeline/artifacts/classification/run/class_weighting/logistic_regression/experiment_manifest.json",
+      "model_artifact": "/Users/mohammadmubashir/VSCode/support-ticket-ingestion-pipeline/artifacts/classification/run/class_weighting/logistic_regression/weighted_model.joblib",
+      "prediction_artifact": "/Users/mohammadmubashir/VSCode/support-ticket-ingestion-pipeline/artifacts/classification/run/class_weighting/logistic_regression/validation_predictions.jsonl",
+      "weighting": "balanced"
+    },
+    "transformer": {
+      "checkpoint": "artifacts/classification/run/transformer_training/checkpoints/checkpoint-3753",
+      "manifest": "/Users/mohammadmubashir/VSCode/support-ticket-ingestion-pipeline/artifacts/classification/run/transformer_training/training_manifest.json",
+      "model_name": "distilbert/distilbert-base-uncased",
+      "prediction_artifact": "/Users/mohammadmubashir/VSCode/support-ticket-ingestion-pipeline/artifacts/classification/run/transformer_training/validation_predictions.jsonl",
+      "weighting": "none"
+    }
+  },
+  "split_version": "split_d1f67d41500f",
+  "test_record_count": 4289,
+  "threshold_status": "pending_business_acceptance_criterion"
+}
