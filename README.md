@@ -1157,3 +1157,189 @@ prediction audit, confidence analysis, split membership, uncalibrated metrics,
 calibration parameters and comparisons, threshold sweep, final policies, and
 report. `apply_prediction_decision` reloads those policies for future
 inference and does not require a true label.
+
+## Phase 2.11 — Batch inference and performance benchmarking
+
+Phase 2.11 benchmarks the three models selected by the Phase 2.9 and 2.10
+policies without retraining, changing the frozen split, or selecting a new
+production classifier:
+
+- balanced TF-IDF + Logistic Regression;
+- balanced TF-IDF + Linear SVM; and
+- the unweighted DistilBERT `checkpoint-3753`.
+
+The benchmark uses a deterministic sample from the frozen test split by
+default. It records the dataset and split identities, sample record IDs,
+sampling seed, and input-length distribution. The sample is used only as an
+inference workload: Phase 2.11 does not calculate classification quality,
+tune a model, or revise a threshold from it.
+
+Steady-state timing excludes model and artifact loading. Primary timing is
+end-to-end:
+
+```text
+classical: raw text -> fitted TF-IDF transform -> classifier -> label array
+transformer: raw text -> tokenization/dynamic padding -> device transfer
+             -> model -> argmax
+```
+
+The default batch sizes are `1, 8, 16, 32, 64`, with 5 warm-up iterations and
+30 measured repetitions. Measurements use `time.perf_counter()`. CUDA and MPS
+work is synchronized before and after timed inference. Throughput uses the
+actual number of processed tickets divided by total measured duration; a final
+short batch is not treated as full.
+
+### Prerequisites and strict artifact selection
+
+Activate the existing environment from the repository root:
+
+```bash
+cd /Users/mohammadmubashir/VCode/support-ticket-ingestion-pipeline
+source .venv/bin/activate
+```
+
+Install the declared project and test dependencies if needed:
+
+```bash
+python -m pip install -e '.[dev]'
+```
+
+The readiness check accepts only artifacts referenced by the frozen selection
+policies. It never falls back to a baseline model or downloads a Transformer
+checkpoint. The repository archive currently lacks:
+
+```text
+artifacts/classification/run/class_weighting/logistic_regression/weighted_model.joblib
+artifacts/classification/run/class_weighting/linear_svm/weighted_model.joblib
+artifacts/classification/run/transformer_training/checkpoints/checkpoint-3753/
+```
+
+Restore those exact selected artifacts before benchmarking. The Transformer
+checkpoint must include its configuration, weights, tokenizer configuration,
+and vocabulary, and the environment must have an importable PyTorch install.
+Check readiness without executing inference:
+
+```bash
+python -m ticket_classification.run_benchmark check
+```
+
+The default artifact and output paths are anchored to the installed repository,
+not the shell's current directory. The command therefore also works from the
+parent `VCode` directory when this checkout is installed in the active virtual
+environment. Use `--run-root` and `--output-dir` to target a different run.
+
+Missing or inconsistent artifacts, tokenizer metadata, label mappings,
+dataset identities, or explicitly requested devices produce an actionable
+error. `check` does not regenerate or substitute artifacts.
+
+### Running individual benchmarks
+
+Run selected Logistic Regression or Linear SVM on CPU:
+
+```bash
+python -m ticket_classification.run_benchmark run \
+  --models logistic_regression \
+  --no-include-available-accelerator
+
+python -m ticket_classification.run_benchmark run \
+  --models linear_svm \
+  --no-include-available-accelerator
+```
+
+Run Transformer CPU inference only:
+
+```bash
+python -m ticket_classification.run_benchmark run \
+  --models transformer \
+  --transformer-devices cpu \
+  --no-include-available-accelerator
+```
+
+Run an explicitly requested accelerator. These commands fail instead of
+silently switching devices when the requested device is unavailable:
+
+```bash
+python -m ticket_classification.run_benchmark run \
+  --models transformer \
+  --transformer-devices mps \
+  --no-include-available-accelerator
+
+python -m ticket_classification.run_benchmark run \
+  --models transformer \
+  --transformer-devices cuda \
+  --no-include-available-accelerator
+```
+
+Run the complete workflow on CPU plus any detected CUDA or MPS accelerator:
+
+```bash
+python -m ticket_classification.run_benchmark run
+```
+
+Important settings can be overridden explicitly:
+
+```bash
+python -m ticket_classification.run_benchmark run \
+  --batch-sizes 1 8 16 32 64 \
+  --warmup-iterations 5 \
+  --repetitions 30 \
+  --sample-count 512 \
+  --seed 42
+```
+
+Infrastructure rates are optional and never supplied by the project. A caller
+can provide rates by device:
+
+```bash
+python -m ticket_classification.run_benchmark run \
+  --hourly-cost cpu=0.25 \
+  --hourly-cost cuda=1.50
+```
+
+With rates supplied, the report assumes full measured utilization and
+calculates cost per ticket, per 1,000 tickets, and per 1,000,000 tickets.
+Hosted API pricing is not applicable because all selected models run locally.
+
+### Outputs and interpretation
+
+Successful runs write:
+
+```text
+artifacts/classification/run/inference_benchmark/
+├── benchmark_config.json
+├── benchmark_manifest.json
+├── benchmark_results.json
+└── inference_benchmark.md
+```
+
+`benchmark_results.json` is the machine-readable source for later work. The
+Markdown report contains model identities, sample metadata, runtime and
+hardware details, P50/P95 latency, throughput, amortized per-ticket time,
+batch-size impact, serialized sizes, memory observations, optional costs,
+operational trade-offs, and limitations. It reports only measurements from an
+actual run and does not assume that the largest batch is optimal.
+
+Model weights and complete inference artifacts are sized separately. The
+Transformer inference package excludes training-only state, and shared files
+are deduplicated within a package total. Process peak RSS is process-wide, not
+model-only; its measured delta is a lower bound. CUDA peak allocation is
+reported when available. MPS allocation depends on the supported PyTorch API
+and is not described as a reliable peak metric.
+
+Regenerate the Markdown presentation from existing structured results without
+rerunning inference, then inspect it:
+
+```bash
+python -m ticket_classification.run_benchmark report
+sed -n '1,260p' artifacts/classification/run/inference_benchmark/inference_benchmark.md
+```
+
+Run the focused Phase 2.11 tests or complete classification suite:
+
+```bash
+python -m pytest tests/classification/test_benchmarking.py -q
+python -m pytest tests/classification -q
+```
+
+The focused tests use controlled clocks and lightweight fixtures. They do not
+assert machine-specific latency or load the missing Transformer checkpoint.
