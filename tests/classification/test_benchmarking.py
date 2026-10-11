@@ -129,11 +129,16 @@ def test_report_generation_uses_structured_results(tmp_path):
     assert target.read_text(encoding="utf-8") == text
 
 
-def test_current_archive_reports_selected_artifacts_missing():
+def test_current_archive_validates_or_reports_selected_artifacts_missing():
     root = Path("artifacts/classification/run")
     if not root.exists():
         pytest.skip("repository artifacts are unavailable")
     config = BenchmarkConfig(run_root=root, models=("logistic_regression",),
                              include_available_accelerator=False)
-    with pytest.raises(FileNotFoundError, match="weighted_model.joblib"):
-        validate_artifacts(config)
+    selected_model = root / "class_weighting/logistic_regression/weighted_model.joblib"
+    if selected_model.exists():
+        result = validate_artifacts(config)
+        assert result["selected_models"]["logistic_regression"]["weighting"] == "balanced"
+    else:
+        with pytest.raises(FileNotFoundError, match="weighted_model.joblib"):
+            validate_artifacts(config)

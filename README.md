@@ -1343,3 +1343,52 @@ python -m pytest tests/classification -q
 
 The focused tests use controlled clocks and lightweight fixtures. They do not
 assert machine-specific latency or load the missing Transformer checkpoint.
+
+## Phase 2.12 — Final three-model comparison
+
+Phase 2.12 evaluates the exact models selected in Phase 2.9 on the complete
+frozen test split and produces the final production recommendation. It does
+not retrain models, change calibration, select a confidence threshold, or use
+test results to revise earlier policies.
+
+Run it once the selected classical artifacts, selected Transformer test
+predictions, calibration policy, and Phase 2.11 results are available:
+
+```bash
+python -m ticket_classification.run_final_comparison
+```
+
+For a quicker diagnostic run, the paired Macro-F1 bootstrap count can be
+reduced explicitly. Such a run should not replace the default final evidence:
+
+```bash
+python -m ticket_classification.run_final_comparison \
+  --bootstrap-repetitions 100
+```
+
+The command writes:
+
+```text
+artifacts/classification/run/final_comparison/
+├── phase2_final_model_comparison.json
+└── phase2_final_model_comparison.md
+```
+
+The comparison verifies exact frozen-test membership, recomputes classical
+predictions from the selected weighted estimators, aligns the selected
+Transformer predictions by record ID, and calculates all quality metrics with
+one label order. It reports per-class changes, exact paired McNemar evidence,
+paired-bootstrap Macro-F1 intervals, training time, model size, calibration
+evidence, complexity, cost availability, and Phase 2.11 latency where measured.
+Missing benchmark cells remain `N/A`; older informal timings are not silently
+substituted.
+
+After this report is accepted, the test set is considered consumed and the
+Phase 2 artifacts are frozen. Further model changes require a new versioned
+evaluation rather than tuning against the final comparison.
+
+Run the focused tests with:
+
+```bash
+python -m pytest tests/classification/test_final_comparison.py -q
+```
